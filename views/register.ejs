@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Slide Navbar</title>
+	<link rel="stylesheet" type="text/css" href="/css/register.css">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500&display=swap" rel="stylesheet">
+<style>
+</style>
+</head>
+<body>
+	<div  class="container">
+	<div class="main">  	
+		<input type="checkbox" id="chk" aria-hidden="true">
+
+			<div class="signup">
+				<form action='/postNewAccount' method="post">
+					<label for="" aria-hidden="true">إنشاء حساب</label>
+					<input type="text" name="name" placeholder="الأسم الثلاثي" required="" style="margin-top: -50px;">
+					<input type="email" name="email" placeholder="البريد الالكتروني" required="">
+                    <input type="password" name="password" placeholder="كلمة المرور" required="">
+					<input type="text" name="age" placeholder="العمر" required="">
+					<input type="text" name="job" placeholder="العمل" required="">
+					<input type="text" name="address" placeholder="المحافظه/البلد" required="">
+					<button style="margin-top: 0;" type="submit">تسجيل</button>
+				</form>
+			</div>
+
+			<div class="login">
+				<form>
+					<label for="chk" aria-hidden="true" class="log">تسجيل الدخول</label>
+					<input type="email" name="email" placeholder="البريد الالكتروني" required="">
+					<input type="password" name="pswd" placeholder="كلمة المرور" required="">
+					<button >تسجيل الدخول</button>
+				</form>
+			</div>
+	</div>
+	<img src="/photo/Sign up-rafiki.png" alt="" class="image1">
+</div>
+<script>
+</script>
+</body>
+</html>
