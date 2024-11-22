@@ -19,7 +19,7 @@ return EndDateAccount
 
 }
 const { createHmac } = require('node:crypto');
-var pharmaModel = mongoose.model('users', pharmaSchema), Global = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+var pharmaModel = mongoose.model('users', pharmaSchema), Global = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/pharma?retryWrites=true&w=majority&appName=Cluster0",
 local = "mongodb://localhost:27017/pharma";
 const secret = 'abcdefg'
  function hashCry(password) {
@@ -60,7 +60,9 @@ exports.createNewAccount = (name,email , password , age , address , job)=>{
             reject(err) })
     })
 }
-
+exports.getRegisterPageForApi = (req,res)=>{
+    res.render('register')
+}
 exports.LoginToAccount = (email, password) => {
     return new Promise((resolve, reject) => {
         mongoose.connect(Global).then(() => {
