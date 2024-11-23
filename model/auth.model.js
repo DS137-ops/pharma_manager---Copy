@@ -61,7 +61,7 @@ exports.createNewAccount = (name,email , password , age , address , job)=>{
     })
 }
 exports.getRegisterPageForApi = (req,res)=>{
-    res.render('register')
+    console.log(1)
 }
 exports.LoginToAccount = (email, password) => {
     return new Promise((resolve, reject) => {
