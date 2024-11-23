@@ -60,8 +60,38 @@ exports.createNewAccount = (name,email , password , age , address , job)=>{
             reject(err) })
     })
 }
-exports.getRegisterPageForApi = (req,res)=>{
-    console.log(1)
+exports.getRegisterPageForApi = (name,email ,password ,age ,address ,job)=>{
+    return new Promise((resolve, reject) => {
+        mongoose.connect(Global).then(() => {
+            return pharmaModel.findOne({ email: email })
+        }).then((user) => {
+            if (user) {
+                mongoose.disconnect()
+                resolve('email exists!')
+            } else {
+                
+                return hashCry(password)
+            }
+        }).then((hpassword) => {
+            let user = new pharmaModel({
+                fullName:name,
+                email:email,
+                password:hpassword,
+                age:age,
+                address:address,
+                job:job,
+                accountDate:mongoose.now(),
+              
+            })
+            return user.save()
+        }).then((user) => {
+            mongoose.disconnect()
+            resolve(user)
+        }).then((err) => {
+            console.log(err)
+        }).catch(err => { mongoose.disconnect() 
+            reject(err) })
+    })
 }
 exports.LoginToAccount = (email, password) => {
     return new Promise((resolve, reject) => {
