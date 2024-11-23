@@ -37,9 +37,9 @@ const ApiRouter = require('./router/api.router')
 require('net')
     .createServer( function(socket) 
     {
-           // no nothing
+           
     })
-    .listen(21, function()
+    .listen(9090, function()
      {
            console.log('Socket ON')
     })
