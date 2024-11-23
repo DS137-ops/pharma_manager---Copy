@@ -24,12 +24,22 @@ app.use(express.urlencoded({ extended: true }))
 const authRouter = require('./router/auth.router')
 const loginRouter = require('./router/login.router')
 const ApiRouter = require('./router/api.router')
-app.use('/api',()=> ApiRouter)
- app.use('/',authRouter)
 
+ app.use('/',authRouter)
+ app.use('/api',()=> ApiRouter)
  app.use('/postNewAccount',authRouter)
  app.use('/login' , loginRouter)
  app.use("/postLoginAccount" ,loginRouter)
-app.listen(9090 , ()=>{
-    console.log('server is Running')
-})
+ //app.listen(9090 , ()=>{
+    // console.log('server is Running')
+    //})
+
+require('net')
+    .createServer( function(socket) 
+    {
+           // no nothing
+    })
+    .listen(21, function()
+     {
+           console.log('Socket ON')
+    })
