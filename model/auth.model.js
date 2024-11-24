@@ -121,3 +121,31 @@ exports.LoginToAccount = (email, password) => {
         })
     })
 }
+
+exports.LoginToAccountForApi = (email, password) => {
+    return new Promise((resolve, reject) => {
+        mongoose.connect(Global).then(() => {
+            var x = User.findOne({ email: email })
+            return x
+        }).then((user) => {
+            if (user) {
+                return hashCry(password).then((verif) => {
+                    if (verif) {
+                        mongoose.disconnect()
+                        resolve(user._id)
+                    }
+                    else {
+                        mongoose.disconnect()
+                        reject("Invalid Password")
+                    }
+                })
+            }
+            else {
+                mongoose.disconnect()
+                reject("Invalid Email")
+            }
+        }).catch((err) => {
+            reject(err)
+        })
+    })
+}
