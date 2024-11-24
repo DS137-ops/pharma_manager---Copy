@@ -8,7 +8,7 @@ const pharmaSchema = new mongoose.Schema({
     address:String,
     job:String,
     accountDate:Date,
-    userid:String,
+    
 });
 function enddate(){
     const thirtyDaysFromNow = new Date();
@@ -27,6 +27,7 @@ const secret = 'abcdefg'
     .update(password)
     .digest('hex');
 }
+
 exports.createNewAccount = (name,email , password , age , address , job)=>{
     return new Promise((resolve, reject) => {
         mongoose.connect(Global).then(() => {
