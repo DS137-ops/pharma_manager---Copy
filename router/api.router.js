@@ -9,4 +9,12 @@ router.post('/',body,(req,res)=>{
         res.json({error:true,message:err})
       })
 })
+
+router.post('/login',body,(req,res)=>{
+    authmodel.LoginToAccount(req.body.email , req.body.password).then(()=>{
+        res.json({error:false , message:'success'})
+    }).catch((err)=>{
+        res.json({error:true,message:err})
+      })
+})
 module.exports = router;
