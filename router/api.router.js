@@ -13,10 +13,10 @@ router.post('/',body,(req,res)=>{
 router.post('/login',body,(req,res)=>{
     authmodel.LoginToAccountForApi(req.body.emaillog , req.body.pswd).then((id)=>{
         req.session.userid = id
-        res.json({error:false  ,  message:'success'})
+        res.json({error:false,message:'success'})
     }).catch((err)=>{
         console.log(err)
-        res.json({error:true,message:'Failed'})
+        res.json({error:true,message:err})
     })
 })
 module.exports = router;
