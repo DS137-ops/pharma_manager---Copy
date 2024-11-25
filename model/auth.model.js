@@ -120,7 +120,8 @@ exports.LoginToAccount = (email, password) => {
 exports.LoginToAccountForApi = (email, password) => {
     return new Promise((resolve, reject) => {
         mongoose.connect(Global).then(() => {
-            return pharmaModel.findOne({ email: email })
+            var t = pharmaModel.findOne({ email: email })
+            return t
         }).then((user) => {
             if (user) {
                 bcrypt.compare(password, user.password).then((verif) => {
