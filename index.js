@@ -9,7 +9,7 @@ app.use(express.static(path.join(__dirname,'assests')));
 let Global = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/pharma?retryWrites=true&w=majority&appName=Cluster0",
 local = "mongodb://localhost:27017/pharma"
 var Store = new MongoStrore({
-    uri:Global,
+    uri:local,
     collection:"sessions"
 })
 app.use(session({
@@ -24,12 +24,13 @@ app.use(express.urlencoded({ extended: true }))
 const authRouter = require('./router/auth.router')
 const loginRouter = require('./router/login.router')
 const apiRouter = require('./router/api.router')
-
+const HomeRouter = require('./router/home.router')
  app.use('/',authRouter)
  app.use('/api',apiRouter)
  app.use('/postNewAccount',authRouter)
  app.use('/login' , loginRouter)
  app.use("/postLoginAccount" ,loginRouter)
+ app.use("/home",HomeRouter)
  app.listen(9090 , ()=>{
     console.log('server is Running')
     })

@@ -12,14 +12,18 @@ exports.postNewAccount =(req,res)=>{
 }
 
 exports.getLoginPage = (req,res)=>{
-    res.render('login',{verifUser: req.session.userid})
+    res.render('register',{verifUser: req.session.userid})
 }
 exports.postLoginAccount = (req,res)=>{
-    authModel.LoginToAccount(req.body.email , req.body.password).then((id)=>{
+    authModel.LoginToAccount(req.body.emaillog , req.body.pswd).then((id)=>{
         req.session.userid = id
-        console.log('success login')
-        res.redirect('/')
-    }).catch(()=>{
+        res.redirect('/home')
+    }).catch((err)=>{
+        console.log(err)
         res.redirect('/')
     })
+}
+
+exports.getHomePage = (req,res)=>{
+    res.render('home',{verifUser: req.session.userid})
 }

@@ -26,17 +26,29 @@
 			</div>
 
 			<div class="login">
-				<form>
-					<label for="chk" aria-hidden="true" class="log">تسجيل الدخول</label>
-					<input type="email" name="email" placeholder="البريد الالكتروني" required="">
+				<form action="/postLoginAccount" method="post">
+					<label for="chk" aria-hidden="true" class="log" id="button-id">تسجيل الدخول</label>
+					<input type="email" name="emaillog" placeholder="البريد الالكتروني" required="">
 					<input type="password" name="pswd" placeholder="كلمة المرور" required="">
-					<button >تسجيل الدخول</button>
+					<button type="submit">تسجيل الدخول</button>
 				</form>
 			</div>
 	</div>
 	<img src="/photo/Sign up-rafiki.png" alt="" class="image1">
 </div>
 <script>
+	var localUrl=   "http://localhost:9090/login" , GlobalUrl =  "https://pharma-manager-copy.onrender.com/login";
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.location.href === localUrl) {
+    const button = document.querySelector('#button-id');
+        if (button) {
+      button.click();
+    } else {
+      console.error("Button not found on the page.");
+    }
+  }
+});
+
 </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const { rejects } = require('node:assert');
 const pharmaSchema = new mongoose.Schema({
     fullName:String,
@@ -30,7 +31,7 @@ const secret = 'abcdefg'
 
 exports.createNewAccount = (name,email , password , age , address , job)=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(Global).then(() => {
+        mongoose.connect(local).then(() => {
             return pharmaModel.findOne({ email: email })
         }).then((user) => {
             if (user) {
@@ -38,7 +39,7 @@ exports.createNewAccount = (name,email , password , age , address , job)=>{
                 resolve('email exists!')
             } else {
                 
-                return hashCry(password)
+                return bcrypt.hash(password, 10)
             }
         }).then((hpassword) => {
             let user = new pharmaModel({
@@ -63,7 +64,7 @@ exports.createNewAccount = (name,email , password , age , address , job)=>{
 }
 exports.getRegisterPageForApi = (name,email ,password ,age ,address ,job)=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(Global).then(() => {
+        mongoose.connect(local).then(() => {
             return pharmaModel.findOne({ email: email })
         }).then((user) => {
             if (user) {
@@ -71,7 +72,7 @@ exports.getRegisterPageForApi = (name,email ,password ,age ,address ,job)=>{
                 resolve('email exists!')
             } else {
                 
-                return hashCry(password)
+                return bcrypt.hash(password, 10)
             }
         }).then((hpassword) => {
             let user = new pharmaModel({
@@ -94,14 +95,16 @@ exports.getRegisterPageForApi = (name,email ,password ,age ,address ,job)=>{
             reject(err) })
     })
 }
+
+
+
 exports.LoginToAccount = (email, password) => {
     return new Promise((resolve, reject) => {
-        mongoose.connect(Global).then(() => {
-            var x = User.findOne({ email: email })
-            return x
+        mongoose.connect(local).then(() => {
+            return pharmaModel.findOne({ email: email })
         }).then((user) => {
             if (user) {
-                return hashCry(password).then((verif) => {
+                bcrypt.compare(password, user.password).then((verif) => {
                     if (verif) {
                         mongoose.disconnect()
                         resolve(user._id)
@@ -114,38 +117,8 @@ exports.LoginToAccount = (email, password) => {
             }
             else {
                 mongoose.disconnect()
-                reject("Invalid Email")
-            }
+                reject("Invalid Email")}
         }).catch((err) => {
-            reject(err)
+            reject(err)})
         })
-    })
-}
-
-exports.LoginToAccountForApi = (email, password) => {
-    return new Promise((resolve, reject) => {
-        mongoose.connect(Global).then(() => {
-            var x = User.findOne({ email: email })
-            return x
-        }).then((user) => {
-            if (user) {
-                return hashCry(password).then((verif) => {
-                    if (verif) {
-                        mongoose.disconnect()
-                        resolve(user._id)
-                    }
-                    else {
-                        mongoose.disconnect()
-                        reject("Invalid Password")
-                    }
-                })
-            }
-            else {
-                mongoose.disconnect()
-                reject("Invalid Email")
-            }
-        }).catch((err) => {
-            reject(err)
-        })
-    })
-}
+    }
