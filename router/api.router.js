@@ -13,7 +13,7 @@ router.post('/',body,(req,res)=>{
 router.post('/login',body,(req,res)=>{
     authmodel.LoginToAccountForApi(req.body.email , req.body.pswd).then((id)=>{
         req.session.userid = id
-        res.redirect('/home')
+        res.json({error:false  ,  message:'success'})
     }).catch((err)=>{
         console.log(err)
         res.json({error:true,message:'Failed'})
