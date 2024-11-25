@@ -19,19 +19,13 @@ let EndDateAccount=cronExpression.slice(6,8) + '/' + cronExpression.slice(9,11)
 return EndDateAccount
 
 }
-const { createHmac } = require('node:crypto');
+
 var pharmaModel = mongoose.model('users', pharmaSchema), Global = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/pharma?retryWrites=true&w=majority&appName=Cluster0",
 local = "mongodb://localhost:27017/pharma";
-const secret = 'abcdefg'
- function hashCry(password) {
-    return  createHmac('sha256', secret)
-    .update(password)
-    .digest('hex');
-}
 
 exports.createNewAccount = (name,email , password , age , address , job)=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(local).then(() => {
+        mongoose.connect(Global).then(() => {
             return pharmaModel.findOne({ email: email })
         }).then((user) => {
             if (user) {
@@ -64,7 +58,7 @@ exports.createNewAccount = (name,email , password , age , address , job)=>{
 }
 exports.getRegisterPageForApi = (name,email ,password ,age ,address ,job)=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(local).then(() => {
+        mongoose.connect(Global).then(() => {
             return pharmaModel.findOne({ email: email })
         }).then((user) => {
             if (user) {
@@ -100,7 +94,7 @@ exports.getRegisterPageForApi = (name,email ,password ,age ,address ,job)=>{
 
 exports.LoginToAccount = (email, password) => {
     return new Promise((resolve, reject) => {
-        mongoose.connect(local).then(() => {
+        mongoose.connect(Global).then(() => {
             return pharmaModel.findOne({ email: email })
         }).then((user) => {
             if (user) {

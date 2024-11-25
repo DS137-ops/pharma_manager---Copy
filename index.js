@@ -9,7 +9,7 @@ app.use(express.static(path.join(__dirname,'assests')));
 let Global = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/pharma?retryWrites=true&w=majority&appName=Cluster0",
 local = "mongodb://localhost:27017/pharma"
 var Store = new MongoStrore({
-    uri:local,
+    uri:Global,
     collection:"sessions"
 })
 app.use(session({
