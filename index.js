@@ -31,16 +31,16 @@ const HomeRouter = require('./router/home.router')
  app.use('/login' , loginRouter)
  app.use("/postLoginAccount" ,loginRouter)
  app.use("/home",HomeRouter)
-//  app.listen(9090 , ()=>{
-//     console.log('server is Running')
-//     })
+ app.listen(9090 , ()=>{
+     console.log('server is Running')
+    })
 
-require('net')
-    .createServer( function() 
-    {
+// require('net')
+//     .createServer( function() 
+//     {
            
-    })
-    .listen(9090, function()
-     {
-           console.log('Socket ON')
-    })
+//     })
+//     .listen(9090, function()
+//      {
+//            console.log('Socket ON')
+//     })
