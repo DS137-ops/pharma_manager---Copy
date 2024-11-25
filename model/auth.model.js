@@ -116,3 +116,28 @@ exports.LoginToAccount = (email, password) => {
             reject(err)})
         })
     }
+    
+exports.LoginToAccountForApi = (email, password) => {
+    return new Promise((resolve, reject) => {
+        mongoose.connect(Global).then(() => {
+            return pharmaModel.findOne({ email: email })
+        }).then((user) => {
+            if (user) {
+                bcrypt.compare(password, user.password).then((verif) => {
+                    if (verif) {
+                        mongoose.disconnect()
+                        resolve(user._id)
+                    }
+                    else {
+                        mongoose.disconnect()
+                        reject("Invalid Password")
+                    }
+                })
+            }
+            else {
+                mongoose.disconnect()
+                reject("Invalid Email")}
+        }).catch((err) => {
+            reject(err)})
+        })
+    }
