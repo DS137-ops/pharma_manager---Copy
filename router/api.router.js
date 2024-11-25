@@ -11,9 +11,9 @@ router.post('/',body,(req,res)=>{
 })
 
 router.post('/login',body,(req,res)=>{
-    authmodel.LoginToAccount(req.body.email , req.body.password).then((id)=>{
+    authmodel.LoginToAccountForApi(req.body.email , req.body.pswd).then((id)=>{
         req.session.userid = id
-        res.json({error:false  ,  message:'success'})
+        res.redirect('/home')
     }).catch((err)=>{
         console.log(err)
         res.json({error:true,message:'Failed'})
