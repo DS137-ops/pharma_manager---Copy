@@ -15,7 +15,7 @@ const pharmaSchema = new mongoose.Schema({
 // let EndDateAccount=cronExpression.slice(6,8) + '/' + cronExpression.slice(9,11)
 // return EndDateAccount
 // }
-var User = mongoose.model('users', pharmaSchema), Global = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/pharma?retryWrites=true&w=majority&appName=Cluster0",
+var User = mongoose.model('users', pharmaSchema), Global = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/pharmatic?retryWrites=true&w=majority&appName=Cluster0",
 local = "mongodb://localhost:27017/pharmatic";
 let bcrypt = require("bcryptjs")
 let jwt = require("jsonwebtoken")
