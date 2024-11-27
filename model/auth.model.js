@@ -21,7 +21,7 @@ let bcrypt = require("bcryptjs")
 let jwt = require("jsonwebtoken")
 exports.postnewuser = (name , emailpar , passwordpar , agepar , addresspar , jobpar )=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(local).then(()=>{
+        mongoose.connect(Global).then(()=>{
             return User.findOne({email : emailpar})
         }).then((doc)=>{
             if(doc){
@@ -56,7 +56,7 @@ exports.postnewuser = (name , emailpar , passwordpar , agepar , addresspar , job
 let privateKey = "fmmmffmmffffsfmfss"
 exports.postloginuser = (email , password)=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(local).then(()=>{
+        mongoose.connect(Global).then(()=>{
             return User.findOne({email : email})
         }).then((user)=>{
             if(!user){
