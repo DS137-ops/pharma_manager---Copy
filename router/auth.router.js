@@ -23,13 +23,13 @@ transporter.sendMail(mailOptions, (error, info) => {
   } else {
     console.log('Email sent:', info.response);
   }});}
-router.post('/' ,body2, (req,res)=>{
+router.post('/' ,body, (req,res)=>{
     authModel.postnewuser(req.body.name ,req.body.email ,req.body.password ,req.body.age ,req.body.address ,req.body.job)
     .then((user)=> res.status(200).json({user , msg:'success'}))
     .catch((err)=> res.status(400).json({err , msg:'Failed'}))
 })
 
-router.post('/login' ,body2, (req,res)=>{
+router.post('/login' ,body, (req,res)=>{
     authModel.postloginuser(req.body.email ,req.body.password)
     .then((token)=> res.status(200).json({token , msg:'success'}))
     .catch((err)=> res.status(400).json({err , msg:'Failed'}))

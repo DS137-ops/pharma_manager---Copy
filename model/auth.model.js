@@ -6,8 +6,14 @@ const pharmaSchema = new mongoose.Schema({
     age:String,
     address:String,
     job:String,
-   accountDate: Date,
-   notifications:Array
+   accountDate:{
+    type:Date,
+    default:null
+   }, 
+   notifications:{
+    type:Array,
+    default:null
+   }
 });
 // function enddate(){
 //     const thirtyDaysFromNow = new Date();
