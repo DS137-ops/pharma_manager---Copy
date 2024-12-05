@@ -22,7 +22,7 @@ let bcrypt = require("bcryptjs")
 let jwt = require("jsonwebtoken")
 exports.postnewuser = (name , emailpar , passwordpar , agepar , addresspar , jobpar )=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(local).then(()=>{
+        mongoose.connect(Global).then(()=>{
             return User.findOne({email : emailpar})
         }).then((doc)=>{
             if(doc){
@@ -57,7 +57,7 @@ exports.postnewuser = (name , emailpar , passwordpar , agepar , addresspar , job
 let privateKey = "fmmmffmmffffsfmfss"
 exports.postloginuser = (email , password)=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(local).then(()=>{
+        mongoose.connect(Global).then(()=>{
             return User.findOne({email : email})
         }).then((user)=>{
             if(!user){
@@ -86,7 +86,7 @@ exports.postloginuser = (email , password)=>{
 })})}
 exports.getUserInfo = (id)=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(local).then(()=>{
+        mongoose.connect(Global).then(()=>{
             return User.findById(id)
         }).then((userinfo)=>{
             if(userinfo){
@@ -102,7 +102,7 @@ exports.getUserInfo = (id)=>{
 
 exports.setNewNotify = (id , message , date)=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(local).then(()=>{
+        mongoose.connect(Global).then(()=>{
             return User.findById(id)
         }).then((user)=>{
             return User.updateOne({_id:new mongoose.Types.ObjectId(id)} ,  { $push: { notifications: {id , message , date} } })

@@ -12,7 +12,7 @@ const xss = require("xss-clean")
 let Global = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/pharmatic?retryWrites=true&w=majority&appName=Cluster0",
 local = "mongodb://localhost:27017/pharmatic"
 var Store = new MongoStrore({
-    uri:local,
+    uri:Global,
     collection:"sessions"
 })
 
