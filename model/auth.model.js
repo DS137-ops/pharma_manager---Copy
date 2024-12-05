@@ -6,7 +6,8 @@ const pharmaSchema = new mongoose.Schema({
     age:String,
     address:String,
     job:String,
-   accountDate: Date
+   accountDate: Date,
+   notifications:Array
 });
 // function enddate(){
 //     const thirtyDaysFromNow = new Date();
@@ -14,14 +15,14 @@ const pharmaSchema = new mongoose.Schema({
 // const cronExpression = `0 0 0 ${thirtyDaysFromNow.getDate()} ${thirtyDaysFromNow.getMonth() + 1} *`
 // let EndDateAccount=cronExpression.slice(6,8) + '/' + cronExpression.slice(9,11)
 // return EndDateAccount
-// }
+// }/
 var User = mongoose.model('users', pharmaSchema), Global = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/pharmatic?retryWrites=true&w=majority&appName=Cluster0",
 local = "mongodb://localhost:27017/pharmatic";
 let bcrypt = require("bcryptjs")
 let jwt = require("jsonwebtoken")
 exports.postnewuser = (name , emailpar , passwordpar , agepar , addresspar , jobpar )=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(Global).then(()=>{
+        mongoose.connect(local).then(()=>{
             return User.findOne({email : emailpar})
         }).then((doc)=>{
             if(doc){
@@ -56,7 +57,7 @@ exports.postnewuser = (name , emailpar , passwordpar , agepar , addresspar , job
 let privateKey = "fmmmffmmffffsfmfss"
 exports.postloginuser = (email , password)=>{
     return new Promise((resolve, reject) => {
-        mongoose.connect(Global).then(()=>{
+        mongoose.connect(local).then(()=>{
             return User.findOne({email : email})
         }).then((user)=>{
             if(!user){
@@ -79,8 +80,38 @@ exports.postloginuser = (email , password)=>{
                 }).catch((err)=>{
                     mongoose.disconnect()
                     reject(err)
-                })
+                })}}).catch((err)=>{
+                    mongoose.disconnect()
+                    reject(err)
+})})}
+exports.getUserInfo = (id)=>{
+    return new Promise((resolve, reject) => {
+        mongoose.connect(local).then(()=>{
+            return User.findById(id)
+        }).then((userinfo)=>{
+            if(userinfo){
+                mongoose.disconnect()
+                resolve(userinfo)
+            }else{
+                mongoose.disconnect()
+                reject("can not find info")
             }
+        }).catch((err)=>console.log(err))
+    })
+}
+
+exports.setNewNotify = (id , message , date)=>{
+    return new Promise((resolve, reject) => {
+        mongoose.connect(local).then(()=>{
+            return User.findById(id)
+        }).then((user)=>{
+            return User.updateOne({_id:new mongoose.Types.ObjectId(id)} ,  { $push: { notifications: {id , message , date} } })
+        }).then(()=>{
+            mongoose.disconnect()
+            resolve("Ok updated")
+        }).catch((err)=>{
+            mongoose.disconnect()
+            reject(err)
         })
     })
 }
