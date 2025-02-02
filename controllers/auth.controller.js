@@ -24,8 +24,8 @@ exports.createNewSpec = async (req, res) => {
        
           newUser = new User({fullName, email, password,role,specilizate, address , phone });
          await newUser.save();
-         const specilizateLine = role === "doctor" ? `<p>Specialization: ${specilizate}</p>` : '';         const approvalLink = `http://localhost:8080/api/approve/${newUser._id}`;
-         const rejectLink = `http://localhost:8080/api/reject/${newUser._id}`;
+         const specilizateLine = role === "doctor" ? `<p>Specialization: ${specilizate}</p>` : '';         const approvalLink = `https://pharma-manager-copy-1.onrender.com/api/approve/${newUser._id}`;
+         const rejectLink = `https://pharma-manager-copy-1.onrender.com/api/reject/${newUser._id}`;
          const mailOptions = {
           from: email,
           to: "feadkaffoura@gmail.com",
