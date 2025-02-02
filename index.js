@@ -14,7 +14,7 @@ app.use(mongoSanitize());
 app.use(xss());
 app.use(helmet());
 const localUri = process.env.LOCAL,
-GlobalUri = process.env.GLOBAL
+GlobalUri = "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/medicalapp?retryWrites=true&w=majority&appName=Cluster0"
 mongoose
     .connect(GlobalUri)
     .then(() => console.log('MongoDB connected'))
