@@ -132,3 +132,15 @@ exports.logoutSpec = async (req,res,next)=>{
   
   res.status(200).json({success:true})
 }
+
+exports.logoutSeek = async(req,res)=>{
+  const id = req.params.id
+  const newSeek = await Seek.findOne({id})
+ const deletedSeek =await Seek.deleteOne({newSeek})
+ if(deletedSeek){
+  return res.status(201).json({success:true , deletedSeek , message:'logout Successfully'})
+ }else{
+  return res.status(201).json({success:false ,  message:'logout Not Successfully'})
+ }
+
+}

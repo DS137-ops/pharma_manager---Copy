@@ -46,4 +46,5 @@ router.post('/createNewSeek',[
 router.post('/signinUser' ,checkprov.isProvved , authController.loginSpec )
 
 router.post('/logoutSpec' , checkprov.checkBlacklist , authController.logoutSpec)
+router.post('/logoutSeek/:id' , authController.logoutSeek )
 module.exports = router;
