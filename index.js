@@ -13,9 +13,10 @@ app.use(express.json());
 app.use(mongoSanitize());
 app.use(xss());
 app.use(helmet());
-const localUri = process.env.LOCAL
+const localUri = process.env.LOCAL,
+GlobalUri = process.env.GLOBAL
 mongoose
-    .connect(localUri)
+    .connect(GlobalUri)
     .then(() => console.log('MongoDB connected'))
     .catch((err) => console.error('MongoDB connection error:', err));
 const authRouter = require("./router/auth.router");
