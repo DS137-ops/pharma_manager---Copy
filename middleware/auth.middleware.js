@@ -26,7 +26,7 @@ exports.checkBlacklist = async(req,res,next)=>{
     if(token){
         const blacklisted = await Blacklist.findOne({ token })
         if(blacklisted){
-            return res.status(401).json({message:' token in blacklist'})
+            return res.status(401).json({message:' You are Logged Out'})
         }
     }
     next();

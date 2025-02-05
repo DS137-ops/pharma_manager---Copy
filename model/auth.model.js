@@ -25,7 +25,14 @@ const bcrypt = require('bcryptjs')
       specilizate:{
         type:String,
         trim:true,
+        required:function(){
+          return this.role === 'doctor'
+        },
         enum:['teeth','internal','baby','Gynecologist','eyes' , 'Orthopedic','surgeon','heart','Neurologist' , 'Urologist'  ]
+      },
+      city:{
+        type:String,
+        required:true
       },
         address: {
           type: String,
@@ -38,6 +45,20 @@ const bcrypt = require('bcryptjs')
 
         },
         approved: { type: Boolean, default: false },
+        StartJob:{
+          type:String,
+          default:null
+        },
+        EndJob:{
+          type:String,
+          default:null
+        },
+        NumberState:{
+          type:String,
+          required:function(){
+            return this.role === 'doctor'
+          },
+        },
         accountDate: {
           type: Date,
         },
@@ -45,6 +66,9 @@ const bcrypt = require('bcryptjs')
           type: Array,
           default: null,
         },
+        adverts:{
+          type:Array,
+        }
       });
 
 

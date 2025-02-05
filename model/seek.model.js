@@ -16,6 +16,14 @@ var mongoose = require('mongoose')
             default:"user",
             enum:["user"]
         },
+        city:{
+            type:String,
+            default:null
+        },
+        address:{
+            type:String,
+            default:null
+        },
         accountDate: {
             type: Date,
           },
