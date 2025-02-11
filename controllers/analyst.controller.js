@@ -128,7 +128,7 @@ exports.createNewAnalyst = async (req, res) => {
   exports.getAnalyst = async (req, res) => {
     const city = req.params.city,
       address = req.params.address;
-    const query = { role: 'Analyst', city: city, address: address };
+    const query = { role: 'analyst', city: city, address: address };
     const findAnalyst = await Analyst.find(query);
     if (findAnalyst) {
       res.status(201).json({ status: true, findAnalyst });

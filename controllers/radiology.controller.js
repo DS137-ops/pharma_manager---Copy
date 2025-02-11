@@ -27,14 +27,14 @@ exports.createNewRadiology = async (req, res) => {
       EndJob,
     } = req.body;
     try {
-      const existingUser = await radiology.findOne({ email });
+      const existingUser = await Radiology.findOne({ email });
       if (existingUser) {
         return res
           .status(409)
           .json({ success: false, message: 'Email already exists' });
       }
   
-      newUser = new radiology({
+      newUser = new Radiology({
         fullName,
         email,
         password,
@@ -90,7 +90,7 @@ exports.createNewRadiology = async (req, res) => {
   
   exports.approveRadiology = async (req, res) => {
     try {
-      const user = await radiology.findById(req.params.id);
+      const user = await Radiology.findById(req.params.id);
       if (!user)
         return res
           .status(404)
@@ -109,13 +109,13 @@ exports.createNewRadiology = async (req, res) => {
 
   exports.rejectRadiology = async (req, res) => {
     try {
-      const user = await radiology.findById(req.params.id);
+      const user = await Radiology.findById(req.params.id);
       if (!user)
         return res
           .status(404)
           .json({ success: false, message: 'User not found' });
   
-      await Analyst.deleteOne({ _id: req.params.id });
+      await Radiology.deleteOne({ _id: req.params.id });
   
       res
         .status(200)
@@ -129,7 +129,7 @@ exports.createNewRadiology = async (req, res) => {
     const city = req.params.city,
       address = req.params.address;
     const query = { role: 'radiology', city: city, address: address };
-    const findradiology = await radiology.find(query);
+    const findradiology = await Radiology.find(query);
     if (findradiology) {
       res.status(201).json({ status: true, findradiology });
     } else {
