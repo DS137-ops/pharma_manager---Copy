@@ -55,7 +55,6 @@ router.get(
   checkprov.checkBlacklist,
   authController.getDoctors
 );
-router.post('/SendDoctorOrder', authController.sendDoctorOrder);
 //End Doctor
 
 //Seek Section

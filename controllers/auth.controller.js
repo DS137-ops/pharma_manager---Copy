@@ -68,11 +68,11 @@ exports.createNewPharmatic = async (req, res) => {
     });
     // https://pharma-manager-copy-1.onrender.com
     await newUser.save();
-    const approvalLink = `pharma-manager-copy-1.onrender.com/api/approve/pharmatic/${newUser._id}`;
-    const rejectLink = `pharma-manager-copy-1.onrender.com/api/reject/pharmatic/${newUser._id}`;
+    const approvalLink = `pharma-manager-copy-2.onrender.com/api/approve/pharmatic/${newUser._id}`;
+    const rejectLink = `pharma-manager-copy-2.onrender.com/api/reject/pharmatic/${newUser._id}`;
     const mailOptions = {
       from: email,
-      to: 'nabd142025@gmail.com',
+      to: 'feadkaffoura@gmail.com',
       subject: 'Test Email with Hotmail',
       html: `
           <h3>New Registration Request</h3>
@@ -332,8 +332,8 @@ exports.createNewDoctor = async (req, res) => {
       EndJob,
     });
     await newUser.save();
-    const approvalLink = `pharma-manager-copy-2.onrender.com/api/approve/pharmatic/${newUser._id}`;
-    const rejectLink = `pharma-manager-copy-2.onrender.com/api/reject/pharmatic/${newUser._id}`;
+    const approvalLink = `pharma-manager-copy-2.onrender.com/api/approve/doctor/${newUser._id}`;
+    const rejectLink = `pharma-manager-copy-2.onrender.com/api/reject/doctor/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
@@ -518,23 +518,3 @@ exports.getDoctors = async (req, res) => {
   }
 };
 
-
-exports.sendDoctorOrder = async (req, res) => {
-  try {
-    const { userId, doctorId, message, replyTo } = req.body;
-
-    const newMessage = new DoctorMessage({
-      userId,
-      doctorId,
-      message,
-      replyTo,
-    });
-    await newMessage.save();
-
-    res
-      .status(201)
-      .json({ success: true, message: 'Message sent', data: newMessage });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error', error });
-  }
-};
