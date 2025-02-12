@@ -1,4 +1,3 @@
-
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
@@ -15,7 +14,26 @@ const transporter = nodemailer.createTransport({
   },
 });
 exports.createNewAnalyst = async (req, res) => {
-    const {
+  const {
+    fullName,
+    email,
+    password,
+    city,
+    region,
+    address,
+    phone,
+    StartJob,
+    EndJob,
+  } = req.body;
+  try {
+    const existingUser = await Analyst.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ success: false, message: 'Email already exists' });
+    }
+
+    newUser = new Analyst({
       fullName,
       email,
       password,
@@ -25,35 +43,16 @@ exports.createNewAnalyst = async (req, res) => {
       phone,
       StartJob,
       EndJob,
-    } = req.body;
-    try {
-      const existingUser = await Analyst.findOne({ email });
-      if (existingUser) {
-        return res
-          .status(409)
-          .json({ success: false, message: 'Email already exists' });
-      }
-  
-      newUser = new Analyst({
-        fullName,
-        email,
-        password,
-        city,
-        region,
-        address,
-        phone,
-        StartJob,
-        EndJob,
-      });
-      // https://pharma-manager-copy-1.onrender.com
-      await newUser.save();
-      const approvalLink = `pharma-manager-copy-1.onrender.com/api/approve/analyst/${newUser._id}`;
-      const rejectLink = `pharma-manager-copy-1.onrender.com/api/reject/analyst/${newUser._id}`;
-      const mailOptions = {
-        from: email,
-        to: 'nabd142025@gmail.com',
-        subject: 'Test Email with Hotmail',
-        html: `
+    });
+    // https://pharma-manager-copy-1.onrender.com
+    await newUser.save();
+    const approvalLink = `pharma-manager-copy-1.onrender.com/api/approve/analyst/${newUser._id}`;
+    const rejectLink = `pharma-manager-copy-1.onrender.com/api/reject/analyst/${newUser._id}`;
+    const mailOptions = {
+      from: email,
+      to: 'feadkaffoura@gmail.com',
+      subject: 'Test Email with Hotmail',
+      html: `
             <h3>New Registration Request</h3>
             <p>Name: ${fullName}</p>
             <p>Email: ${email}</p>
@@ -66,73 +65,70 @@ exports.createNewAnalyst = async (req, res) => {
             <p>Click below to approve or reject:</p>
             <a href="${approvalLink}" style="color:green">Approve</a> | <a href="${rejectLink}" style="color:red">Reject</a>
           `,
-      };
-      await transporter.sendMail(mailOptions);
-  
-      res
-        .status(200)
-        .json({ success: true, message: 'Registration request sent to admin' });
-    } catch (err) {
-      console.error('Error registering user:', err);
-      if (err.name === 'ValidationError') {
-        const errors = Object.values(err.errors).map((e) => e.message);
-        return res
-          .status(400)
-          .json({ success: false, message: errors.join(', ') });
-      }
-  
-      res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-  };
+    };
+    await transporter.sendMail(mailOptions);
 
-  
-
-  
-  exports.approveAnalyst = async (req, res) => {
-    try {
-      const user = await Analyst.findById(req.params.id);
-      if (!user)
-        return res
-          .status(404)
-          .json({ success: false, message: 'User not found' });
-  
-      user.approved = true;
-      await user.save();
-  
-      res
-        .status(200)
-        .json({ success: true, user, message: 'User approved successfully' });
-    } catch (err) {
-      res.status(500).json({ success: false, message: 'Internal server error' });
+    res
+      .status(200)
+      .json({ success: true, message: 'Registration request sent to admin' });
+  } catch (err) {
+    console.error('Error registering user:', err);
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map((e) => e.message);
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
     }
-  };
 
-  exports.rejectAnalyst = async (req, res) => {
-    try {
-      const user = await Analyst.findById(req.params.id);
-      if (!user)
-        return res
-          .status(404)
-          .json({ success: false, message: 'User not found' });
-  
-      await Analyst.deleteOne({ _id: req.params.id });
-  
-      res
-        .status(200)
-        .json({ success: true, message: 'User rejected successfully' });
-    } catch (err) {
-      res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-  };
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
 
-  exports.getAnalyst = async (req, res) => {
-    const city = req.params.city,
-      address = req.params.address;
-    const query = { role: 'analyst', city: city, address: address };
-    const findAnalyst = await Analyst.find(query);
-    if (findAnalyst) {
-      res.status(201).json({ status: true, findAnalyst });
-    } else {
-      res.status(404).json({ status: false, message: 'No result' });
-    }
-  };
+exports.approveAnalyst = async (req, res) => {
+  try {
+    const user = await Analyst.findById(req.params.id);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
+
+    user.approved = true;
+    await user.save();
+
+    res
+      .status(200)
+      .json({ success: true, user, message: 'User approved successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+exports.rejectAnalyst = async (req, res) => {
+  try {
+    const user = await Analyst.findById(req.params.id);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
+
+    await Analyst.deleteOne({ _id: req.params.id });
+
+    res
+      .status(200)
+      .json({ success: true, message: 'User rejected successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+exports.getAnalyst = async (req, res) => {
+  const city = req.params.city,
+    address = req.params.address;
+  const query = { role: 'analyst', city: city, address: address };
+  const findAnalyst = await Analyst.find(query);
+  if (findAnalyst) {
+    res.status(201).json({ status: true, findAnalyst });
+  } else {
+    res.status(404).json({ status: false, message: 'No result' });
+  }
+};

@@ -140,35 +140,39 @@ exports.ratePharmatic = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-exports.getFinalRate  = async(req,res)=>{
-  try{
-  const pharmaticId = req.params.id
-  const pharmatic = await Pharmatic.findById(id)
-  if (!pharmatic) {
-    return res.status(404).json({ message: "Pharmatic not found" });
-}
+exports.getFinalRate = async (req, res) => {
+  try {
+    const pharmaticId = req.params.id;
+    const pharmatic = await Pharmatic.findById(id);
+    if (!pharmatic) {
+      return res.status(404).json({ message: 'Pharmatic not found' });
+    }
 
-// Get all ratings
-const ratings = pharmatic.rate.map(r => r.rating);
+    // Get all ratings
+    const ratings = pharmatic.rate.map((r) => r.rating);
 
-if (ratings.length === 0) {
-    return res.json({ pharmaticId, finalRate: 0, message: "No ratings available" });
-}
+    if (ratings.length === 0) {
+      return res.json({
+        pharmaticId,
+        finalRate: 0,
+        message: 'No ratings available',
+      });
+    }
 
-// Calculate average rating
-const total = ratings.reduce((sum, rating) => sum + rating, 0);
-const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
+    // Calculate average rating
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
 
-res.json({ pharmaticId, finalRate: parseFloat(averageRating) });
-
-}catch(error){
-  console.error("Error calculating rating:", error);
-  res.status(500).json({ message: "Internal server error" });
-}
-}
-exports.updatePharmaticInfo = async(req,res)=>{
-  try{
-    const { fullName,
+    res.json({ pharmaticId, finalRate: parseFloat(averageRating) });
+  } catch (error) {
+    console.error('Error calculating rating:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+exports.updatePharmaticInfo = async (req, res) => {
+  try {
+    const {
+      fullName,
       email,
       password,
       city,
@@ -176,13 +180,28 @@ exports.updatePharmaticInfo = async(req,res)=>{
       address,
       phone,
       StartJob,
-      EndJob} = req.body;
-      const id = req.params.id
-      
-     await Pharmatic.updateMany({_id:new mongoose.Types.ObjectId(id)} , {$set:{fullName:fullName , email:email , password:password , city:city , region:region , address:address , phone:phone , StartJob:StartJob  ,EndJob:EndJob}}  )
-     res.status(201).json({success:true , message:'UpdatedSuccesffuly'})
+      EndJob,
+    } = req.body;
+    const id = req.params.id;
 
-  }catch(err){
+    await Pharmatic.updateMany(
+      { _id: new mongoose.Types.ObjectId(id) },
+      {
+        $set: {
+          fullName: fullName,
+          email: email,
+          password: password,
+          city: city,
+          region: region,
+          address: address,
+          phone: phone,
+          StartJob: StartJob,
+          EndJob: EndJob,
+        },
+      }
+    );
+    res.status(201).json({ success: true, message: 'UpdatedSuccesffuly' });
+  } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
@@ -192,9 +211,8 @@ exports.updatePharmaticInfo = async(req,res)=>{
     }
 
     res.status(500).json({ success: false, message: 'Internal server error' });
-  
   }
-}
+};
 
 // exports.sendImageToPhar = async (req, res) => {
 //   try {
@@ -318,7 +336,7 @@ exports.createNewDoctor = async (req, res) => {
     const rejectLink = `pharma-manager-copy-1.onrender.com/api/reject/pharmatic/${newUser._id}`;
     const mailOptions = {
       from: email,
-      to: 'nabd142025@gmail.com',
+      to: 'feadkaffoura@gmail.com',
       subject: 'Test Email with Hotmail',
       html: `
           <h3>New Registration Request</h3>
@@ -404,7 +422,9 @@ exports.loginPhar = async (req, res) => {
     res.status(200).json({ success: true, message: 'Login successful', token });
   } catch (err) {
     console.error('Error logging in:', err);
-    res.status(500).json({ success: false, message: `Internal server error ${err}` });
+    res
+      .status(500)
+      .json({ success: false, message: `Internal server error ${err}` });
   }
 };
 
@@ -437,42 +457,43 @@ exports.logoutSeek = async (req, res) => {
 };
 
 exports.sendImageToPhar = async (req, res) => {
-    try {
-        const { city, region, sickId } = req.params;
-        const pharmatics = await Pharmatic.find({ city, region });
-        if (pharmatics.length === 0) {
-            return res.status(404).json({ message: 'No pharmacists found in this area' });
-        }
-        if (!req.file || !req.file.path) {
-            return res.status(400).json({ message: 'Image upload failed' });
-        }
-        const imageUrl = req.file.path;
-        const notification = {
-            sickId,
-            imageUrl,
-            date: new Date(),
-        };
-        await Promise.all(
-            pharmatics.map(async (pharmatic) => {
-                if (!pharmatic.notifications) pharmatic.notifications = [];
-                pharmatic.notifications.push(notification);
-                await pharmatic.save();
-            })
-        );
-  
-        res.status(200).json({
-            message: 'Image sent successfully to all pharmacists in this area',
-            imageUrl,
-            city,
-            region,
-            sickId,
-        });
-  
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+  try {
+    const { city, region, sickId } = req.params;
+    const pharmatics = await Pharmatic.find({ city, region });
+    if (pharmatics.length === 0) {
+      return res
+        .status(404)
+        .json({ message: 'No pharmacists found in this area' });
     }
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ message: 'Image upload failed' });
+    }
+    const imageUrl = req.file.path;
+    const notification = {
+      sickId,
+      imageUrl,
+      date: new Date(),
+    };
+    await Promise.all(
+      pharmatics.map(async (pharmatic) => {
+        if (!pharmatic.notifications) pharmatic.notifications = [];
+        pharmatic.notifications.push(notification);
+        await pharmatic.save();
+      })
+    );
+
+    res.status(200).json({
+      message: 'Image sent successfully to all pharmacists in this area',
+      imageUrl,
+      city,
+      region,
+      sickId,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
+};
 exports.getPharmas = async (req, res) => {
   const city = req.params.city,
     region = req.params.region;
@@ -508,7 +529,6 @@ exports.getradiology = async (req, res) => {
   }
 };
 
-
 exports.sendDoctorOrder = async (req, res) => {
   try {
     const { userId, doctorId, message, replyTo } = req.body;
@@ -527,7 +547,4 @@ exports.sendDoctorOrder = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Server error', error });
   }
-}
-
-
-
+};
