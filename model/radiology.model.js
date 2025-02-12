@@ -22,7 +22,7 @@ const medicalSchemaforRadiology = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: 'rediology',
+    default: 'radiology',
   },
   city: {
     type: String,

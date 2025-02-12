@@ -143,7 +143,6 @@ router.get('/approve/radiology/:id', RadiologyController.approveRadiology);
 router.get('/reject/radiology/:id', RadiologyController.rejectRadiology);
 router.get(
   '/getradiologiesinCity/:city?/:region?',
-  checkprov.checkBlacklist,
   RadiologyController.getradiology
 );
 
