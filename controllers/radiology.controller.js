@@ -127,6 +127,7 @@ exports.getradiology = async (req, res) => {
     region = req.params.region;
   const query = { role: 'radiology', city: city, region: region };
   const findradiology = await Radiology.find(query);
+  console.log(findradiology)
   if (findradiology) {
     res.status(201).json({ status: true, findradiology });
   } else {
