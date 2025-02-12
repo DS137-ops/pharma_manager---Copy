@@ -51,7 +51,7 @@ router.post(
 router.get('/approve/doctor/:id', authController.approvePharmatic);
 router.get('/reject/doctor/:id', authController.rejectPharmatic);
 router.get(
-  '/getDoctorsinCity/:city?/:address?',
+  '/getDoctorsinCity/:city?/:region?',
   checkprov.checkBlacklist,
   authController.getDoctors
 );
@@ -142,7 +142,7 @@ router.post(
 router.get('/approve/radiology/:id', RadiologyController.approveRadiology);
 router.get('/reject/radiology/:id', RadiologyController.rejectRadiology);
 router.get(
-  '/getradiologiesinCity/:city?/:address?',
+  '/getradiologiesinCity/:city?/:region?',
   checkprov.checkBlacklist,
   RadiologyController.getradiology
 );
@@ -177,7 +177,7 @@ router.post(
 router.get('/approve/analyst/:id', analystController.approveAnalyst);
 router.get('/reject/analyst/:id', analystController.rejectAnalyst);
 router.get(
-  '/getAnalystsinCity/:city?/:address?',
+  '/getAnalystsinCity/:city?/:region?',
   checkprov.checkBlacklist,
   analystController.getAnalyst
 );

@@ -124,8 +124,8 @@ exports.rejectRadiology = async (req, res) => {
 
 exports.getradiology = async (req, res) => {
   const city = req.params.city,
-    address = req.params.address;
-  const query = { role: 'radiology', city: city, address: address };
+    region = req.params.region;
+  const query = { role: 'radiology', city: city, region: region };
   const findradiology = await Radiology.find(query);
   if (findradiology) {
     res.status(201).json({ status: true, findradiology });

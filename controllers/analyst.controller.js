@@ -123,8 +123,8 @@ exports.rejectAnalyst = async (req, res) => {
 
 exports.getAnalyst = async (req, res) => {
   const city = req.params.city,
-    address = req.params.address;
-  const query = { role: 'analyst', city: city, address: address };
+  region = req.params.region;
+  const query = { role: 'analyst', city: city, region: region };
   const findAnalyst = await Analyst.find(query);
   if (findAnalyst) {
     res.status(201).json({ status: true, findAnalyst });

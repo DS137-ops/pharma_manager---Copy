@@ -508,8 +508,8 @@ exports.getPharmas = async (req, res) => {
 };
 exports.getDoctors = async (req, res) => {
   const city = req.params.city,
-    address = req.params.address;
-  const query = { role: 'doctor', city: city, address: address };
+    region = req.params.region;
+  const query = { role: 'doctor', city: city, region: region };
   const findDoctor = await User.find(query);
   if (findDoctor) {
     res.status(201).json({ status: true, findDoctor });
@@ -517,17 +517,7 @@ exports.getDoctors = async (req, res) => {
     res.status(404).json({ status: false, message: 'No result' });
   }
 };
-exports.getradiology = async (req, res) => {
-  const city = req.params.city,
-    address = req.params.address;
-  const query = { role: 'radiology', city: city, address: address };
-  const findradiology = await User.find(query);
-  if (findradiology) {
-    res.status(201).json({ status: true, findradiology });
-  } else {
-    res.status(404).json({ status: false, message: 'No result' });
-  }
-};
+
 
 exports.sendDoctorOrder = async (req, res) => {
   try {
