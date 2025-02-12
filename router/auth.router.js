@@ -10,14 +10,18 @@ const cloudinary = require('cloudinary').v2;
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-      folder: "pharmacy_images",
-      format: async (req, file) => "png",
-      public_id: (req, file) => Date.now() + '-' + file.originalname,
+    folder: 'pharmacy_images',
+    format: async (req, file) => 'png',
+    public_id: (req, file) => Date.now() + '-' + file.originalname,
   },
 });
 const upload = multer({ storage: storage });
 //api doctor
-router.post('/send-image/:city/:region/:sickId', upload.single('image'), authController.sendImageToPhar);
+router.post(
+  '/send-image/:city/:region/:sickId',
+  upload.single('image'),
+  authController.sendImageToPhar
+);
 router.post(
   '/createNewDoctor',
   [
@@ -54,7 +58,6 @@ router.get(
 router.post('/SendDoctorOrder', authController.sendDoctorOrder);
 //End Doctor
 
-
 //Seek Section
 router.post(
   '/createNewSeek',
@@ -73,7 +76,6 @@ router.post(
   authController.logoutSeek
 );
 //End Seek
-
 
 //Pharmatic Section
 router.post(
@@ -99,7 +101,7 @@ router.post(
   authController.createNewPharmatic
 );
 router.post('/rate/:pharmaticId', authController.ratePharmatic);
-router.get('/final-rate/:pharmaticId' , authController.getFinalRate)
+router.get('/final-rate/:pharmaticId', authController.getFinalRate);
 router.get('/approve/pharmatic/:id', authController.approvePharmatic);
 router.get('/reject/pharmatic/:id', authController.rejectPharmatic);
 router.post('/signinPharmatic', checkprov.isProvved, authController.loginPhar);
@@ -146,7 +148,6 @@ router.get(
 );
 
 //End Radiology
-
 
 //Analyst Section
 
