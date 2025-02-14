@@ -6,10 +6,12 @@ const refreshTokenSchema = new mongoose.Schema({
         required:true,
         unique:true
     },
+    userRef:{
+        type:String,
+    },
     createdAt:{
         type:Date,
         default:Date.now(),
-        expires:'10min'
     }
 })
 const RefreshToken = mongoose.model('RefreshToken' , refreshTokenSchema )

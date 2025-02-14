@@ -23,6 +23,7 @@ const medicalSchema = new mongoose.Schema({
   role: {
     type: String,
     default: 'pharmatic',
+    enum:['pharmatic']
   },
   city: {
     type: String,

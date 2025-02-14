@@ -22,7 +22,8 @@ const bcrypt = require('bcryptjs')
       },
       role:{
         type:String,
-        default:'doctor'
+        default:'doctor',
+        enum:['doctor']
       },
       city:{
         type:String,

@@ -66,6 +66,7 @@ exports.createNewPharmatic = async (req, res) => {
       StartJob,
       EndJob,
     });
+
     // https://pharma-manager-copy-1.onrender.com
     await newUser.save();
     const approvalLink = `pharma-manager-copy-2.onrender.com/api/approve/pharmatic/${newUser._id}`;
@@ -90,9 +91,10 @@ exports.createNewPharmatic = async (req, res) => {
     };
     await transporter.sendMail(mailOptions);
 
-    res
-      .status(200)
-      .json({ success: true, message: 'Registration request sent to admin' });
+    res.status(200).json({
+      success: true,
+      message: 'Registration request sent to admin please wait for approved',
+    });
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {
@@ -104,46 +106,59 @@ exports.createNewPharmatic = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
 exports.ratePharmatic = async (req, res) => {
   try {
     const { pharmaticId } = req.params;
-    const { userId, rating, review } = req.body;
-    if (rating < 1 || rating > 5) {
-      return res
-        .status(400)
-        .json({ message: 'Rating must be between 1 and 5' });
+    const {userId, rating, review } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(pharmaticId)) {
+      return res.status(400).json({ message: 'Invalid Pharmacist ID format' });
     }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid User ID format' });
+    }
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
     const pharmatic = await Pharmatic.findById(pharmaticId);
     if (!pharmatic) {
       return res.status(404).json({ message: 'Pharmacist not found' });
     }
+
+    // تأكد من أن rate هو مصفوفة
+    if (!pharmatic.rate) {
+      pharmatic.rate = [];
+    }
+
+    // التحقق مما إذا كان المستخدم قد قيم سابقًا
     const existingRatingIndex = pharmatic.rate.findIndex(
-      (r) => r.userId.toString() === userId
+      (r) => r.userId.toString() === userId.toString()
     );
 
     if (existingRatingIndex !== -1) {
+      // تحديث التقييم الحالي
       pharmatic.rate[existingRatingIndex].rating = rating;
       pharmatic.rate[existingRatingIndex].review = review;
       pharmatic.rate[existingRatingIndex].date = new Date();
     } else {
+      // إضافة تقييم جديد
       pharmatic.rate.push({ userId, rating, review, date: new Date() });
     }
 
     await pharmatic.save();
 
-    res
-      .status(200)
-      .json({ message: 'Rating submitted successfully', data: pharmatic.rate });
+    res.status(200).json({ message: 'Rating submitted successfully', data: pharmatic.rate });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 exports.getFinalRate = async (req, res) => {
   try {
-    const pharmaticId = req.params.id;
-    const pharmatic = await Pharmatic.findById(id);
+    const pharmaticId = req.params.pharmaticId;
+    const pharmatic = await Pharmatic.findById(pharmaticId);
     if (!pharmatic) {
       return res.status(404).json({ message: 'Pharmatic not found' });
     }
@@ -265,7 +280,25 @@ exports.approvePharmatic = async (req, res) => {
 
     user.approved = true;
     await user.save();
-
+    const mailOptions = {
+      from: 'nabd142025@gmail.com',
+      to: user.email,
+      subject: 'الرد على طلب التسجيل',
+      html: `
+          <h3>بعد مراجعة حالة طلبك التالي:</h3>
+          <p>Name: ${user.fullName}</p>
+          <p>Email: ${user.email}</p>
+          <p>Role: ${user.newUser.role}</p>
+          <p>City: ${user.city}</p>
+          <p>Region: ${user.region}</p>
+           <p>Phone: ${user.phone}</p>
+           <p>StartJob: ${user.StartJob}</p>
+           <p>EndJob: ${user.EndJob}</p>
+          <h3>تمت الموافقة على طلبك بنجاح </h3>
+          <h5>مع أطيب التمنيات</h5>
+        `,
+    };
+    await transporter.sendMail(mailOptions);
     res
       .status(200)
       .json({ success: true, user, message: 'User approved successfully' });
@@ -280,7 +313,25 @@ exports.rejectPharmatic = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: 'User not found' });
-
+    const mailOptions = {
+      from: 'nabd142025@gmail.com',
+      to: user.email,
+      subject: 'الرد على طلب التسجيل',
+      html: `
+              <h3>بعد مراجعة حالة طلبك التالي:</h3>
+              <p>Name: ${user.fullName}</p>
+              <p>Email: ${user.email}</p>
+              <p>Role: ${user.newUser.role}</p>
+              <p>City: ${user.city}</p>
+              <p>Region: ${user.region}</p>
+               <p>Phone: ${user.phone}</p>
+               <p>StartJob: ${user.StartJob}</p>
+               <p>EndJob: ${user.EndJob}</p>
+              <h3>لم تتم الموافقة على طلبك يرجى إعادة تفقد البيانات وإرسال الطلب مجددا </h3>
+              <h5>مع أطيب التمنيات</h5>
+            `,
+    };
+    await transporter.sendMail(mailOptions);
     await Pharmatic.deleteOne({ _id: req.params.id });
 
     res
@@ -382,7 +433,7 @@ exports.createNewSeek = async (req, res) => {
     const newSeek = new Seek({ fullName, phone });
     await newSeek.save();
     const token = await jwt.sign({ id: newSeek._id }, '1001110');
-    RefreshToken.create({ token });
+    RefreshToken.create({ token, userRef: newSeek._id });
     return res.status(201).json({
       success: true,
       newSeek,
@@ -416,7 +467,7 @@ exports.loginPhar = async (req, res) => {
         .status(401)
         .json({ success: false, message: 'password is Not the same' });
     }
-    const token = await jwt.sign({ id: user._id, role: user.role }, '1001110');
+    const token = await jwt.sign({ id: user._id, role: 'user' }, '1001110');
     RefreshToken.create({ token });
 
     res.status(200).json({ success: true, message: 'Login successful', token });
@@ -432,7 +483,6 @@ exports.logoutSpec = async (req, res, next) => {
   const token =
     req.headers.authorization && req.headers.authorization.split(' ')[1];
   const { refreshToken } = req.body;
-  console.log(123);
   if (token) {
     console.log(token);
     await Blacklist.create({ token });
@@ -445,6 +495,7 @@ exports.logoutSeek = async (req, res) => {
   const id = req.params.id;
   const newSeek = await Seek.findOne({ id });
   const deletedSeek = await Seek.deleteOne({ newSeek });
+  await RefreshToken.deleteOne({ newSeek });
   if (deletedSeek) {
     return res
       .status(201)
@@ -517,4 +568,3 @@ exports.getDoctors = async (req, res) => {
     res.status(404).json({ status: false, message: 'No result' });
   }
 };
-

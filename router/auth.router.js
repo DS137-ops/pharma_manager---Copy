@@ -4,6 +4,7 @@ const analystController = require('../controllers/analyst.controller');
 const RadiologyController = require('../controllers/radiology.controller');
 const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
+const ckeckSeek = require('../middleware/seek.middleware');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
@@ -52,7 +53,7 @@ router.get('/approve/doctor/:id', authController.approvePharmatic);
 router.get('/reject/doctor/:id', authController.rejectPharmatic);
 router.get(
   '/getDoctorsinCity/:city?/:region?',
-  checkprov.checkBlacklist,
+  checkprov.checkifLoggedIn,
   authController.getDoctors
 );
 //End Doctor
@@ -71,7 +72,7 @@ router.post(
 );
 router.post(
   '/logoutSeek/:id',
-  checkprov.checkBlacklist,
+  checkprov.checkifLoggedIn,
   authController.logoutSeek
 );
 //End Seek
@@ -99,18 +100,33 @@ router.post(
   ],
   authController.createNewPharmatic
 );
-router.post('/rate/:pharmaticId', authController.ratePharmatic);
+router.post(
+  '/rate/:pharmaticId',
+  checkprov.checkifLoggedIn,
+  ckeckSeek.authenticateSeek,
+  authController.ratePharmatic
+);
 router.get('/final-rate/:pharmaticId', authController.getFinalRate);
 router.get('/approve/pharmatic/:id', authController.approvePharmatic);
 router.get('/reject/pharmatic/:id', authController.rejectPharmatic);
 router.post('/signinPharmatic', checkprov.isProvved, authController.loginPhar);
-router.post('/updatePharInfo/:id', authController.updatePharmaticInfo);
+router.post(
+  '/updatePharInfo/:id',
+  checkprov.checkifLoggedIn,
+  checkprov.isPharmatic,
+  authController.updatePharmaticInfo
+);
 router.get(
   '/getPharmainCity/:city?/:region?',
-  checkprov.checkBlacklist,
+  checkprov.checkifLoggedIn,
+  ckeckSeek.authenticateSeek,
   authController.getPharmas
 );
-router.post('/logoutSpec', checkprov.checkBlacklist, authController.logoutSpec);
+router.post(
+  '/logoutSpec',
+  checkprov.checkifLoggedIn,
+  authController.logoutSpec
+);
 //router.post('/sendMessageToPharmatic/:city?/:address?',authController.sendMessage);
 //router.get('/getMessages/:userId', authController.getMessages);
 //End Pharmatic
@@ -142,6 +158,7 @@ router.get('/approve/radiology/:id', RadiologyController.approveRadiology);
 router.get('/reject/radiology/:id', RadiologyController.rejectRadiology);
 router.get(
   '/getradiologiesinCity/:city?/:region?',
+  checkprov.checkifLoggedIn,
   RadiologyController.getradiology
 );
 
@@ -176,7 +193,7 @@ router.get('/approve/analyst/:id', analystController.approveAnalyst);
 router.get('/reject/analyst/:id', analystController.rejectAnalyst);
 router.get(
   '/getAnalystsinCity/:city?/:region?',
-  checkprov.checkBlacklist,
+  checkprov.checkifLoggedIn,
   analystController.getAnalyst
 );
 //End Analyst

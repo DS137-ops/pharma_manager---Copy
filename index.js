@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const authRouter = require('./router/auth.router');
+const adminRouter = require('./router/admin.router');
 const http = require('http');
 app.use('/uploads', express.static('uploads'));
 const mongoose = require('mongoose');
@@ -28,6 +29,7 @@ mongoose
   .catch((err) => console.error('MongoDB connection error:', err));
 
 app.use('/api', authRouter);
+app.use('/admin', adminRouter);
 server.listen(PORT, () => {
   console.log(`server is Running ${PORT}`);
 });

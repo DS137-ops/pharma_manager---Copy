@@ -8,7 +8,6 @@ const blacklistSchema = new mongoose.Schema({
     createdAt:{
         type:Date,
         default:Date.now(),
-        expires:'10min'
     }
 })
 const Blacklist = mongoose.model('Blacklist' , blacklistSchema )

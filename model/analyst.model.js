@@ -23,6 +23,7 @@ const medicalSchemaforAnalyst = new mongoose.Schema({
   role: {
     type: String,
     default: 'analyst',
+    enum:['analyst']
   },
   city: {
     type: String,

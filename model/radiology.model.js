@@ -23,6 +23,7 @@ const medicalSchemaforRadiology = new mongoose.Schema({
   role: {
     type: String,
     default: 'radiology',
+    enum:['radiology']
   },
   city: {
     type: String,
