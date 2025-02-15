@@ -67,7 +67,7 @@ exports.createNewPharmatic = async (req, res) => {
       EndJob,
     });
 
-    // https://pharma-manager-copy-1.onrender.com
+    // https://pharma-manager-copy-2.onrender.com
     await newUser.save();
     const approvalLink = `pharma-manager-copy-2.onrender.com/api/approve/pharmatic/${newUser._id}`;
     const rejectLink = `pharma-manager-copy-2.onrender.com/api/reject/pharmatic/${newUser._id}`;
@@ -693,7 +693,7 @@ exports.rateDoctor = async (req, res) => {
         .json({ message: 'Rating must be between 1 and 5' });
     }
 
-    const doctor = await Pharmatic.findById(DoctorId);
+    const doctor = await Doctor.findById(DoctorId);
     if (!doctor) {
       return res.status(404).json({ message: 'doctor not found' });
     }
