@@ -13,7 +13,7 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'doctors', // Folder name in Cloudinary
-    format: async (req, file) => 'jpeg', // File format
+    format: async (req, file) => 'png', // File format
     public_id: (req, file) => `doctor_${Date.now()}`, // Unique filename
   },
 });

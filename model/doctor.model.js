@@ -88,7 +88,6 @@ const doctorSchema = new mongoose.Schema({
     type: Array,
     default: null,
   },
-  
 });
 
 doctorSchema.methods.verifyPassword = async function (password) {

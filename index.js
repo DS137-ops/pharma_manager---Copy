@@ -19,7 +19,7 @@ app.use(xss());
 app.use(helmet());
 const { Server } = require('socket.io');
 const server = http.createServer(app);
-const localUri =      'mongodb://localhost:27017/medicalapp',
+const localUri = 'mongodb://localhost:27017/medicalapp',
   GlobalUri =
     'mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/medicalapp?retryWrites=true&w=majority&appName=Cluster0';
 

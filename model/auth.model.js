@@ -23,7 +23,7 @@ const medicalSchema = new mongoose.Schema({
   role: {
     type: String,
     default: 'pharmatic',
-    enum:['pharmatic']
+    enum: ['pharmatic'],
   },
   city: {
     type: String,
@@ -67,12 +67,12 @@ const medicalSchema = new mongoose.Schema({
   },
   notifications: [
     {
-        sickId: String,
-        imageUrl: String,
-        date: { type: Date, default: Date.now },
-    }
-]
-})
+      sickId: String,
+      imageUrl: String,
+      date: { type: Date, default: Date.now },
+    },
+  ],
+});
 medicalSchema.methods.verifyPassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };

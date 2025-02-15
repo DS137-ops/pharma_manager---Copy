@@ -5,9 +5,9 @@ const RadiologyController = require('../controllers/radiology.controller');
 const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
-const upload = require("../controllers/cloundary"); 
-const Doctor = require("../model/doctor.model")
-const Pharmacy = require("../model/auth.model")
+const upload = require('../controllers/cloundary');
+const Doctor = require('../model/doctor.model');
+const Pharmacy = require('../model/auth.model');
 //api doctor
 router.post(
   '/send-image/:city/:region/:sickId',
@@ -49,7 +49,10 @@ router.post(
   ckeckSeek.authenticateSeek,
   authController.rateDoctor
 );
-router.get('/final-rate-doctor/:doctorId', authController.getFinalRateforDoctor);
+router.get(
+  '/final-rate-doctor/:doctorId',
+  authController.getFinalRateforDoctor
+);
 router.get(
   '/getDoctorsinCity/:city?/:region?/:spec?',
   checkprov.checkifLoggedIn,
@@ -62,40 +65,44 @@ router.post(
   checkprov.isDoctor,
   authController.updateDoctorInfo
 );
-router.post("/upload-pharmacy-image/:id/:Seekid", upload.single("image"), async (req, res) => {
-  try {
-    const { id ,Seekid } = req.params;
+router.post(
+  '/upload-pharmacy-image/:id/:Seekid',
+  upload.single('image'),
+  async (req, res) => {
+    try {
+      const { id, Seekid } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid pharmacy ID" });
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid pharmacy ID' });
+      }
+
+      const pharmacy = await Pharmacy.findById(id);
+      if (!pharmacy) {
+        return res.status(404).json({ message: 'pharmacy not found' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const imageUrl = req.file.path;
+      pharmacy.notifications.push({
+        sickId: Seekid,
+        imageUrl: imageUrl,
+        date: new Date(),
+      });
+      await pharmacy.save();
+
+      res.status(200).json({
+        message: 'Image uploaded successfully',
+        data: pharmacy,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
     }
-
-    const pharmacy = await Pharmacy.findById(id);
-    if (!pharmacy) {
-      return res.status(404).json({ message: "pharmacy not found" });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
-
-    const imageUrl = req.file.path;
-    pharmacy.notifications.push({
-      sickId: Seekid,
-      imageUrl: imageUrl,
-      date: new Date()
-    });
-    await pharmacy.save();
-
-    res.status(200).json({
-      message: "Image uploaded successfully",
-      data: pharmacy,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
 //End Doctor
 
 //Seek Section
