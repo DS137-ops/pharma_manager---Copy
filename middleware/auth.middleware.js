@@ -1,4 +1,5 @@
 const User = require('../model/auth.model');
+const Doctor = require('../model/doctor.model');
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
 const Seek = require('../model/seek.model');
@@ -66,3 +67,25 @@ exports.isPharmatic = async(req,res,next)=>{
       .json({ success: false, message: 'Internal server error', error });
   }
   }
+
+  exports.isDoctor = async(req,res,next)=>{
+    try{
+      const {DoctorId} = req.params
+      if(!DoctorId){
+       return res
+        .status(404)
+        .json({success:false , message:'No access available'})
+      }
+      const isDoctor = await Doctor.find({DoctorId})
+      if(!isDoctor){
+       return res
+        .status(404)
+        .json({success:false , message:'Allow for Doctors'})
+      }
+      next()
+    }catch(error){
+      res
+        .status(500)
+        .json({ success: false, message: 'Internal server error', error });
+    }
+    }

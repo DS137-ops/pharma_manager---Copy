@@ -5,18 +5,8 @@ const RadiologyController = require('../controllers/radiology.controller');
 const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('cloudinary').v2;
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'pharmacy_images',
-    format: async (req, file) => 'png',
-    public_id: (req, file) => Date.now() + '-' + file.originalname,
-  },
-});
-const upload = multer({ storage: storage });
+const upload = require("../controllers/cloundary"); 
+
 //api doctor
 router.post(
   '/send-image/:city/:region/:sickId',
@@ -49,13 +39,58 @@ router.post(
   ],
   authController.createNewDoctor
 );
-router.get('/approve/doctor/:id', authController.approvePharmatic);
-router.get('/reject/doctor/:id', authController.rejectPharmatic);
-router.get(
-  '/getDoctorsinCity/:city?/:region?',
+router.get('/approve/doctor/:id', authController.approveDoctor);
+router.get('/reject/doctor/:id', authController.rejectDoctor);
+router.post('/signinDoctor', checkprov.isProvved, authController.loginDoctor);
+router.post(
+  '/rateDoctor/:DoctorId',
   checkprov.checkifLoggedIn,
+  ckeckSeek.authenticateSeek,
+  authController.rateDoctor
+);
+router.get('/final-rate-doctor/:doctorId', authController.getFinalRateforDoctor);
+router.get(
+  '/getDoctorsinCity/:city?/:region?/:spec?',
+  checkprov.checkifLoggedIn,
+  ckeckSeek.authenticateSeek,
   authController.getDoctors
 );
+router.post(
+  '/updateDoctorInfo/:id',
+  checkprov.checkifLoggedIn,
+  checkprov.isDoctor,
+  authController.updateDoctorInfo
+);
+router.post("/upload-doctor-image/:id", upload.single("image"), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid doctor ID" });
+    }
+
+    const doctor = await Doctor.findById(id);
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const imageUrl = req.file.path;
+    doctor.image = imageUrl;
+    await doctor.save();
+
+    res.status(200).json({
+      message: "Image uploaded successfully",
+      data: doctor,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 //End Doctor
 
 //Seek Section
@@ -101,12 +136,12 @@ router.post(
   authController.createNewPharmatic
 );
 router.post(
-  '/rate/:pharmaticId',
+  '/ratePharmacy/:pharmaticId',
   checkprov.checkifLoggedIn,
   ckeckSeek.authenticateSeek,
   authController.ratePharmatic
 );
-router.get('/final-rate/:pharmaticId', authController.getFinalRate);
+router.get('/final-rate-pharmacy/:pharmaticId', authController.getFinalRate);
 router.get('/approve/pharmatic/:id', authController.approvePharmatic);
 router.get('/reject/pharmatic/:id', authController.rejectPharmatic);
 router.post('/signinPharmatic', checkprov.isProvved, authController.loginPhar);
