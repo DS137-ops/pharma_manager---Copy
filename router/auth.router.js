@@ -6,7 +6,8 @@ const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const upload = require("../controllers/cloundary"); 
-
+const Doctor = require("../model/doctor.model")
+const Pharmacy = require("../model/auth.model")
 //api doctor
 router.post(
   '/send-image/:city/:region/:sickId',
@@ -61,17 +62,17 @@ router.post(
   checkprov.isDoctor,
   authController.updateDoctorInfo
 );
-router.post("/upload-doctor-image/:id", upload.single("image"), async (req, res) => {
+router.post("/upload-pharmacy-image/:id/:Seekid", upload.single("image"), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id ,Seekid } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid doctor ID" });
+      return res.status(400).json({ message: "Invalid pharmacy ID" });
     }
 
-    const doctor = await Doctor.findById(id);
-    if (!doctor) {
-      return res.status(404).json({ message: "Doctor not found" });
+    const pharmacy = await Pharmacy.findById(id);
+    if (!pharmacy) {
+      return res.status(404).json({ message: "pharmacy not found" });
     }
 
     if (!req.file) {
@@ -79,12 +80,16 @@ router.post("/upload-doctor-image/:id", upload.single("image"), async (req, res)
     }
 
     const imageUrl = req.file.path;
-    doctor.image = imageUrl;
-    await doctor.save();
+    pharmacy.notifications.push({
+      sickId: Seekid,
+      imageUrl: imageUrl,
+      date: new Date()
+    });
+    await pharmacy.save();
 
     res.status(200).json({
       message: "Image uploaded successfully",
-      data: doctor,
+      data: pharmacy,
     });
   } catch (error) {
     console.error(error);

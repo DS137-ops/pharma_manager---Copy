@@ -88,14 +88,14 @@ const doctorSchema = new mongoose.Schema({
     type: Array,
     default: null,
   },
-  image: { type: String },
+  
 });
 
-medicalSchema.methods.verifyPassword = async function (password) {
+doctorSchema.methods.verifyPassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };
 
-medicalSchema.pre('save', async function (next) {
+doctorSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
   try {
