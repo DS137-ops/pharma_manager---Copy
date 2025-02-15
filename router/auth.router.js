@@ -6,6 +6,7 @@ const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Pharmacy = require('../model/auth.model');
+const multer = require('multer');
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 cloudinary.config({
