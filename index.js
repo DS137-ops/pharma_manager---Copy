@@ -17,6 +17,25 @@ app.use(express.json());
 app.use(mongoSanitize());
 app.use(xss());
 app.use(helmet());
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: 'dqk8dzdoo',
+  api_key: '687124232966245',
+  api_secret: 'LhIKcexhYtHUK-bZSiIoT8jsMqc',
+});
+
+// Multer Storage Configuration
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `pharmacies/${req.params.id}`, // Creates a unique folder for each pharmacy
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+const upload = multer({ storage: storage });
 const { Server } = require('socket.io');
 const server = http.createServer(app);
 const localUri = 'mongodb://localhost:27017/medicalapp',
@@ -30,6 +49,11 @@ mongoose
 
 app.use('/api', authRouter);
 app.use('/admin', adminRouter);
+const maged = path.join(__dirname, 'assests/glew.png')
+app.post( '/uploadphoto' , async(req,res)=>{
+  await cloudinary.uploader.upload(maged)
+console.log(maged)
+})
 server.listen(PORT, () => {
   console.log(`server is Running ${PORT}`);
 });

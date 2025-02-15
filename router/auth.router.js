@@ -6,9 +6,11 @@ const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Pharmacy = require('../model/auth.model');
+const path = require('path');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
+
 cloudinary.config({
   cloud_name: 'dqk8dzdoo',
   api_key: '687124232966245',
@@ -24,6 +26,7 @@ const storage = new CloudinaryStorage({
   }),
 });
 const upload = multer({ storage: storage });
+
 //api doctor
 router.post(
   '/send-image/:city/:region/:sickId',
