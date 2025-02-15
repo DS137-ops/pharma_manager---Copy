@@ -191,7 +191,7 @@ router.post(
     }
   }
 );
-app.get("/imagesForPharmacy/:pharmacistId", async (req, res) => {
+router.get("/imagesForPharmacy/:pharmacistId", async (req, res) => {
   try {
     const {  pharmacistId } = req.params;
     const images = await Pharmacy.find({  pharmacistId }).sort({ date: -1 });

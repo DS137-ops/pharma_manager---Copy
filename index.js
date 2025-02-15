@@ -48,11 +48,7 @@ mongoose
 
 app.use('/api', authRouter);
 app.use('/admin', adminRouter);
-const maged = path.join(__dirname, 'assests/glew.png');
-app.post('/uploadphoto', async (req, res) => {
-  await cloudinary.uploader.upload(maged);
-  console.log(maged);
-});
+
 server.listen(PORT, () => {
   console.log(`server is Running ${PORT}`);
 });
