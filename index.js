@@ -36,7 +36,7 @@ const storage = new CloudinaryStorage({
   }),
 });
 const upload = multer({ storage: storage });
-const { Server } = require('socket.io');
+
 const server = http.createServer(app);
 const localUri = 'mongodb://localhost:27017/medicalapp',
   GlobalUri =
