@@ -65,13 +65,7 @@ const medicalSchema = new mongoose.Schema({
   accountDate: {
     type: Date,
   },
-  notifications: [
-    {
-      sickId: String,
-      imageUrl: String,
-      date: { type: Date, default: Date.now },
-    },
-  ],
+ 
 });
 medicalSchema.methods.verifyPassword = async function (password) {
   return bcrypt.compare(password, this.password);

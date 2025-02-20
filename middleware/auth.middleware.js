@@ -3,6 +3,8 @@ const Doctor = require('../model/doctor.model');
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
 const Seek = require('../model/seek.model');
+const jwt = require('jsonwebtoken');
+
 //if the spec is approved  Common for all specs
 exports.isProvved = async (req, res, next) => {
   try {
@@ -41,51 +43,78 @@ exports.checkifLoggedIn = async (req, res, next) => {
   const refreshtoken = await RefreshToken.findOne({ token });
   console.log(refreshtoken);
   if (!refreshtoken) {
-    return res.status(401).json({ message: ' You are Logged Out' });
+    return res.status(401).json({ message: 'You are Logged Out' });
   }
   next();
 };
 
-exports.isPharmatic = async(req,res,next)=>{
-  try{
-    const {pharmaticId} = req.params
-    if(!pharmaticId){
-     return res
-      .status(404)
-      .json({success:false , message:'No access available'})
+exports.isPharmatic = async (req, res, next) => {
+  try {
+    const { pharmaticId } = req.params;
+    if (!pharmaticId) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'No access available' });
     }
-    const isphar = await User.find({pharmaticId})
-    if(!isphar){
-     return res
-      .status(404)
-      .json({success:false , message:'Allow for pharmatics'})
+    const isphar = await User.find({ pharmaticId });
+    if (!isphar) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Allow for pharmatics' });
     }
-    next()
-  }catch(error){
+    next();
+  } catch (error) {
     res
       .status(500)
       .json({ success: false, message: 'Internal server error', error });
   }
-  }
+};
 
-  exports.isDoctor = async(req,res,next)=>{
-    try{
-      const {DoctorId} = req.params
-      if(!DoctorId){
-       return res
+exports.isDoctor = async (req, res, next) => {
+  try {
+    const DoctorId = req.params.id;
+    console.log(DoctorId);
+    if (!DoctorId) {
+      return res
         .status(404)
-        .json({success:false , message:'No access available'})
-      }
-      const isDoctor = await Doctor.find({DoctorId})
-      if(!isDoctor){
-       return res
+        .json({ success: false, message: 'No access available' });
+    }
+    const isDoctor = await Doctor.findById(DoctorId);
+    if (!isDoctor) {
+      return res
         .status(404)
-        .json({success:false , message:'Allow for Doctors'})
-      }
-      next()
-    }catch(error){
-      res
-        .status(500)
-        .json({ success: false, message: 'Internal server error', error });
+        .json({ success: false, message: 'Allow for Doctors' });
     }
+    next();
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: 'Internal server error', error });
+  }
+};
+
+exports.authMiddleware = async (req, res, next) => {
+  try {
+    const token = req.header('Authorization')?.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ message: 'يجب تسجيل الدخول' });
     }
+
+    const decoded = jwt.verify(token, '1001110');
+    const patient = await Seek.findById(decoded.id);
+
+    if (!patient) {
+      return res.status(404).json({ message: 'المريض غير موجود' });
+    }
+
+    req.user = {
+      patientId: patient._id,
+      name: patient.name,
+    };
+
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'المصادقة فشلت', error: error.message });
+  }
+};

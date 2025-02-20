@@ -52,7 +52,7 @@ exports.createNewRadiology = async (req, res) => {
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
-      subject: 'Test Email with Hotmail',
+      subject: 'طلب تسجيل جديد',
       html: `
             <h3>New Registration Request</h3>
             <p>Name: ${fullName}</p>
@@ -95,7 +95,25 @@ exports.approveRadiology = async (req, res) => {
 
     user.approved = true;
     await user.save();
-
+    const mailOptions = {
+      from: 'nabd142025@gmail.com',
+      to: user.email,
+      subject: 'الرد على طلب التسجيل',
+      html: `
+          <h3>بعد مراجعة حالة طلبك التالي:</h3>
+          <p>Name: ${user.fullName}</p>
+          <p>Email: ${user.email}</p>
+          <p>Role: ${user.role}</p>
+          <p>City: ${user.city}</p>
+          <p>Region: ${user.region}</p>
+           <p>Phone: ${user.phone}</p>
+           <p>StartJob: ${user.StartJob}</p>
+           <p>EndJob: ${user.EndJob}</p>
+          <h3>تمت الموافقة على طلبك بنجاح </h3>
+          <h5>مع أطيب التمنيات</h5>
+        `,
+    };
+    await transporter.sendMail(mailOptions);
     res
       .status(200)
       .json({ success: true, user, message: 'User approved successfully' });
@@ -111,7 +129,25 @@ exports.rejectRadiology = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: 'User not found' });
-
+        const mailOptions = {
+          from: 'nabd142025@gmail.com',
+          to: user.email,
+          subject: 'الرد على طلب التسجيل',
+          html: `
+                  <h3>بعد مراجعة حالة طلبك التالي:</h3>
+                  <p>Name: ${user.fullName}</p>
+                  <p>Email: ${user.email}</p>
+                  <p>Role: ${user.newUser.role}</p>
+                  <p>City: ${user.city}</p>
+                  <p>Region: ${user.region}</p>
+                   <p>Phone: ${user.phone}</p>
+                   <p>StartJob: ${user.StartJob}</p>
+                   <p>EndJob: ${user.EndJob}</p>
+                  <h3>لم تتم الموافقة على طلبك يرجى إعادة تفقد البيانات وإرسال الطلب مجددا </h3>
+                  <h5>مع أطيب التمنيات</h5>
+                `,
+        };
+        await transporter.sendMail(mailOptions);
     await Radiology.deleteOne({ _id: req.params.id });
 
     res
@@ -132,5 +168,162 @@ exports.getradiology = async (req, res) => {
     res.status(201).json({ status: true, findradiology });
   } else {
     res.status(404).json({ status: false, message: 'No result' });
+  }
+};
+
+
+exports.rateRadiology = async (req, res) => {
+  try {
+    const { radiologyId } = req.params;
+    const { userId, rating, review } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(radiologyId)) {
+      return res.status(400).json({ message: 'Invalid Radiologist ID format' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid User ID format' });
+    }
+    if (rating < 1 || rating > 5) {
+      return res
+        .status(400)
+        .json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    const radiology = await Radiology.findById(radiologyId);
+    if (!radiology) {
+      return res.status(404).json({ message: 'Pharmacist not found' });
+    }
+
+    // تأكد من أن rate هو مصفوفة
+    if (!radiology.rate) {
+      radiology.rate = [];
+    }
+
+    // التحقق مما إذا كان المستخدم قد قيم سابقًا
+    const existingRatingIndex = radiology.rate.findIndex(
+      (r) => r.userId.toString() === userId.toString()
+    );
+
+    if (existingRatingIndex !== -1) {
+      // تحديث التقييم الحالي
+      radiology.rate[existingRatingIndex].rating = rating;
+      radiology.rate[existingRatingIndex].review = review;
+      radiology.rate[existingRatingIndex].date = new Date();
+    } else {
+      // إضافة تقييم جديد
+      radiology.rate.push({ userId, rating, review, date: new Date() });
+    }
+
+    await radiology.save();
+
+    res
+      .status(200)
+      .json({ message: 'Rating submitted successfully', data: radiology.rate });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+exports.getFinalRateForRadiology = async (req, res) => {
+  try {
+    const radiologyId = req.params.radiologyId;
+    const radiology = await Radiology.findById(radiologyId);
+    if (!radiology) {
+      return res.status(404).json({ message: 'Radiology not found' });
+    }
+
+    // Get all ratings
+    const ratings = radiology.rate.map((r) => r.rating);
+
+    if (ratings.length === 0) {
+      return res.json({
+        radiologyId,
+        finalRate: 0,
+        message: 'No ratings available',
+      });
+    }
+
+    // Calculate average rating
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
+
+    res.json({ radiologyId, finalRate: parseFloat(averageRating) });
+  } catch (error) {
+    console.error('Error calculating rating:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.loginRadio = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await Radiology.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Email is Not Correct' });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'password is Not the same' });
+    }
+    const token = await jwt.sign({ id: user._id, role: 'radiology' }, '1001110');
+    RefreshToken.create({ token });
+
+    res.status(200).json({ success: true, message: 'Login successful', token });
+  } catch (err) {
+    console.error('Error logging in:', err);
+    res
+      .status(500)
+      .json({ success: false, message: `Internal server error ${err}` });
+  }
+};
+
+exports.updateRadiologyInfo = async (req, res) => {
+  try {
+    const {
+      fullName,
+      email,
+      password,
+      city,
+      region,
+      address,
+      phone,
+      StartJob,
+      EndJob,
+    } = req.body;
+    const id = req.params.id;
+
+    await Radiology.updateMany(
+      { _id: new mongoose.Types.ObjectId(id) },
+      {
+        $set: {
+          fullName: fullName,
+          email: email,
+          password: password,
+          city: city,
+          region: region,
+          address: address,
+          phone: phone,
+          StartJob: StartJob,
+          EndJob: EndJob,
+        },
+      }
+    );
+    res.status(201).json({ success: true, message: 'UpdatedSuccesffuly' });
+  } catch (err) {
+    console.error('Error registering user:', err);
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map((e) => e.message);
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
+    }
+
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };

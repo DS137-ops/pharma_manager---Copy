@@ -49,28 +49,36 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: [
-      'teeth',
-      'internal',
-      'baby',
-      'Gynecologist',
-      'eyes',
-      'Orthopedic',
-      'surgeon',
-      'heart',
-      'Neurologist',
-      'Urologist',
+      "أسنان",
+    "مراكز تجميل",
+    "جلدية و تناسلية",
+    "باطنه",
+    "قلب و أوعية دموية",
+    "نساء و توليد",
+    "أنف و أذن و حنجرة",
+    "عظام",
+    "مخ و أعصاب",
+    "عيون",
+    "مسالك بولية",
+    "جهاز هضمي و كبد",
+    "كلى",
+    "أمراض دم",
+    "أورام",
+    "علاج طبيعي",
+    "الطب النفسي",
+    "تخسيس و تغذية",
+    "نطق و تخاطب",
+      "جراحة عامة",
+    "جراحة تجميل ",
+    "جراحة أطفال",
+    "جراحة أوعية دموية",
+    "جراحة قلب و صدر",
+    "جراحة مخ و اعصاب و عمود فقري",
+    "جراحة اورام",
     ],
   },
-  NumberState: { type: String, required: true },
-  jobHour: {
-    Monday: { start: String, end: String },
-    Tuesday: { start: String, end: String },
-    Wednesday: { start: String, end: String },
-    Thursday: { start: String, end: String },
-    Friday: { start: String, end: String },
-    Saturday: { start: String, end: String },
-    Sunday: { start: String, end: String },
-  },
+  NumberState: { type: Number, required: true },
+
   rate: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'doctor' },
@@ -80,14 +88,16 @@ const doctorSchema = new mongoose.Schema({
     },
   ],
   approved: { type: Boolean, default: false },
-
+  doctorimage: [
+    {
+      imageUrl: String,
+      date: { type: Date, default: Date.now },
+    },
+  ],
   accountDate: {
     type: Date,
   },
-  notifications: {
-    type: Array,
-    default: null,
-  },
+  
 });
 
 doctorSchema.methods.verifyPassword = async function (password) {

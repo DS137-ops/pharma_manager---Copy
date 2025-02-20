@@ -6,19 +6,21 @@ const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Pharmacy = require('../model/auth.model');
+const Doctor = require('../model/doctor.model');
+const Radiology = require('../model/radiology.model');
 const mongoose = require('mongoose');
-const path = require('path');
+const Booking = require('../model/book.model');
+const PrescriptionRequest = require("../model/PrescriptionRequest.model");
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
-
 cloudinary.config({
   cloud_name: 'dqk8dzdoo',
   api_key: '687124232966245',
   api_secret: 'LhIKcexhYtHUK-bZSiIoT8jsMqc',
 });
 
-// Multer Storage Configuration
+// For pharmacy
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => ({
@@ -28,12 +30,26 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
+// For radiology
+const storage_for_radiology = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `radiology/${req.params.id}`, // Creates a unique folder for each pharmacy
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+const uploadForRadiology = multer({ storage: storage_for_radiology });
+
+// For doctor
+const storage_for_Doctor = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `Doctors/${req.params.id}`, // Creates a unique folder for each pharmacy
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+const uploadfordoctor = multer({ storage: storage_for_Doctor });
 //api doctor
-router.post(
-  '/send-image/:city/:region/:sickId',
-  upload.single('image'),
-  authController.sendImageToPhar
-);
 router.post(
   '/createNewDoctor',
   [
@@ -62,7 +78,7 @@ router.post(
 );
 router.get('/approve/doctor/:id', authController.approveDoctor);
 router.get('/reject/doctor/:id', authController.rejectDoctor);
-router.post('/signinDoctor', checkprov.isProvved, authController.loginDoctor);
+router.post('/signinDoctor', authController.loginDoctor);
 router.post(
   '/rateDoctor/:DoctorId',
   checkprov.checkifLoggedIn,
@@ -81,10 +97,59 @@ router.get(
 );
 router.post(
   '/updateDoctorInfo/:id',
-  checkprov.checkifLoggedIn,
+  body('phone').notEmpty().withMessage('phone is required'),
   checkprov.isDoctor,
+  checkprov.checkifLoggedIn,
   authController.updateDoctorInfo
 );
+router.post(
+  '/upload-doctor-photo/:id',
+  checkprov.checkifLoggedIn,
+  uploadfordoctor.single('image'),
+  async (req, res) => {
+    try {
+      const DoctorId = req.params.id;
+      if (!mongoose.Types.ObjectId.isValid(DoctorId)) {
+        return res.status(400).json({ message: 'Invalid pharmacy ID' });
+      }
+      const TheDoctor = await Doctor.findById(DoctorId);
+      if (!TheDoctor) {
+        return res.status(404).json({ message: 'Doctor not found' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const image = req.file.path;
+      TheDoctor.doctorimage.push({
+        imageUrl: image,
+        date: new Date(),
+      });
+      await TheDoctor.save();
+      res.status(200).json({
+        message: 'Image uploaded successfully',
+        data: TheDoctor,
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Internal server', error });
+    }
+  }
+);
+
+router.get('/get-doctor-image/:id', async (req, res) => {
+  try {
+    const  doctorId  = req.params.id
+    const doctor = await Doctor.findById(doctorId);
+    const notify = doctor.doctorimage
+    
+    res.status(201).json({ success: true, notify });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
 //End Doctor
 
 //Seek Section
@@ -104,6 +169,7 @@ router.post(
   checkprov.checkifLoggedIn,
   authController.logoutSeek
 );
+
 //End Seek
 
 //Pharmatic Section
@@ -151,54 +217,112 @@ router.get(
   ckeckSeek.authenticateSeek,
   authController.getPharmas
 );
-router.post(
-  '/upload-image-for-pharmacy/:id/:Seekid',
-  upload.single('image'),
-  async (req, res) => {
-    try {
-      const { id, Seekid } = req.params;
-
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ message: 'Invalid pharmacy ID' });
-      }
-
-      const pharmacy = await Pharmacy.findById(id);
-      if (!pharmacy) {
-        return res.status(404).json({ message: 'Pharmacy not found' });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded' });
-      }
-
-      const imageUrl = req.file.path; // Cloudinary URL
-
-      pharmacy.notifications.push({
-        sickId: Seekid,
-        imageUrl: imageUrl,
-        date: new Date(),
-      });
-
-      await pharmacy.save();
-
-      res.status(200).json({
-        message: 'Image uploaded successfully',
-        data: pharmacy,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error' });
+router.post('/upload-image-for-pharmacy/:Seekid/:city/:region',upload.single('image'),async(req,res)=>{
+  try{
+    const {  Seekid , city , region } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(Seekid)) {
+               return res.status(400).json({ message: 'Invalid Seek ID' });
     }
+    if (!req.file) return res.status(400).json({ message: "يرجى رفع صورة" });
+    const imageUrl = req.file.path;
+    const prescription = new PrescriptionRequest({
+      Seekid,
+      city,
+      region,
+      imageUrl,
+    });
+    await prescription.save();
+    res.status(201).json({ message: "تم إرسال الروشتة بنجاح إلى الصيادلة", prescription });
+
+  }catch(error){
+    res.status(500).json({ error:error });
   }
-);
-router.get("/imagesForPharmacy/:pharmacistId", async (req, res) => {
+})
+router.post("/prescriptions/:id/respond", async (req, res) => {
   try {
-    const {  pharmacistId } = req.params;
-    const images = await Pharmacy.find({  pharmacistId }).sort({ date: -1 });
-    if(!images){
-      res.status(404).json({success:false ,message:"no images" })
-    }
-    res.status(201).json({success:true ,images});
+    const { pharmacistId, price } = req.body;
+    const prescription = await PrescriptionRequest.findById(req.params.id);
+
+    if (!prescription) return res.status(404).json({ message: "طلب الروشتة غير موجود" });
+
+    // إضافة رد الصيدلي
+    prescription.responses.push({
+      pharmacistId,
+      price,
+      status: "pending",
+    });
+
+    await prescription.save();
+
+    res.json({ message: "تم إرسال السعر بنجاح", prescription });
+  } catch (error) {
+    res.status(500).json({ error: "حدث خطأ أثناء إرسال السعر" });
+  }
+});
+router.get("/prescriptions/patient/:patientId", async (req, res) => {
+  try {
+    const prescriptions = await PrescriptionRequest.find({ Seekid: req.params.patientId }).populate("responses.pharmacistId");
+    res.json({prescriptions});
+  } catch (error) {
+    
+    res.status(500).json({ message: "حدث خطأ أثناء جلب الطلبات"  , error});
+  }
+});
+router.get("/prescriptions/pharmacist/:pharmacistId", async (req, res) => {
+  try {
+    const prescriptions = await PrescriptionRequest.find({ "responses.pharmacistId": req.params.pharmacistId });
+    res.json(prescriptions);
+  } catch (error) {
+    res.status(500).json({ error: "حدث خطأ أثناء جلب الطلبات" });
+  }
+});
+
+// router.post(
+//   '/upload-image-for-pharmacy/:id/:Seekid',
+//   upload.single('image'),
+//   async (req, res) => {
+//     try {
+//       const { id, Seekid } = req.params;
+
+//       if (!mongoose.Types.ObjectId.isValid(id)) {
+//         return res.status(400).json({ message: 'Invalid pharmacy ID' });
+//       }
+
+//       const pharmacy = await Pharmacy.findById(id);
+//       if (!pharmacy) {
+//         return res.status(404).json({ message: 'Pharmacy not found' });
+//       }
+
+//       if (!req.file) {
+//         return res.status(400).json({ message: 'No file uploaded' });
+//       }
+
+//       const imageUrl = req.file.path; // Cloudinary URL
+
+//       await pharmacy.notifications.push({
+//         sickId: Seekid,
+//         imageUrl: imageUrl,
+//         date: new Date(),
+//       });
+
+//       await pharmacy.save();
+
+//       res.status(200).json({
+//         message: 'Image uploaded successfully',
+//         data: pharmacy,
+//       });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ message: 'Server error' });
+//     }
+//   }
+// );
+router.get('/imagesForPharmacy/:pharmacistId', async (req, res) => {
+  try {
+    const { pharmacistId } = req.params;
+    const pharmacy = await Pharmacy.findById(pharmacistId);
+    const notify = [pharmacy.notifications];
+    res.status(201).json({ success: true, notify });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -243,7 +367,69 @@ router.get(
   checkprov.checkifLoggedIn,
   RadiologyController.getradiology
 );
+router.post(
+  '/rateRadiology/:radiologyId',
+  checkprov.checkifLoggedIn,
+  ckeckSeek.authenticateSeek,
+  RadiologyController.rateRadiology
+);
+router.get('/final-rate-radiology/:radiologyId', RadiologyController.getFinalRateForRadiology);
+router.post('/signinRadiology', checkprov.isProvved, RadiologyController.loginRadio);
+router.post(
+  '/updateRadioInfo/:id',
+  checkprov.checkifLoggedIn,
+  RadiologyController.updateRadiologyInfo
+);
+router.post(
+  '/upload-image-for-radiology/:id/:Seekid',
+  uploadForRadiology.single('image'),
+  async (req, res) => {
+    try {
+      const { id, Seekid } = req.params;
 
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid radiology ID' });
+      }
+
+      const radiology = await Radiology.findById(id);
+      if (!radiology) {
+        return res.status(404).json({ message: 'radiology not found' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const imageUrl = req.file.path; // Cloudinary URL
+
+      await radiology.notifications.push({
+        sickId: Seekid,
+        imageUrl: imageUrl,
+        date: new Date(),
+      });
+
+      await radiology.save();
+
+      res.status(200).json({
+        message: 'Image uploaded successfully',
+        data: radiology,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
+router.get('/imagesForRadiology/:radiologyId', async (req, res) => {
+  try {
+    const { radiologyId } = req.params;
+    const radiology = await Pharmacy.findById(radiologyId);
+    const notify = [radiology.notifications];
+    res.status(201).json({ success: true, notify });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 //End Radiology
 
 //Analyst Section

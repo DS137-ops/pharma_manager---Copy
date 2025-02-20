@@ -7,9 +7,26 @@ const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
-const cloudinary = require("cloudinary").v2;
-const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
+function generateTimeSlots(start, end) {
+  const slots = [];
+  let [sh, sm] = start.split(':').map(Number);
+  let [eh, em] = end.split(':').map(Number);
+
+  while (sh < eh || (sh === eh && sm < em)) {
+    let hour = sh.toString().padStart(2, '0');
+    let minute = sm.toString().padStart(2, '0');
+    slots.push(`${hour}:${minute}`);
+
+    sm += 30;
+    if (sm >= 60) {
+      sm -= 60;
+      sh++;
+    }
+  }
+
+  return slots;
+}
 
 //   cloud_name: 'dqk8dzdoo',
 //   api_key: '687124232966245',
@@ -292,7 +309,7 @@ exports.approvePharmatic = async (req, res) => {
           <h3>بعد مراجعة حالة طلبك التالي:</h3>
           <p>Name: ${user.fullName}</p>
           <p>Email: ${user.email}</p>
-          <p>Role: ${user.newUser.role}</p>
+          <p>Role: ${user.role}</p>
           <p>City: ${user.city}</p>
           <p>Region: ${user.region}</p>
            <p>Phone: ${user.phone}</p>
@@ -358,17 +375,15 @@ exports.createNewDoctor = async (req, res) => {
     phone,
     specilizate,
     NumberState,
-    jobHour,
-    rate,
-    StartJob,
-    EndJob,
   } = req.body;
+  
   try {
     const existingUser = await Doctor.findOne({ email });
     if (existingUser) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'Email already exists' });
+      return res.status(409).json({
+        success: false,
+        message: `Email already exists`,
+      });
     }
 
     newUser = new Doctor({
@@ -381,14 +396,11 @@ exports.createNewDoctor = async (req, res) => {
       phone,
       specilizate,
       NumberState,
-      jobHour,
-      rate,
-      StartJob,
-      EndJob,
     });
+    //pharma-manager-copy-2.onrender.com
     await newUser.save();
-    const approvalLink = `pharma-manager-copy-2.onrender.com/api/approve/doctor/${newUser._id}`;
-    const rejectLink = `pharma-manager-copy-2.onrender.com/api/reject/doctor/${newUser._id}`;
+    const approvalLink = `http://localhost:8080/api/approve/doctor/${newUser._id}`;
+    const rejectLink = `http://localhost:8080/api/reject/doctor/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
@@ -401,8 +413,6 @@ exports.createNewDoctor = async (req, res) => {
           <p>City: ${city}</p>
           <p>Region: ${region}</p>
            <p>Phone: ${phone}</p>
-           <p>StartJob: ${StartJob}</p>
-           <p>EndJob: ${EndJob}</p>
           <p>Click below to approve or reject:</p>
           <a href="${approvalLink}" style="color:green">Approve</a> | <a href="${rejectLink}" style="color:red">Reject</a>
         `,
@@ -411,7 +421,7 @@ exports.createNewDoctor = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: true, message: 'Registration request sent to admin' });
+      .json({ success: true, message: `Registration request sent to admin` });
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {
@@ -437,18 +447,16 @@ exports.approveDoctor = async (req, res) => {
     await user.save();
     const mailOptions = {
       from: 'nabd142025@gmail.com',
-      to: user.email,
+      to:user.email,
       subject: 'الرد على طلب التسجيل',
       html: `
           <h3>بعد مراجعة حالة طلبك التالي:</h3>
           <p>Name: ${user.fullName}</p>
           <p>Email: ${user.email}</p>
-          <p>Role: ${user.newUser.role}</p>
+          <p>Role: ${user.role}</p>
           <p>City: ${user.city}</p>
           <p>Region: ${user.region}</p>
            <p>Phone: ${user.phone}</p>
-           <p>StartJob: ${user.StartJob}</p>
-           <p>EndJob: ${user.EndJob}</p>
           <h3>تمت الموافقة على طلبك بنجاح </h3>
           <h5>مع أطيب التمنيات</h5>
         `,
@@ -458,7 +466,9 @@ exports.approveDoctor = async (req, res) => {
       .status(200)
       .json({ success: true, user, message: 'User approved successfully' });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    res
+      .status(500)
+      .json({ success: false, message: `Internal server error ${err}` });
   }
 };
 exports.rejectDoctor = async (req, res) => {
@@ -475,13 +485,11 @@ exports.rejectDoctor = async (req, res) => {
       html: `
               <h3>بعد مراجعة حالة طلبك التالي:</h3>
               <p>Name: ${user.fullName}</p>
-              <p>Email: ${user.email}</p>
-              <p>Role: ${user.newUser.role}</p>
-              <p>City: ${user.city}</p>
-              <p>Region: ${user.region}</p>
-               <p>Phone: ${user.phone}</p>
-               <p>StartJob: ${user.StartJob}</p>
-               <p>EndJob: ${user.EndJob}</p>
+          <p>Email: ${user.email}</p>
+          <p>Role: ${user.role}</p>
+          <p>City: ${user.city}</p>
+          <p>Region: ${user.region}</p>
+           <p>Phone: ${user.phone}</p>
               <h3>لم تتم الموافقة على طلبك يرجى إعادة تفقد البيانات وإرسال الطلب مجددا </h3>
               <h5>مع أطيب التمنيات</h5>
             `,
@@ -543,7 +551,7 @@ exports.loginPhar = async (req, res) => {
         .status(401)
         .json({ success: false, message: 'password is Not the same' });
     }
-    const token = await jwt.sign({ id: user._id, role: 'user' }, '1001110');
+    const token = await jwt.sign({ id: user._id, role: 'pharmatic' }, '1001110');
     RefreshToken.create({ token });
 
     res.status(200).json({ success: true, message: 'Login successful', token });
@@ -583,44 +591,6 @@ exports.logoutSeek = async (req, res) => {
   }
 };
 
-exports.sendImageToPhar = async (req, res) => {
-  try {
-    const { city, region, sickId } = req.params;
-    const pharmatics = await Pharmatic.find({ city, region });
-    if (pharmatics.length === 0) {
-      return res
-        .status(404)
-        .json({ message: 'No pharmacists found in this area' });
-    }
-    if (!req.file || !req.file.path) {
-      return res.status(400).json({ message: 'Image upload failed' });
-    }
-    const imageUrl = req.file.path;
-    const notification = {
-      sickId,
-      imageUrl,
-      date: new Date(),
-    };
-    await Promise.all(
-      pharmatics.map(async (pharmatic) => {
-        if (!pharmatic.notifications) pharmatic.notifications = [];
-        pharmatic.notifications.push(notification);
-        await pharmatic.save();
-      })
-    );
-
-    res.status(200).json({
-      message: 'Image sent successfully to all pharmacists in this area',
-      imageUrl,
-      city,
-      region,
-      sickId,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
 exports.getPharmas = async (req, res) => {
   const city = req.params.city,
     region = req.params.region;
@@ -637,10 +607,8 @@ exports.getDoctors = async (req, res) => {
   const city = req.params.city,
     region = req.params.region,
     spec = req.params.spec;
-  const query = { role: 'doctor', city: city, region: region };
-  if (spec && spec !== null) {
-    query.spec = spec;
-  }
+  const query = {  city: city, region: region , specilizate:spec };
+  
   const findDoctor = await Doctor.find(query);
   if (findDoctor) {
     res.status(201).json({ status: true, findDoctor });
@@ -664,10 +632,16 @@ exports.loginDoctor = async (req, res) => {
         .status(401)
         .json({ success: false, message: 'password is Not the same' });
     }
+  
+ 
     const token = await jwt.sign({ id: user._id, role: 'doctor' }, '1001110');
     RefreshToken.create({ token });
 
-    res.status(200).json({ success: true, message: 'Login successful', token });
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token
+        });
   } catch (err) {
     console.error('Error logging in:', err);
     res
@@ -692,7 +666,6 @@ exports.rateDoctor = async (req, res) => {
         .status(400)
         .json({ message: 'Rating must be between 1 and 5' });
     }
-
     const doctor = await Doctor.findById(DoctorId);
     if (!doctor) {
       return res.status(404).json({ message: 'doctor not found' });
@@ -732,7 +705,7 @@ exports.rateDoctor = async (req, res) => {
 exports.getFinalRateforDoctor = async (req, res) => {
   try {
     const doctorId = req.params.doctorId;
-    const doctor = await Pharmatic.findById(doctorId);
+    const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
@@ -759,12 +732,10 @@ exports.getFinalRateforDoctor = async (req, res) => {
   }
 };
 
-
 exports.updateDoctorInfo = async (req, res) => {
   try {
     const {
       fullName,
-      email,
       password,
       city,
       region,
@@ -772,28 +743,37 @@ exports.updateDoctorInfo = async (req, res) => {
       phone,
       specilizate,
       NumberState,
-      jobHour,
-      StartJob,
-      EndJob,
+      schedule,
     } = req.body;
     const id = req.params.id;
-
+    const scheduleSlots = {};
+    if (schedule && typeof schedule === 'object') {
+     
+      Object.entries(schedule).forEach(([day, times]) => {
+        if (times.startTime && times.endTime) {
+          scheduleSlots[day] = generateTimeSlots(
+            times.startTime,
+            times.endTime
+          );
+        } else {
+          scheduleSlots[day] = [];
+        }
+      });
+    }
     await Doctor.updateMany(
       { _id: new mongoose.Types.ObjectId(id) },
       {
         $set: {
           fullName,
-    email,
-    password,
-    city,
-    region,
-    address,
-    phone,
-    specilizate,
-    NumberState,
-    jobHour,
-    StartJob,
-    EndJob,
+          password,
+          city,
+          region,
+          address,
+          phone,
+          specilizate,
+          NumberState,
+          schedule,
+          scheduleSlots,
         },
       }
     );

@@ -18,6 +18,8 @@ app.use(mongoSanitize());
 app.use(xss());
 app.use(helmet());
 const multer = require('multer');
+const Booking = require("./model/book.model");
+const moment = require("moment");
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
@@ -42,12 +44,18 @@ const localUri = 'mongodb://localhost:27017/medicalapp',
   GlobalUri =
     'mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/medicalapp?retryWrites=true&w=majority&appName=Cluster0';
 mongoose
-  .connect(GlobalUri)
+  .connect(localUri)
   .then(() => console.log('MongoDB connected!'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
 app.use('/api', authRouter);
 app.use('/admin', adminRouter);
+
+
+
+
+require("./utils");
+
 
 server.listen(PORT, () => {
   console.log(`server is Running ${PORT}`);
