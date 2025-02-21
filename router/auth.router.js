@@ -221,7 +221,7 @@ router.post("/EmailisUsed" , async(req,res)=>{
   if(!email){
     res.status(404).json({success:false , message:"email Not Found"})
   }
-  const isExist =await Pharmatic.find({email})
+  const isExist =await Pharmatic.findOne({email})
   if(isExist){
     res.status(400).json({success:false , message:"email is used"})
   }
