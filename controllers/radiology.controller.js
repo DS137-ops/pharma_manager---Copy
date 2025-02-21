@@ -137,7 +137,7 @@ exports.rejectRadiology = async (req, res) => {
                   <h3>بعد مراجعة حالة طلبك التالي:</h3>
                   <p>Name: ${user.fullName}</p>
                   <p>Email: ${user.email}</p>
-                  <p>Role: ${user.newUser.role}</p>
+                  <p>Role: ${user.role}</p>
                   <p>City: ${user.city}</p>
                   <p>Region: ${user.region}</p>
                    <p>Phone: ${user.phone}</p>

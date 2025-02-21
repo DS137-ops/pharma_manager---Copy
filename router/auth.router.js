@@ -78,19 +78,7 @@ router.post(
   ],
   authController.createNewDoctor
 );
-router.post("/EmailisUsedForDoctor" , async(req,res)=>{
-  const email = req.body.email
-  if(!email){
-    res.status(404).json({success:false , message:"email Not Found"})
-  }
-  const isExist =await Doctor.find({email:email})
-  if(isExist){
-    res.status(400).json({success:false , message:"email is used"})
-  }
-  res.status(201).json({success:true , message:"email is not used" })
 
-
-})
 router.get("/approve/doctor/:id", authController.approveDoctor);
 router.get("/reject/doctor/:id", authController.rejectDoctor);
 router.post("/signinDoctor", authController.loginDoctor);
@@ -216,17 +204,19 @@ router.post(
   
   authController.createNewPharmatic
 );
-router.post("/EmailisUsed" , async(req,res)=>{
+router.post("/isApprovedPharmatic" , async(req,res)=>{
   const email = req.body.email
   if(!email){
-    res.status(404).json({success:false , message:"email Not Found"})
+    res.status(404).json({success:false , message:"Email Not found"})
   }
-  const isExist =await Pharmatic.findOne({email})
-  if(isExist){
-    res.status(400).json({success:false , message:"email is used"})
+  const user = Pharmatic.findOne({email})
+  if(!user){
+    res.status(404).json({success:false , message:"User Not found"})
   }
-  res.status(201).json({success:true , message:"email is not used" })
-
+  if(!user.approved){
+    res.status(400).json({success:false , message:"user is not approved yet!"})
+  }
+  res.status(201).json({success:true , message:"user is  approved sucessfully!"})
 
 })
 router.post(
@@ -403,19 +393,7 @@ router.post(
   ],
   RadiologyController.createNewRadiology
 );
-router.post("/EmailisUsedForRadiology" , async(req,res)=>{
-  const email = req.body.email
-  if(!email){
-    res.status(404).json({success:false , message:"email Not Found"})
-  }
-  const isExist =await Radiology.find({email:email})
-  if(isExist){
-    res.status(400).json({success:false , message:"email is used"})
-  }
-  res.status(201).json({success:true , message:"email is not used" })
 
-
-})
 router.get("/approve/radiology/:id", RadiologyController.approveRadiology);
 router.get("/reject/radiology/:id", RadiologyController.rejectRadiology);
 router.get(
@@ -519,19 +497,7 @@ router.post(
   ],
   analystController.createNewAnalyst
 );
-router.post("/EmailisUsedForAnalyst" , async(req,res)=>{
-  const email = req.body.email
-  if(!email){
-    res.status(404).json({success:false , message:"email Not Found"})
-  }
-  const isExist =await Analyst.find({email:email})
-  if(isExist){
-    res.status(400).json({success:false , message:"email is used"})
-  }
-  res.status(201).json({success:true , message:"email is not used" })
 
-
-})
 router.get("/approve/analyst/:id", analystController.approveAnalyst);
 router.get("/reject/analyst/:id", analystController.rejectAnalyst);
 router.get(
