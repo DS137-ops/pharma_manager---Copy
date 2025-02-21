@@ -86,8 +86,8 @@ exports.createNewPharmatic = async (req, res) => {
 
     // https://pharma-manager-copy-2.onrender.com
     await newUser.save();
-    const approvalLink = `pharma-manager-copy-2.onrender.com/api/approve/pharmatic/${newUser._id}`;
-    const rejectLink = `pharma-manager-copy-2.onrender.com/api/reject/pharmatic/${newUser._id}`;
+    const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/approve/pharmatic/${newUser._id}`;
+    const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/reject/pharmatic/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: "feadkaffoura@gmail.com",
@@ -415,8 +415,8 @@ exports.createNewDoctor = async (req, res) => {
     });
     //pharma-manager-copy-2.onrender.com
     await newUser.save();
-    const approvalLink = `http://localhost:8080/api/approve/doctor/${newUser._id}`;
-    const rejectLink = `http://localhost:8080/api/reject/doctor/${newUser._id}`;
+    const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/approve/doctor/${newUser._id}`;
+    const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/reject/doctor/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: "feadkaffoura@gmail.com",

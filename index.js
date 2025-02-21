@@ -37,14 +37,12 @@ const storage = new CloudinaryStorage({
     allowed_formats: ["jpg", "png", "jpeg"],
   }),
 });
-const upload = multer({ storage: storage });
-
 const server = http.createServer(app);
 const localUri = "mongodb://localhost:27017/medicalapp",
   GlobalUri =
     "mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/medicalapp?retryWrites=true&w=majority&appName=Cluster0";
 mongoose
-  .connect(localUri)
+  .connect(GlobalUri)
   .then(() => console.log("MongoDB connected!"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
