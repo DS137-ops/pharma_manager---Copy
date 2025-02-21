@@ -9,6 +9,7 @@ const Pharmacy = require("../model/auth.model");
 const Doctor = require("../model/doctor.model");
 const Pharmatic = require("../model/auth.model");
 const Radiology = require("../model/radiology.model");
+const Analyst = require("../model/analyst.model");
 const mongoose = require("mongoose");
 const Booking = require("../model/book.model");
 const PrescriptionRequest = require("../model/PrescriptionRequest.model");
@@ -77,7 +78,7 @@ router.post(
   ],
   authController.createNewDoctor
 );
-router.post("/EmailisUsed" , async(req,res)=>{
+router.post("/EmailisUsedForDoctor" , async(req,res)=>{
   const email = req.body.email
   if(!email){
     res.status(404).json({success:false , message:"email Not Found"})
@@ -402,6 +403,19 @@ router.post(
   ],
   RadiologyController.createNewRadiology
 );
+router.post("/EmailisUsedForRadiology" , async(req,res)=>{
+  const email = req.body.email
+  if(!email){
+    res.status(404).json({success:false , message:"email Not Found"})
+  }
+  const isExist =await Radiology.find({email:email})
+  if(isExist){
+    res.status(400).json({success:false , message:"email is used"})
+  }
+  res.status(201).json({success:true , message:"email is not used" })
+
+
+})
 router.get("/approve/radiology/:id", RadiologyController.approveRadiology);
 router.get("/reject/radiology/:id", RadiologyController.rejectRadiology);
 router.get(
@@ -505,7 +519,19 @@ router.post(
   ],
   analystController.createNewAnalyst
 );
+router.post("/EmailisUsedForAnalyst" , async(req,res)=>{
+  const email = req.body.email
+  if(!email){
+    res.status(404).json({success:false , message:"email Not Found"})
+  }
+  const isExist =await Analyst.find({email:email})
+  if(isExist){
+    res.status(400).json({success:false , message:"email is used"})
+  }
+  res.status(201).json({success:true , message:"email is not used" })
 
+
+})
 router.get("/approve/analyst/:id", analystController.approveAnalyst);
 router.get("/reject/analyst/:id", analystController.rejectAnalyst);
 router.get(
