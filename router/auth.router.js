@@ -7,6 +7,7 @@ const checkprov = require("../middleware/auth.middleware");
 const ckeckSeek = require("../middleware/seek.middleware");
 const Pharmacy = require("../model/auth.model");
 const Doctor = require("../model/doctor.model");
+const Pharmatic = require("../model/auth.model");
 const Radiology = require("../model/radiology.model");
 const mongoose = require("mongoose");
 const Booking = require("../model/book.model");
@@ -76,6 +77,19 @@ router.post(
   ],
   authController.createNewDoctor
 );
+router.post("/EmailisUsed" , async(req,res)=>{
+  const email = req.body.email
+  if(!email){
+    res.status(404).json({success:false , message:"email Not Found"})
+  }
+  const isExist =await Doctor.find({email:email})
+  if(isExist){
+    res.status(400).json({success:false , message:"email is used"})
+  }
+  res.status(201).json({success:true , message:"email is not used" })
+
+
+})
 router.get("/approve/doctor/:id", authController.approveDoctor);
 router.get("/reject/doctor/:id", authController.rejectDoctor);
 router.post("/signinDoctor", authController.loginDoctor);
@@ -198,8 +212,22 @@ router.post(
     body("city").trim().notEmpty().withMessage("City is required"),
     body("phone").notEmpty().withMessage("phone is required"),
   ],
+  
   authController.createNewPharmatic
 );
+router.post("/EmailisUsed" , async(req,res)=>{
+  const email = req.body.email
+  if(!email){
+    res.status(404).json({success:false , message:"email Not Found"})
+  }
+  const isExist =await Pharmatic.find({email:email})
+  if(isExist){
+    res.status(400).json({success:false , message:"email is used"})
+  }
+  res.status(201).json({success:true , message:"email is not used" })
+
+
+})
 router.post(
   "/ratePharmacy/:pharmaticId",
   checkprov.checkifLoggedIn,
