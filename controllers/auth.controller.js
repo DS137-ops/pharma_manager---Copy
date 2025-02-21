@@ -1,21 +1,21 @@
-const Pharmatic = require("../model/auth.model");
-const Seek = require("../model/seek.model");
-const Doctor = require("../model/doctor.model");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const mongoose = require("mongoose");
-var nodemailer = require("nodemailer");
-const Blacklist = require("../model/Blacklist.model");
-const RefreshToken = require("../model/RefreshToken.model");
+const Pharmatic = require('../model/auth.model');
+const Seek = require('../model/seek.model');
+const Doctor = require('../model/doctor.model');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+var nodemailer = require('nodemailer');
+const Blacklist = require('../model/Blacklist.model');
+const RefreshToken = require('../model/RefreshToken.model');
 
 function generateTimeSlots(start, end) {
   const slots = [];
-  let [sh, sm] = start.split(":").map(Number);
-  let [eh, em] = end.split(":").map(Number);
+  let [sh, sm] = start.split(':').map(Number);
+  let [eh, em] = end.split(':').map(Number);
 
   while (sh < eh || (sh === eh && sm < em)) {
-    let hour = sh.toString().padStart(2, "0");
-    let minute = sm.toString().padStart(2, "0");
+    let hour = sh.toString().padStart(2, '0');
+    let minute = sm.toString().padStart(2, '0');
     slots.push(`${hour}:${minute}`);
 
     sm += 30;
@@ -45,10 +45,10 @@ function generateTimeSlots(start, end) {
 // });
 //const upload = multer({ storage: storage });
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: 'gmail',
   auth: {
-    user: "nabd142025@gmail.com",
-    pass: "nzxm wyky hapd xqsu", // firaskingsalha67  CX6EQ-VQ2H4-JKC2H-JLUFY-A5NYA   cpzz lnvy ldus tczj
+    user: 'nabd142025@gmail.com',
+    pass: 'nzxm wyky hapd xqsu', // firaskingsalha67  CX6EQ-VQ2H4-JKC2H-JLUFY-A5NYA   cpzz lnvy ldus tczj
   },
 });
 //sign pharmatic
@@ -69,7 +69,7 @@ exports.createNewPharmatic = async (req, res) => {
     if (existingUser) {
       return res
         .status(409)
-        .json({ success: false, message: "Email already exists" });
+        .json({ success: false, message: 'Email already exists' });
     }
 
     newUser = new Pharmatic({
@@ -90,8 +90,8 @@ exports.createNewPharmatic = async (req, res) => {
     const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/reject/pharmatic/${newUser._id}`;
     const mailOptions = {
       from: email,
-      to: "feadkaffoura@gmail.com",
-      subject: "Test Email with Hotmail",
+      to: 'feadkaffoura@gmail.com',
+      subject: 'Test Email with Hotmail',
       html: `
           <h3>New Registration Request</h3>
           <p>Name: ${fullName}</p>
@@ -110,17 +110,17 @@ exports.createNewPharmatic = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Registration request sent to admin please wait for approved",
+      message: 'Registration request sent to admin please wait for approved',
     });
   } catch (err) {
-    console.error("Error registering user:", err);
-    if (err.name === "ValidationError") {
+    console.error('Error registering user:', err);
+    if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
       return res
         .status(400)
-        .json({ success: false, message: errors.join(", ") });
+        .json({ success: false, message: errors.join(', ') });
     }
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 exports.ratePharmatic = async (req, res) => {
@@ -129,20 +129,20 @@ exports.ratePharmatic = async (req, res) => {
     const { userId, rating, review } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(pharmaticId)) {
-      return res.status(400).json({ message: "Invalid Pharmacist ID format" });
+      return res.status(400).json({ message: 'Invalid Pharmacist ID format' });
     }
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID format" });
+      return res.status(400).json({ message: 'Invalid User ID format' });
     }
     if (rating < 1 || rating > 5) {
       return res
         .status(400)
-        .json({ message: "Rating must be between 1 and 5" });
+        .json({ message: 'Rating must be between 1 and 5' });
     }
 
     const pharmatic = await Pharmatic.findById(pharmaticId);
     if (!pharmatic) {
-      return res.status(404).json({ message: "Pharmacist not found" });
+      return res.status(404).json({ message: 'Pharmacist not found' });
     }
 
     // تأكد من أن rate هو مصفوفة
@@ -169,10 +169,10 @@ exports.ratePharmatic = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "Rating submitted successfully", data: pharmatic.rate });
+      .json({ message: 'Rating submitted successfully', data: pharmatic.rate });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -181,7 +181,7 @@ exports.getFinalRate = async (req, res) => {
     const pharmaticId = req.params.pharmaticId;
     const pharmatic = await Pharmatic.findById(pharmaticId);
     if (!pharmatic) {
-      return res.status(404).json({ message: "Pharmatic not found" });
+      return res.status(404).json({ message: 'Pharmatic not found' });
     }
 
     // Get all ratings
@@ -191,7 +191,7 @@ exports.getFinalRate = async (req, res) => {
       return res.json({
         pharmaticId,
         finalRate: 0,
-        message: "No ratings available",
+        message: 'No ratings available',
       });
     }
 
@@ -201,8 +201,8 @@ exports.getFinalRate = async (req, res) => {
 
     res.json({ pharmaticId, finalRate: parseFloat(averageRating) });
   } catch (error) {
-    console.error("Error calculating rating:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error calculating rating:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 exports.updatePharmaticInfo = async (req, res) => {
@@ -236,17 +236,17 @@ exports.updatePharmaticInfo = async (req, res) => {
         },
       }
     );
-    res.status(201).json({ success: true, message: "UpdatedSuccesffuly" });
+    res.status(201).json({ success: true, message: 'UpdatedSuccesffuly' });
   } catch (err) {
-    console.error("Error registering user:", err);
-    if (err.name === "ValidationError") {
+    console.error('Error registering user:', err);
+    if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
       return res
         .status(400)
-        .json({ success: false, message: errors.join(", ") });
+        .json({ success: false, message: errors.join(', ') });
     }
 
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -297,14 +297,14 @@ exports.approvePharmatic = async (req, res) => {
     if (!user)
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: 'User not found' });
 
     user.approved = true;
     await user.save();
     const mailOptions = {
-      from: "nabd142025@gmail.com",
+      from: 'nabd142025@gmail.com',
       to: user.email,
-      subject: "الرد على طلب التسجيل",
+      subject: 'الرد على طلب التسجيل',
       html: `
           <h3>بعد مراجعة حالة طلبك التالي:</h3>
           <p>Name: ${user.fullName}</p>
@@ -322,9 +322,9 @@ exports.approvePharmatic = async (req, res) => {
     await transporter.sendMail(mailOptions);
     res
       .status(200)
-      .json({ success: true, user, message: "User approved successfully" });
+      .json({ success: true, user, message: 'User approved successfully' });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 exports.rejectPharmatic = async (req, res) => {
@@ -333,16 +333,16 @@ exports.rejectPharmatic = async (req, res) => {
     if (!user)
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: 'User not found' });
     const mailOptions = {
-      from: "nabd142025@gmail.com",
+      from: 'nabd142025@gmail.com',
       to: user.email,
-      subject: "الرد على طلب التسجيل",
+      subject: 'الرد على طلب التسجيل',
       html: `
               <h3>بعد مراجعة حالة طلبك التالي:</h3>
               <p>Name: ${user.fullName}</p>
               <p>Email: ${user.email}</p>
-              <p>Role: ${user.newUser.role}</p>
+              <p>Role: ${user.role}</p>
               <p>City: ${user.city}</p>
               <p>Region: ${user.region}</p>
                <p>Phone: ${user.phone}</p>
@@ -357,9 +357,9 @@ exports.rejectPharmatic = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: true, message: "User rejected successfully" });
+      .json({ success: true, message: 'User rejected successfully' });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -419,8 +419,8 @@ exports.createNewDoctor = async (req, res) => {
     const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/reject/doctor/${newUser._id}`;
     const mailOptions = {
       from: email,
-      to: "feadkaffoura@gmail.com",
-      subject: "Test Email with Hotmail",
+      to: 'feadkaffoura@gmail.com',
+      subject: 'Test Email with Hotmail',
       html: `
           <h3>New Registration Request</h3>
           <p>Name: ${fullName}</p>
@@ -439,18 +439,18 @@ exports.createNewDoctor = async (req, res) => {
       .status(200)
       .json({ success: true, message: `Registration request sent to admin` });
   } catch (err) {
-    console.error("Error registering user:", err);
-    if (err.name === "ValidationError") {
+    console.error('Error registering user:', err);
+    if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
       return res
         .status(400)
-        .json({ success: false, message: errors.join(", ") });
+        .json({ success: false, message: errors.join(', ') });
     }
 
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-const moment = require("moment");
+const moment = require('moment');
 exports.createNewBook = async (req, res) => {
   try {
     const { doctorId, patientId, idDay, idHour } = req.body;
@@ -459,17 +459,17 @@ exports.createNewBook = async (req, res) => {
     if (!doctor) {
       return res
         .status(404)
-        .json({ status: false, message: "Doctor not found" });
+        .json({ status: false, message: 'Doctor not found' });
     }
 
     const dayIndex = doctor.booking.length;
     if (idDay > dayIndex || idDay < 0) {
-      return res.status(404).json({ status: false, message: "Day not found" });
+      return res.status(404).json({ status: false, message: 'Day not found' });
     }
 
     const hourIndex = doctor.booking[idDay].length;
     if (idDay > hourIndex || idDay < 0) {
-      return res.status(404).json({ status: false, message: "Hour not found" });
+      return res.status(404).json({ status: false, message: 'Hour not found' });
     }
 
     const existingPatient = doctor.booking[idDay].bookingHours[
@@ -480,8 +480,8 @@ exports.createNewBook = async (req, res) => {
 
     // حساب اليوم القادم المناسب بناءً على idDay
     let nextAppointmentDate = todayUTC.clone().day(idDay);
-    if (nextAppointmentDate.isBefore(todayUTC, "day")) {
-      nextAppointmentDate.add(7, "days"); // إذا اليوم المحدد مرّ، اختار الأسبوع القادم
+    if (nextAppointmentDate.isBefore(todayUTC, 'day')) {
+      nextAppointmentDate.add(7, 'days'); // إذا اليوم المحدد مرّ، اختار الأسبوع القادم
     }
 
     // البحث عن وقت البدء من rangeBooking
@@ -489,7 +489,7 @@ exports.createNewBook = async (req, res) => {
     if (!range) {
       return res
         .status(404)
-        .json({ status: false, message: "No rangeBooking for this day" });
+        .json({ status: false, message: 'No rangeBooking for this day' });
     }
 
     // حساب وقت الموعد بالـ UTC
@@ -497,7 +497,7 @@ exports.createNewBook = async (req, res) => {
       .utc(nextAppointmentDate)
       .hour(range.start) // ضبط الساعة بناءً على rangeBooking.start
       .minute(0) // ضبط الدقائق إلى 0
-      .add(idHour * 30, "minutes"); // حساب وقت الموعد
+      .add(idHour * 30, 'minutes'); // حساب وقت الموعد
 
     if (!existingPatient) {
       doctor.booking[idDay].bookingHours[idHour].patientIDs.push({
@@ -508,16 +508,16 @@ exports.createNewBook = async (req, res) => {
       await doctor.save();
       return res
         .status(200)
-        .json({ status: true, message: "Booking successful" });
+        .json({ status: true, message: 'Booking successful' });
     } else {
       return res.status(400).json({
         status: false,
-        message: "Patient already booked in this slot",
+        message: 'Patient already booked in this slot',
       });
     }
   } catch (error) {
-    console.error("Error in createNewBook:", error);
-    res.status(500).json({ status: false, message: "Server error" });
+    console.error('Error in createNewBook:', error);
+    res.status(500).json({ status: false, message: 'Server error' });
   }
 };
 
@@ -527,14 +527,14 @@ exports.approveDoctor = async (req, res) => {
     if (!user)
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: 'User not found' });
 
     user.approved = true;
     await user.save();
     const mailOptions = {
-      from: "nabd142025@gmail.com",
+      from: 'nabd142025@gmail.com',
       to: user.email,
-      subject: "الرد على طلب التسجيل",
+      subject: 'الرد على طلب التسجيل',
       html: `
           <h3>بعد مراجعة حالة طلبك التالي:</h3>
           <p>Name: ${user.fullName}</p>
@@ -550,7 +550,7 @@ exports.approveDoctor = async (req, res) => {
     await transporter.sendMail(mailOptions);
     res
       .status(200)
-      .json({ success: true, user, message: "User approved successfully" });
+      .json({ success: true, user, message: 'User approved successfully' });
   } catch (err) {
     res
       .status(500)
@@ -563,11 +563,11 @@ exports.rejectDoctor = async (req, res) => {
     if (!user)
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: 'User not found' });
     const mailOptions = {
-      from: "nabd142025@gmail.com",
+      from: 'nabd142025@gmail.com',
       to: user.email,
-      subject: "الرد على طلب التسجيل",
+      subject: 'الرد على طلب التسجيل',
       html: `
               <h3>بعد مراجعة حالة طلبك التالي:</h3>
               <p>Name: ${user.fullName}</p>
@@ -585,9 +585,9 @@ exports.rejectDoctor = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: true, message: "User rejected successfully" });
+      .json({ success: true, message: 'User rejected successfully' });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -598,27 +598,27 @@ exports.createNewSeek = async (req, res) => {
     if (existSeek) {
       return res
         .status(409)
-        .json({ success: false, message: "Phone already used" });
+        .json({ success: false, message: 'Phone already used' });
     }
     const newSeek = new Seek({ fullName, phone });
     await newSeek.save();
-    const token = await jwt.sign({ id: newSeek._id }, "1001110");
+    const token = await jwt.sign({ id: newSeek._id }, '1001110');
     RefreshToken.create({ token, userRef: newSeek._id });
     return res.status(201).json({
       success: true,
       newSeek,
-      message: "user register succesfully",
+      message: 'user register succesfully',
       token,
     });
   } catch (err) {
-    console.error("Error registering user:", err);
-    if (err.name === "ValidationError") {
+    console.error('Error registering user:', err);
+    if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
       return res
         .status(400)
-        .json({ success: false, message: errors.join(", ") });
+        .json({ success: false, message: errors.join(', ') });
     }
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
@@ -629,23 +629,23 @@ exports.loginPhar = async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: "Email is Not Correct" });
+        .json({ success: false, message: 'Email is Not Correct' });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res
         .status(401)
-        .json({ success: false, message: "password is Not the same" });
+        .json({ success: false, message: 'password is Not the same' });
     }
     const token = await jwt.sign(
-      { id: user._id, role: "pharmatic" },
-      "1001110"
+      { id: user._id, role: 'pharmatic' },
+      '1001110'
     );
     RefreshToken.create({ token });
 
-    res.status(200).json({ success: true, message: "Login successful", token });
+    res.status(200).json({ success: true, message: 'Login successful', token });
   } catch (err) {
-    console.error("Error logging in:", err);
+    console.error('Error logging in:', err);
     res
       .status(500)
       .json({ success: false, message: `Internal server error ${err}` });
@@ -654,7 +654,7 @@ exports.loginPhar = async (req, res) => {
 
 exports.logoutSpec = async (req, res, next) => {
   const token =
-    req.headers.authorization && req.headers.authorization.split(" ")[1];
+    req.headers.authorization && req.headers.authorization.split(' ')[1];
   const { refreshToken } = req.body;
   if (token) {
     console.log(token);
@@ -672,24 +672,24 @@ exports.logoutSeek = async (req, res) => {
   if (deletedSeek) {
     return res
       .status(201)
-      .json({ success: true, deletedSeek, message: "logout Successfully" });
+      .json({ success: true, deletedSeek, message: 'logout Successfully' });
   } else {
     return res
       .status(201)
-      .json({ success: false, message: "logout Not Successfully" });
+      .json({ success: false, message: 'logout Not Successfully' });
   }
 };
 
 exports.getPharmas = async (req, res) => {
   const city = req.params.city,
     region = req.params.region;
-  const query = { role: "pharmatic", city: city, region: region };
+  const query = { role: 'pharmatic', city: city, region: region };
 
   const findPharma = await Pharmatic.find(query);
   if (findPharma) {
     res.status(201).json({ status: true, findPharma });
   } else {
-    res.status(404).json({ status: false, message: "No result" });
+    res.status(404).json({ status: false, message: 'No result' });
   }
 };
 
@@ -704,7 +704,7 @@ exports.getDoctors = async (req, res) => {
     const doctors = await Doctor.find(query);
 
     if (!doctors || doctors.length === 0) {
-      return res.status(404).json({ status: false, message: "No result" });
+      return res.status(404).json({ status: false, message: 'No result' });
     }
 
     const currentDate = new Date();
@@ -733,25 +733,25 @@ exports.loginDoctor = async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: "Email is Not Correct" });
+        .json({ success: false, message: 'Email is Not Correct' });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res
         .status(401)
-        .json({ success: false, message: "password is Not the same" });
+        .json({ success: false, message: 'password is Not the same' });
     }
 
-    const token = await jwt.sign({ id: user._id, role: "doctor" }, "1001110");
+    const token = await jwt.sign({ id: user._id, role: 'doctor' }, '1001110');
     RefreshToken.create({ token });
 
     res.status(200).json({
       success: true,
-      message: "Login successful",
+      message: 'Login successful',
       token,
     });
   } catch (err) {
-    console.error("Error logging in:", err);
+    console.error('Error logging in:', err);
     res
       .status(500)
       .json({ success: false, message: `Internal server error ${err}` });
@@ -764,19 +764,19 @@ exports.rateDoctor = async (req, res) => {
     const { userId, rating, review } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(DoctorId)) {
-      return res.status(400).json({ message: "Invalid Doctor ID format" });
+      return res.status(400).json({ message: 'Invalid Doctor ID format' });
     }
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid user ID format" });
+      return res.status(400).json({ message: 'Invalid user ID format' });
     }
     if (rating < 1 || rating > 5) {
       return res
         .status(400)
-        .json({ message: "Rating must be between 1 and 5" });
+        .json({ message: 'Rating must be between 1 and 5' });
     }
     const doctor = await Doctor.findById(DoctorId);
     if (!doctor) {
-      return res.status(404).json({ message: "doctor not found" });
+      return res.status(404).json({ message: 'doctor not found' });
     }
 
     // تأكد من أن rate هو مصفوفة
@@ -803,10 +803,10 @@ exports.rateDoctor = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "Rating submitted successfully", data: doctor.rate });
+      .json({ message: 'Rating submitted successfully', data: doctor.rate });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -815,7 +815,7 @@ exports.getFinalRateforDoctor = async (req, res) => {
     const doctorId = req.params.doctorId;
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
-      return res.status(404).json({ message: "Doctor not found" });
+      return res.status(404).json({ message: 'Doctor not found' });
     }
 
     // Get all ratings
@@ -825,7 +825,7 @@ exports.getFinalRateforDoctor = async (req, res) => {
       return res.json({
         doctorId,
         finalRate: 0,
-        message: "No ratings available",
+        message: 'No ratings available',
       });
     }
 
@@ -835,8 +835,8 @@ exports.getFinalRateforDoctor = async (req, res) => {
 
     res.json({ doctorId, finalRate: parseFloat(averageRating) });
   } catch (error) {
-    console.error("Error calculating rating:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error calculating rating:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -855,7 +855,7 @@ exports.updateDoctorInfo = async (req, res) => {
     } = req.body;
     const id = req.params.id;
     const scheduleSlots = {};
-    if (schedule && typeof schedule === "object") {
+    if (schedule && typeof schedule === 'object') {
       Object.entries(schedule).forEach(([day, times]) => {
         if (times.startTime && times.endTime) {
           scheduleSlots[day] = generateTimeSlots(
@@ -884,16 +884,16 @@ exports.updateDoctorInfo = async (req, res) => {
         },
       }
     );
-    res.status(201).json({ success: true, message: "UpdatedSuccesffuly" });
+    res.status(201).json({ success: true, message: 'UpdatedSuccesffuly' });
   } catch (err) {
-    console.error("Error registering user:", err);
-    if (err.name === "ValidationError") {
+    console.error('Error registering user:', err);
+    if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
       return res
         .status(400)
-        .json({ success: false, message: errors.join(", ") });
+        .json({ success: false, message: errors.join(', ') });
     }
 
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
