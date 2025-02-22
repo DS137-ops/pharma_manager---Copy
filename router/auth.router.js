@@ -241,74 +241,158 @@ router.get(
   ckeckSeek.authenticateSeek,
   authController.getPharmas
 );
-router.post(
-  "/upload-image-for-pharmacy/:Seekid/:city/:region",
-  upload.single("image"),
-  async (req, res) => {
-    try {
-      const { Seekid, city, region } = req.params;
-      if (!mongoose.Types.ObjectId.isValid(Seekid)) {
-        return res.status(400).json({ message: "Invalid Seek ID" });
-      }
-      if (!req.file) return res.status(400).json({ message: "يرجى رفع صورة" });
-      const imageUrl = req.file.path;
-      const prescription = new PrescriptionRequest({
-        Seekid,
-        city,
-        region,
-        imageUrl,
-      });
-      await prescription.save();
-      res
-        .status(201)
-        .json({ message: "تم إرسال الروشتة بنجاح إلى الصيادلة", prescription });
-    } catch (error) {
-      res.status(500).json({ error: error });
+
+router.post("/send-request", upload.single("image"), async (req, res) => {
+  try {
+    const { patientId, city, region } = req.body;
+    const imageUrl = req.file.path; // رابط الصورة
+    if (!mongoose.Types.ObjectId.isValid(patientId)) {
+               return res.status(400).json({ message: "Invalid Seek ID" });
     }
-  }
-);
-router.post("/prescriptions/:id/respond", async (req, res) => {
-  try {
-    const { pharmacistId, price } = req.body;
-    const prescription = await PrescriptionRequest.findById(req.params.id);
-
-    if (!prescription)
-      return res.status(404).json({ message: "طلب الروشتة غير موجود" });
-
-    // إضافة رد الصيدلي
-    prescription.responses.push({
-      pharmacistId,
-      price,
-      status: "pending",
+    if(!req.file){
+      return res.status(400).json({message:"no image upload"})
+    }
+    const newRequest = new PrescriptionRequest({
+      patientId,
+      imageUrl,
+      city,
+      region,
+      pharmacistsResponded: [],
     });
 
-    await prescription.save();
+    await newRequest.save();
+    res.status(201).json({ message: "تم إرسال الطلب بنجاح", request: newRequest });
+  } catch (error) {
+    res.status(500).json({ message: "حدث خطأ أثناء إرسال الطلب", error });
+  }
+});
+router.get("/pharmacist-requests/:pharmacistId", async (req, res) => {
+  try {
+    const pharmacist = await Pharmatic.findById(req.params.pharmacistId);
+    if (!pharmacist) return res.status(404).json({ message: "الصيدلي غير موجود" });
 
-    res.json({ message: "تم إرسال السعر بنجاح", prescription });
+    // البحث عن الطلبات في نفس المدينة والمنطقة
+    const requests = await PrescriptionRequest.find({
+      city: pharmacist.city,
+      region: pharmacist.region,
+    }).populate("patientId");
+
+    res.status(200).json({ requests });
   } catch (error) {
-    res.status(500).json({ error: "حدث خطأ أثناء إرسال السعر" });
+    res.status(500).json({ message: "خطأ أثناء جلب الطلبات", error });
   }
 });
-router.get("/prescriptions/patient/:patientId", async (req, res) => {
+
+router.post("/respond-request", async (req, res) => {
   try {
-    const prescriptions = await PrescriptionRequest.find({
-      Seekid: req.params.patientId,
-    }).populate("responses.pharmacistId");
-    res.json({ prescriptions });
+    const { requestId, pharmacistId, price, accepted } = req.body;
+
+    const request = await PrescriptionRequest.findById(requestId);
+    if (!request) return res.status(404).json({ message: "الطلب غير موجود" });
+    if(accepted && !price){
+      res.status(400).json({message:"price is required"})
+    }
+    // إضافة رد الصيدلي إلى الطلب
+    request.pharmacistsResponded.push({ pharmacistId, price, accepted });
+    await request.save();
+
+    res.status(200).json({ message: "تم إرسال الرد بنجاح" });
   } catch (error) {
-    res.status(500).json({ message: "حدث خطأ أثناء جلب الطلبات", error });
+    res.status(500).json({ message: "خطأ أثناء الرد على الطلب", error });
   }
 });
-router.get("/prescriptions/pharmacist/:pharmacistId", async (req, res) => {
+router.get("/patient-responses/:patientId", async (req, res) => {
   try {
-    const prescriptions = await PrescriptionRequest.find({
-      "responses.pharmacistId": req.params.pharmacistId,
+    const patientRequests = await PrescriptionRequest.find({ patientId: req.params.patientId })
+      .populate("pharmacistsResponded.pharmacistId", "name phone");
+
+    let responses = [];
+    patientRequests.forEach((request) => {
+      request.pharmacistsResponded.forEach((response) => {
+        if (response.accepted) {
+          responses.push({
+            pharmacistName: response.pharmacistId.name,
+            phone: response.pharmacistId.phone,
+            price: response.price,
+          });
+        }
+      });
     });
-    res.json(prescriptions);
+
+    res.status(200).json({ responses });
   } catch (error) {
-    res.status(500).json({ error: "حدث خطأ أثناء جلب الطلبات" });
+    res.status(500).json({ message: "خطأ أثناء جلب الردود", error });
   }
 });
+
+// router.post(
+//   "/upload-image-for-pharmacy/:Seekid/:city/:region",
+//   upload.single("image"),
+//   async (req, res) => {
+//     try {
+//       const { Seekid, city, region } = req.params;
+//       if (!mongoose.Types.ObjectId.isValid(Seekid)) {
+//         return res.status(400).json({ message: "Invalid Seek ID" });
+//       }
+//       if (!req.file) return res.status(400).json({ message: "يرجى رفع صورة" });
+//       const imageUrl = req.file.path;
+//       const prescription = new PrescriptionRequest({
+//         Seekid,
+//         city,
+//         region,
+//         imageUrl,
+//       });
+//       await prescription.save();
+//       res
+//         .status(201)
+//         .json({ message: "تم إرسال الروشتة بنجاح إلى الصيادلة", prescription });
+//     } catch (error) {
+//       res.status(500).json({ error: error });
+//     }
+//   }
+// );
+// router.post("/prescriptions/:id/respond", async (req, res) => {
+//   try {
+//     const { pharmacistId, price } = req.body;
+//     const prescription = await PrescriptionRequest.findById(req.params.id);
+
+//     if (!prescription)
+//       return res.status(404).json({ message: "طلب الروشتة غير موجود" });
+
+//     // إضافة رد الصيدلي
+//     prescription.responses.push({
+//       pharmacistId,
+//       price,
+//       status: "pending",
+//     });
+
+//     await prescription.save();
+
+//     res.json({ message: "تم إرسال السعر بنجاح", prescription });
+//   } catch (error) {
+//     res.status(500).json({ error: "حدث خطأ أثناء إرسال السعر" });
+//   }
+// });
+// router.get("/prescriptions/patient/:patientId", async (req, res) => {
+//   try {
+//     const prescriptions = await PrescriptionRequest.find({
+//       Seekid: req.params.patientId,
+//     }).populate("responses.pharmacistId");
+//     res.json({ prescriptions });
+//   } catch (error) {
+//     res.status(500).json({ message: "حدث خطأ أثناء جلب الطلبات", error });
+//   }
+// });
+// router.get("/prescriptions/pharmacist/:pharmacistId", async (req, res) => {
+//   try {
+//     const prescriptions = await PrescriptionRequest.find({
+//       "responses.pharmacistId": req.params.pharmacistId,
+//     });
+//     res.json(prescriptions);
+//   } catch (error) {
+//     res.status(500).json({ error: "حدث خطأ أثناء جلب الطلبات" });
+//   }
+// });
 
 // router.post(
 //   '/upload-image-for-pharmacy/:id/:Seekid',
@@ -350,16 +434,16 @@ router.get("/prescriptions/pharmacist/:pharmacistId", async (req, res) => {
 //     }
 //   }
 // );
-router.get("/imagesForPharmacy/:pharmacistId", async (req, res) => {
-  try {
-    const { pharmacistId } = req.params;
-    const pharmacy = await Pharmacy.findById(pharmacistId);
-    const notify = [pharmacy.notifications];
-    res.status(201).json({ success: true, notify });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// router.get("/imagesForPharmacy/:pharmacistId", async (req, res) => {
+//   try {
+//     const { pharmacistId } = req.params;
+//     const pharmacy = await Pharmacy.findById(pharmacistId);
+//     const notify = [pharmacy.notifications];
+//     res.status(201).json({ success: true, notify });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 router.post(
   "/logoutSpec",

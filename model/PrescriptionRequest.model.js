@@ -1,24 +1,17 @@
-const mongoose = require('mongoose');
-const prescriptionRequestSchema = new mongoose.Schema({
-  Seekid: { type: mongoose.Schema.Types.ObjectId, ref: 'Seek', required: true },
-  city: { type: String, required: true },
-  region: { type: String, required: true },
-  imageUrl: { type: String, required: true }, // رابط صورة الروشتة
-  responses: [
+const mongoose = require("mongoose");
+
+const requestSchema = new mongoose.Schema({
+  patientId: { type: mongoose.Schema.Types.ObjectId, ref: "seek" },
+  imageUrl: String, // رابط صورة الروشتة
+  city: String,
+  region: String,
+  pharmacistsResponded: [
     {
-      pharmacistId: { type: mongoose.Schema.Types.ObjectId, ref: 'pharmatic' },
-      price: { type: Number },
-      status: {
-        type: String,
-        enum: ['pending', 'accepted'],
-        default: 'pending',
-      },
+      pharmacistId: { type: mongoose.Schema.Types.ObjectId, ref: "pharmatic" },
+      price: Number,
+      accepted: Boolean,
     },
   ],
-  createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model(
-  'PrescriptionRequest',
-  prescriptionRequestSchema
-);
+module.exports = mongoose.model("PrescriptionRequest", requestSchema);
