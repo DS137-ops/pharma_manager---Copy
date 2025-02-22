@@ -33,7 +33,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => ({
-    folder: `pharmacies/${req.params.id}`, // Creates a unique folder for each pharmacy
+    folder: `pharmacies/${req.params.id}`,
     allowed_formats: ["jpg", "png", "jpeg"],
   }),
 });

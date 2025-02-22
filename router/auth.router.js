@@ -209,7 +209,7 @@ router.post("/isApprovedPharmatic" , async(req,res)=>{
   if(!email){
     res.status(404).json({success:false , message:"Email Not found"})
   }
-  const user = Pharmatic.findOne({email})
+  const user = await Pharmatic.findOne({email})
   if(!user){
     res.status(404).json({success:false , message:"User Not found"})
   }
@@ -393,7 +393,21 @@ router.post(
   ],
   RadiologyController.createNewRadiology
 );
+router.post("/isApprovedRadiology" , async(req,res)=>{
+  const email = req.body.email
+  if(!email){
+    res.status(404).json({success:false , message:"Email Not found"})
+  }
+  const user = Radiology.findOne({email})
+  if(!user){
+    res.status(404).json({success:false , message:"User Not found"})
+  }
+  if(!user.approved){
+    res.status(400).json({success:false , message:"user is not approved yet!"})
+  }
+  res.status(201).json({success:true , message:"user is  approved sucessfully!"})
 
+})
 router.get("/approve/radiology/:id", RadiologyController.approveRadiology);
 router.get("/reject/radiology/:id", RadiologyController.rejectRadiology);
 router.get(
@@ -497,7 +511,21 @@ router.post(
   ],
   analystController.createNewAnalyst
 );
+router.post("/isApprovedAnalyst" , async(req,res)=>{
+  const email = req.body.email
+  if(!email){
+    res.status(404).json({success:false , message:"Email Not found"})
+  }
+  const user = Analyst.findOne({email})
+  if(!user){
+    res.status(404).json({success:false , message:"User Not found"})
+  }
+  if(!user.approved){
+    res.status(400).json({success:false , message:"user is not approved yet!"})
+  }
+  res.status(201).json({success:true , message:"user is  approved sucessfully!"})
 
+})
 router.get("/approve/analyst/:id", analystController.approveAnalyst);
 router.get("/reject/analyst/:id", analystController.rejectAnalyst);
 router.get(
