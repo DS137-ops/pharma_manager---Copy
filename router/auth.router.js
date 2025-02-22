@@ -398,7 +398,7 @@ router.post("/isApprovedRadiology" , async(req,res)=>{
   if(!email){
     res.status(404).json({success:false , message:"Email Not found"})
   }
-  const user = Radiology.findOne({email})
+  const user = await Radiology.findOne({email})
   if(!user){
     res.status(404).json({success:false , message:"User Not found"})
   }
@@ -516,7 +516,7 @@ router.post("/isApprovedAnalyst" , async(req,res)=>{
   if(!email){
     res.status(404).json({success:false , message:"Email Not found"})
   }
-  const user = Analyst.findOne({email})
+  const user = await Analyst.findOne({email})
   if(!user){
     res.status(404).json({success:false , message:"User Not found"})
   }
