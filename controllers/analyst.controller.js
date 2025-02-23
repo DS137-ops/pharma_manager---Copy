@@ -87,6 +87,37 @@ exports.createNewAnalyst = async (req, res) => {
   }
 };
 
+exports.loginAna = async (req, res) => {
+  const { email, password } = req.body;
+  if(!email || !password){
+    res.status(404).json({message:'all fields are required'})
+  }
+  try {
+    const { email, password } = req.body;
+    const user = await Analyst.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Email is Not Correct' });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'password is Not the same' });
+    }
+    const token = await jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
+    RefreshToken.create({ token });
+
+    res.status(200).json({ success: true, message: 'Login successful', token });
+  } catch (err) {
+    console.error('Error logging in:', err);
+    res
+      .status(500)
+      .json({ success: false, message: `Internal server error ${err}` });
+  }
+};
+
 exports.approveAnalyst = async (req, res) => {
   try {
     const user = await Analyst.findById(req.params.id);

@@ -260,6 +260,10 @@ exports.getFinalRateForRadiology = async (req, res) => {
 };
 
 exports.loginRadio = async (req, res) => {
+  const { email, password } = req.body;
+  if(!email || !password){
+    res.status(404).json({message:'all fields are required'})
+  }
   try {
     const { email, password } = req.body;
     const user = await Radiology.findOne({ email });

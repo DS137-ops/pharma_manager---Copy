@@ -541,6 +541,11 @@ router.post(
   ],
   analystController.createNewAnalyst
 );
+router.post(
+  '/signinAnalyst',
+  checkprov.isProvved,
+  analystController.loginAna
+);
 router.post('/isApprovedAnalyst', async (req, res) => {
   const email = req.body.email;
   if (!email) {
