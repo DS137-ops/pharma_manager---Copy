@@ -1,25 +1,26 @@
-const router = require("express").Router();
-const authController = require("../controllers/auth.controller");
-const analystController = require("../controllers/analyst.controller");
-const RadiologyController = require("../controllers/radiology.controller");
-const { body } = require("express-validator");
-const checkprov = require("../middleware/auth.middleware");
-const ckeckSeek = require("../middleware/seek.middleware");
-const Pharmacy = require("../model/auth.model");
-const Doctor = require("../model/doctor.model");
-const Pharmatic = require("../model/auth.model");
-const Radiology = require("../model/radiology.model");
-const Analyst = require("../model/analyst.model");
-const mongoose = require("mongoose");
-const Booking = require("../model/book.model");
-const PrescriptionRequest = require("../model/PrescriptionRequest.model");
-const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("cloudinary").v2;
+const router = require('express').Router();
+const authController = require('../controllers/auth.controller');
+const analystController = require('../controllers/analyst.controller');
+const RadiologyController = require('../controllers/radiology.controller');
+const { body } = require('express-validator');
+const checkprov = require('../middleware/auth.middleware');
+const ckeckSeek = require('../middleware/seek.middleware');
+const Pharmacy = require('../model/auth.model');
+const Doctor = require('../model/doctor.model');
+const Pharmatic = require('../model/auth.model');
+const Radiology = require('../model/radiology.model');
+const Analyst = require('../model/analyst.model');
+const mongoose = require('mongoose');
+const Booking = require('../model/book.model');
+const PrescriptionRequest = require('../model/PrescriptionRequest.model');
+const PrescriptionRadiologyRequest = require('../model/PrescriptionRadiology.model');
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 cloudinary.config({
-  cloud_name: "dqk8dzdoo",
-  api_key: "687124232966245",
-  api_secret: "LhIKcexhYtHUK-bZSiIoT8jsMqc",
+  cloud_name: 'dqk8dzdoo',
+  api_key: '687124232966245',
+  api_secret: 'LhIKcexhYtHUK-bZSiIoT8jsMqc',
 });
 
 // For pharmacy
@@ -27,7 +28,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => ({
     folder: `pharmacies/${req.params.id}`, // Creates a unique folder for each pharmacy
-    allowed_formats: ["jpg", "png", "jpeg"],
+    allowed_formats: ['jpg', 'png', 'jpeg'],
   }),
 });
 const upload = multer({ storage: storage });
@@ -37,7 +38,7 @@ const storage_for_radiology = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => ({
     folder: `radiology/${req.params.id}`, // Creates a unique folder for each pharmacy
-    allowed_formats: ["jpg", "png", "jpeg"],
+    allowed_formats: ['jpg', 'png', 'jpeg'],
   }),
 });
 const uploadForRadiology = multer({ storage: storage_for_radiology });
@@ -47,87 +48,87 @@ const storage_for_Doctor = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => ({
     folder: `Doctors/${req.params.id}`, // Creates a unique folder for each pharmacy
-    allowed_formats: ["jpg", "png", "jpeg"],
+    allowed_formats: ['jpg', 'png', 'jpeg'],
   }),
 });
 const uploadfordoctor = multer({ storage: storage_for_Doctor });
 //api doctor
 router.post(
-  "/createNewDoctor",
+  '/createNewDoctor',
   [
-    body("fullName")
+    body('fullName')
       .trim()
       .isLength({ min: 2 })
-      .withMessage("Full name must be at least 3 characters long"),
-    body("email")
+      .withMessage('Full name must be at least 3 characters long'),
+    body('email')
       .trim()
       .isEmail()
-      .withMessage("Please provide a valid email address"),
-    body("password")
+      .withMessage('Please provide a valid email address'),
+    body('password')
       .isLength({ min: 8 })
-      .withMessage("Password must be at least 8 characters long"),
-    body("region").trim().notEmpty().withMessage("region is required"),
-    body("address").trim().notEmpty().withMessage("Address is required"),
-    body("specilizate")
+      .withMessage('Password must be at least 8 characters long'),
+    body('region').trim().notEmpty().withMessage('region is required'),
+    body('address').trim().notEmpty().withMessage('Address is required'),
+    body('specilizate')
       .trim()
       .notEmpty()
-      .withMessage("specilizate is required"),
+      .withMessage('specilizate is required'),
 
-    body("city").trim().notEmpty().withMessage("City is required"),
-    body("phone").notEmpty().withMessage("phone is required"),
+    body('city').trim().notEmpty().withMessage('City is required'),
+    body('phone').notEmpty().withMessage('phone is required'),
   ],
   authController.createNewDoctor
 );
 
-router.get("/approve/doctor/:id", authController.approveDoctor);
-router.get("/reject/doctor/:id", authController.rejectDoctor);
-router.post("/signinDoctor", authController.loginDoctor);
+router.get('/approve/doctor/:id', authController.approveDoctor);
+router.get('/reject/doctor/:id', authController.rejectDoctor);
+router.post('/signinDoctor', authController.loginDoctor);
 router.post(
-  "/rateDoctor/:DoctorId",
+  '/rateDoctor/:DoctorId',
   checkprov.checkifLoggedIn,
   ckeckSeek.authenticateSeek,
   authController.rateDoctor
 );
 router.get(
-  "/final-rate-doctor/:doctorId",
+  '/final-rate-doctor/:doctorId',
   authController.getFinalRateforDoctor
 );
 router.get(
-  "/getDoctorsinCity/:city?/:region?/:spec?",
+  '/getDoctorsinCity/:city?/:region?/:spec?',
   // checkprov.checkifLoggedIn,
   // ckeckSeek.authenticateSeek,
   authController.getDoctors
 );
 
 router.post(
-  "/createNewBook",
+  '/createNewBook',
   // checkprov.checkifLoggedIn,
   // ckeckSeek.authenticateSeek,
   authController.createNewBook
 );
 router.post(
-  "/updateDoctorInfo/:id",
-  body("phone").notEmpty().withMessage("phone is required"),
+  '/updateDoctorInfo/:id',
+  body('phone').notEmpty().withMessage('phone is required'),
   checkprov.isDoctor,
   checkprov.checkifLoggedIn,
   authController.updateDoctorInfo
 );
 router.post(
-  "/upload-doctor-photo/:id",
+  '/upload-doctor-photo/:id',
   checkprov.checkifLoggedIn,
-  uploadfordoctor.single("image"),
+  uploadfordoctor.single('image'),
   async (req, res) => {
     try {
       const DoctorId = req.params.id;
       if (!mongoose.Types.ObjectId.isValid(DoctorId)) {
-        return res.status(400).json({ message: "Invalid pharmacy ID" });
+        return res.status(400).json({ message: 'Invalid pharmacy ID' });
       }
       const TheDoctor = await Doctor.findById(DoctorId);
       if (!TheDoctor) {
-        return res.status(404).json({ message: "Doctor not found" });
+        return res.status(404).json({ message: 'Doctor not found' });
       }
       if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
+        return res.status(400).json({ message: 'No file uploaded' });
       }
 
       const image = req.file.path;
@@ -137,16 +138,16 @@ router.post(
       });
       await TheDoctor.save();
       res.status(200).json({
-        message: "Image uploaded successfully",
+        message: 'Image uploaded successfully',
         data: TheDoctor,
       });
     } catch (error) {
-      res.status(500).json({ message: "Internal server", error });
+      res.status(500).json({ message: 'Internal server', error });
     }
   }
 );
 
-router.get("/get-doctor-image/:id", async (req, res) => {
+router.get('/get-doctor-image/:id', async (req, res) => {
   try {
     const doctorId = req.params.id;
     const doctor = await Doctor.findById(doctorId);
@@ -162,18 +163,18 @@ router.get("/get-doctor-image/:id", async (req, res) => {
 
 //Seek Section
 router.post(
-  "/createNewSeek",
+  '/createNewSeek',
   [
-    body("fullName")
+    body('fullName')
       .trim()
       .isLength({ min: 2 })
-      .withMessage("Full name must be at least 3 characters long"),
-    body("phone").notEmpty().withMessage("phone is required"),
+      .withMessage('Full name must be at least 3 characters long'),
+    body('phone').notEmpty().withMessage('phone is required'),
   ],
   authController.createNewSeek
 );
 router.post(
-  "/logoutSeek/:id",
+  '/logoutSeek/:id',
   checkprov.checkifLoggedIn,
   authController.logoutSeek
 );
@@ -182,137 +183,152 @@ router.post(
 
 //Pharmatic Section
 router.post(
-  "/createNewPharmatic",
+  '/createNewPharmatic',
   [
-    body("fullName")
+    body('fullName')
       .trim()
       .isLength({ min: 2 })
-      .withMessage("Full name must be at least 3 characters long"),
-    body("email")
+      .withMessage('Full name must be at least 3 characters long'),
+    body('email')
       .trim()
       .isEmail()
-      .withMessage("Please provide a valid email address"),
-    body("password")
+      .withMessage('Please provide a valid email address'),
+    body('password')
       .isLength({ min: 8 })
-      .withMessage("Password must be at least 8 characters long"),
-    body("region").trim().notEmpty().withMessage("region is required"),
-    body("address").trim().notEmpty().withMessage("Address is required"),
+      .withMessage('Password must be at least 8 characters long'),
+    body('region').trim().notEmpty().withMessage('region is required'),
+    body('address').trim().notEmpty().withMessage('Address is required'),
 
-    body("city").trim().notEmpty().withMessage("City is required"),
-    body("phone").notEmpty().withMessage("phone is required"),
+    body('city').trim().notEmpty().withMessage('City is required'),
+    body('phone').notEmpty().withMessage('phone is required'),
   ],
-  
+
   authController.createNewPharmatic
 );
-router.post("/isApprovedPharmatic" , async(req,res)=>{
-  const email = req.body.email
-  if(!email){
-    res.status(404).json({success:false , message:"Email Not found"})
+router.post('/isApprovedPharmatic', async (req, res) => {
+  const email = req.body.email;
+  if (!email) {
+    res.status(404).json({ success: false, message: 'Email Not found' });
   }
-  const user = await Pharmatic.findOne({email})
-  if(!user){
-    res.status(404).json({success:false , message:"User Not found"})
+  const user = await Pharmatic.findOne({ email });
+  if (!user) {
+    res.status(404).json({ success: false, message: 'User Not found' });
   }
-  if(!user.approved){
-    res.status(400).json({success:false , message:"user is not approved yet!"})
+  if (!user.approved) {
+    res
+      .status(400)
+      .json({ success: false, message: 'user is not approved yet!' });
   }
-  res.status(201).json({success:true , message:"user is  approved sucessfully!"})
-
-})
+  res
+    .status(201)
+    .json({ success: true, message: 'user is  approved sucessfully!' });
+});
 router.post(
-  "/ratePharmacy/:pharmaticId",
+  '/ratePharmacy/:pharmaticId',
   checkprov.checkifLoggedIn,
   ckeckSeek.authenticateSeek,
   authController.ratePharmatic
 );
-router.get("/final-rate-pharmacy/:pharmaticId", authController.getFinalRate);
-router.get("/approve/pharmatic/:id", authController.approvePharmatic);
-router.get("/reject/pharmatic/:id", authController.rejectPharmatic);
-router.post("/signinPharmatic", checkprov.isProvved, authController.loginPhar);
+router.get('/final-rate-pharmacy/:pharmaticId', authController.getFinalRate);
+router.get('/approve/pharmatic/:id', authController.approvePharmatic);
+router.get('/reject/pharmatic/:id', authController.rejectPharmatic);
+router.post('/signinPharmatic', checkprov.isProvved, authController.loginPhar);
 router.post(
-  "/updatePharInfo/:id",
+  '/updatePharInfo/:id',
   checkprov.checkifLoggedIn,
   checkprov.isPharmatic,
   authController.updatePharmaticInfo
 );
 router.get(
-  "/getPharmainCity/:city?/:region?",
+  '/getPharmainCity/:city?/:region?',
   checkprov.checkifLoggedIn,
   ckeckSeek.authenticateSeek,
   authController.getPharmas
 );
 
-router.post("/send-request", upload.single("image"), async (req, res) => {
-  try {
-    const { patientId, city, region } = req.body;
-    const imageUrl = req.file.path; // رابط الصورة
-    if (!mongoose.Types.ObjectId.isValid(patientId)) {
-               return res.status(400).json({ message: "Invalid Seek ID" });
-    }
-    if(!req.file){
-      return res.status(400).json({message:"no image upload"})
-    }
-    const newRequest = new PrescriptionRequest({
-      patientId,
-      imageUrl,
-      city,
-      region,
-      pharmacistsResponded: [],
-    });
+router.post(
+  '/send-request/:patientId/:city/:region',
+  upload.single('image'),
+  async (req, res) => {
+    try {
+      const { patientId, city, region } = req.params;
 
-    await newRequest.save();
-    res.status(201).json({ message: "تم إرسال الطلب بنجاح", request: newRequest });
-  } catch (error) {
-    res.status(500).json({ message: "حدث خطأ أثناء إرسال الطلب", error });
+      const imageUrl = req.file.path; // رابط الصورة
+      if (!mongoose.Types.ObjectId.isValid(patientId)) {
+        return res.status(400).json({ message: 'Invalid Seek ID' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: 'no image upload' });
+      }
+      const newRequest = new PrescriptionRequest({
+        patientId,
+        imageUrl,
+        city,
+        region,
+
+      });
+
+      await newRequest.save();
+      res
+        .status(201)
+        .json({ message: 'تم إرسال الطلب بنجاح', request: newRequest });
+    } catch (error) {
+      console.error('خطأ أثناء إرسال الطلب:', error);
+      res
+        .status(500)
+        .json({ message: 'حدث خطأ أثناء إرسال الطلب', error: error.message });
+    }
   }
-});
-router.get("/pharmacist-requests/:pharmacistId", async (req, res) => {
+);
+router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
   try {
     const pharmacist = await Pharmatic.findById(req.params.pharmacistId);
-    if (!pharmacist) return res.status(404).json({ message: "الصيدلي غير موجود" });
+    if (!pharmacist)
+      return res.status(404).json({ message: 'الصيدلي غير موجود' });
 
     // البحث عن الطلبات في نفس المدينة والمنطقة
     const requests = await PrescriptionRequest.find({
       city: pharmacist.city,
       region: pharmacist.region,
-    }).populate("patientId");
+    }).populate('patientId');
 
     res.status(200).json({ requests });
   } catch (error) {
-    res.status(500).json({ message: "خطأ أثناء جلب الطلبات", error });
+    res.status(500).json({ message: 'خطأ أثناء جلب الطلبات',error: error.message });
   }
 });
-
-router.post("/respond-request", async (req, res) => {
+router.post('/respond-request', async (req, res) => {
   try {
     const { requestId, pharmacistId, price, accepted } = req.body;
 
     const request = await PrescriptionRequest.findById(requestId);
-    if (!request) return res.status(404).json({ message: "الطلب غير موجود" });
-    if(accepted && !price){
-      res.status(400).json({message:"price is required"})
+    if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
+    if (accepted && !price) {
+      res.status(400).json({ message: 'price is required' });
     }
     // إضافة رد الصيدلي إلى الطلب
     request.pharmacistsResponded.push({ pharmacistId, price, accepted });
     await request.save();
 
-    res.status(200).json({ message: "تم إرسال الرد بنجاح" });
+    res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
   } catch (error) {
-    res.status(500).json({ message: "خطأ أثناء الرد على الطلب", error });
+    res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error });
   }
 });
-router.get("/patient-responses/:patientId", async (req, res) => {
+router.get('/patient-responses/:patientId', async (req, res) => {
   try {
-    const patientRequests = await PrescriptionRequest.find({ patientId: req.params.patientId })
-      .populate("pharmacistsResponded.pharmacistId", "name phone");
-
+    const patientRequests = await PrescriptionRequest.find({
+      patientId: req.params.patientId,
+    }).populate('pharmacistsResponded.pharmacistId', 'fullName phone city region');
     let responses = [];
     patientRequests.forEach((request) => {
       request.pharmacistsResponded.forEach((response) => {
         if (response.accepted) {
           responses.push({
-            pharmacistName: response.pharmacistId.name,
+            pharmacistName: response.pharmacistId.fullName,
             phone: response.pharmacistId.phone,
+            city: response.pharmacistId.city,
+            region: response.pharmacistId.region,
             price: response.price,
           });
         }
@@ -321,299 +337,232 @@ router.get("/patient-responses/:patientId", async (req, res) => {
 
     res.status(200).json({ responses });
   } catch (error) {
-    res.status(500).json({ message: "خطأ أثناء جلب الردود", error });
+    res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
   }
 });
 
-// router.post(
-//   "/upload-image-for-pharmacy/:Seekid/:city/:region",
-//   upload.single("image"),
-//   async (req, res) => {
-//     try {
-//       const { Seekid, city, region } = req.params;
-//       if (!mongoose.Types.ObjectId.isValid(Seekid)) {
-//         return res.status(400).json({ message: "Invalid Seek ID" });
-//       }
-//       if (!req.file) return res.status(400).json({ message: "يرجى رفع صورة" });
-//       const imageUrl = req.file.path;
-//       const prescription = new PrescriptionRequest({
-//         Seekid,
-//         city,
-//         region,
-//         imageUrl,
-//       });
-//       await prescription.save();
-//       res
-//         .status(201)
-//         .json({ message: "تم إرسال الروشتة بنجاح إلى الصيادلة", prescription });
-//     } catch (error) {
-//       res.status(500).json({ error: error });
-//     }
-//   }
-// );
-// router.post("/prescriptions/:id/respond", async (req, res) => {
-//   try {
-//     const { pharmacistId, price } = req.body;
-//     const prescription = await PrescriptionRequest.findById(req.params.id);
-
-//     if (!prescription)
-//       return res.status(404).json({ message: "طلب الروشتة غير موجود" });
-
-//     // إضافة رد الصيدلي
-//     prescription.responses.push({
-//       pharmacistId,
-//       price,
-//       status: "pending",
-//     });
-
-//     await prescription.save();
-
-//     res.json({ message: "تم إرسال السعر بنجاح", prescription });
-//   } catch (error) {
-//     res.status(500).json({ error: "حدث خطأ أثناء إرسال السعر" });
-//   }
-// });
-// router.get("/prescriptions/patient/:patientId", async (req, res) => {
-//   try {
-//     const prescriptions = await PrescriptionRequest.find({
-//       Seekid: req.params.patientId,
-//     }).populate("responses.pharmacistId");
-//     res.json({ prescriptions });
-//   } catch (error) {
-//     res.status(500).json({ message: "حدث خطأ أثناء جلب الطلبات", error });
-//   }
-// });
-// router.get("/prescriptions/pharmacist/:pharmacistId", async (req, res) => {
-//   try {
-//     const prescriptions = await PrescriptionRequest.find({
-//       "responses.pharmacistId": req.params.pharmacistId,
-//     });
-//     res.json(prescriptions);
-//   } catch (error) {
-//     res.status(500).json({ error: "حدث خطأ أثناء جلب الطلبات" });
-//   }
-// });
-
-// router.post(
-//   '/upload-image-for-pharmacy/:id/:Seekid',
-//   upload.single('image'),
-//   async (req, res) => {
-//     try {
-//       const { id, Seekid } = req.params;
-
-//       if (!mongoose.Types.ObjectId.isValid(id)) {
-//         return res.status(400).json({ message: 'Invalid pharmacy ID' });
-//       }
-
-//       const pharmacy = await Pharmacy.findById(id);
-//       if (!pharmacy) {
-//         return res.status(404).json({ message: 'Pharmacy not found' });
-//       }
-
-//       if (!req.file) {
-//         return res.status(400).json({ message: 'No file uploaded' });
-//       }
-
-//       const imageUrl = req.file.path; // Cloudinary URL
-
-//       await pharmacy.notifications.push({
-//         sickId: Seekid,
-//         imageUrl: imageUrl,
-//         date: new Date(),
-//       });
-
-//       await pharmacy.save();
-
-//       res.status(200).json({
-//         message: 'Image uploaded successfully',
-//         data: pharmacy,
-//       });
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ message: 'Server error' });
-//     }
-//   }
-// );
-// router.get("/imagesForPharmacy/:pharmacistId", async (req, res) => {
-//   try {
-//     const { pharmacistId } = req.params;
-//     const pharmacy = await Pharmacy.findById(pharmacistId);
-//     const notify = [pharmacy.notifications];
-//     res.status(201).json({ success: true, notify });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// });
 
 router.post(
-  "/logoutSpec",
+  '/logoutSpec',
   checkprov.checkifLoggedIn,
   authController.logoutSpec
 );
-//router.post('/sendMessageToPharmatic/:city?/:address?',authController.sendMessage);
-//router.get('/getMessages/:userId', authController.getMessages);
+
 //End Pharmatic
 
 //Radiology Section
 router.post(
-  "/createNewRadiology",
+  '/createNewRadiology',
   [
-    body("fullName")
+    body('fullName')
       .trim()
       .isLength({ min: 2 })
-      .withMessage("Full name must be at least 3 characters long"),
-    body("email")
+      .withMessage('Full name must be at least 3 characters long'),
+    body('email')
       .trim()
       .isEmail()
-      .withMessage("Please provide a valid email address"),
-    body("password")
+      .withMessage('Please provide a valid email address'),
+    body('password')
       .isLength({ min: 8 })
-      .withMessage("Password must be at least 8 characters long"),
-    body("region").trim().notEmpty().withMessage("region is required"),
-    body("address").trim().notEmpty().withMessage("Address is required"),
+      .withMessage('Password must be at least 8 characters long'),
+    body('region').trim().notEmpty().withMessage('region is required'),
+    body('address').trim().notEmpty().withMessage('Address is required'),
 
-    body("city").trim().notEmpty().withMessage("City is required"),
-    body("phone").notEmpty().withMessage("phone is required"),
+    body('city').trim().notEmpty().withMessage('City is required'),
+    body('phone').notEmpty().withMessage('phone is required'),
   ],
   RadiologyController.createNewRadiology
 );
-router.post("/isApprovedRadiology" , async(req,res)=>{
-  const email = req.body.email
-  if(!email){
-    res.status(404).json({success:false , message:"Email Not found"})
+router.post('/isApprovedRadiology', async (req, res) => {
+  const email = req.body.email;
+  if (!email) {
+    res.status(404).json({ success: false, message: 'Email Not found' });
   }
-  const user = await Radiology.findOne({email})
-  if(!user){
-    res.status(404).json({success:false , message:"User Not found"})
+  const user = await Radiology.findOne({ email });
+  if (!user) {
+    res.status(404).json({ success: false, message: 'User Not found' });
   }
-  if(!user.approved){
-    res.status(400).json({success:false , message:"user is not approved yet!"})
+  if (!user.approved) {
+    res
+      .status(400)
+      .json({ success: false, message: 'user is not approved yet!' });
   }
-  res.status(201).json({success:true , message:"user is  approved sucessfully!"})
-
-})
-router.get("/approve/radiology/:id", RadiologyController.approveRadiology);
-router.get("/reject/radiology/:id", RadiologyController.rejectRadiology);
+  res
+    .status(201)
+    .json({ success: true, message: 'user is  approved sucessfully!' });
+});
+router.get('/approve/radiology/:id', RadiologyController.approveRadiology);
+router.get('/reject/radiology/:id', RadiologyController.rejectRadiology);
 router.get(
-  "/getradiologiesinCity/:city?/:region?",
+  '/getradiologiesinCity/:city?/:region?',
   checkprov.checkifLoggedIn,
   RadiologyController.getradiology
 );
 router.post(
-  "/rateRadiology/:radiologyId",
+  '/rateRadiology/:radiologyId',
   checkprov.checkifLoggedIn,
   ckeckSeek.authenticateSeek,
   RadiologyController.rateRadiology
 );
 router.get(
-  "/final-rate-radiology/:radiologyId",
+  '/final-rate-radiology/:radiologyId',
   RadiologyController.getFinalRateForRadiology
 );
 router.post(
-  "/signinRadiology",
+  '/signinRadiology',
   checkprov.isProvved,
   RadiologyController.loginRadio
 );
 router.post(
-  "/updateRadioInfo/:id",
+  '/updateRadioInfo/:id',
   checkprov.checkifLoggedIn,
   RadiologyController.updateRadiologyInfo
 );
+
 router.post(
-  "/upload-image-for-radiology/:id/:Seekid",
-  uploadForRadiology.single("image"),
+  '/send-request-for-radiology/:patientId/:city/:region',
+  uploadForRadiology.single('image'),
   async (req, res) => {
     try {
-      const { id, Seekid } = req.params;
+      const { patientId, city, region } = req.params;
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ message: "Invalid radiology ID" });
+      const imageUrl = req.file.path;
+      if (!mongoose.Types.ObjectId.isValid(patientId)) {
+        return res.status(400).json({ message: 'Invalid Seek ID' });
       }
-
-      const radiology = await Radiology.findById(id);
-      if (!radiology) {
-        return res.status(404).json({ message: "radiology not found" });
-      }
-
       if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
+        return res.status(400).json({ message: 'no image upload' });
       }
+      const newRequest = new PrescriptionRadiologyRequest({
+        patientId,
+        imageUrl,
+        city,
+        region,
 
-      const imageUrl = req.file.path; // Cloudinary URL
-
-      await radiology.notifications.push({
-        sickId: Seekid,
-        imageUrl: imageUrl,
-        date: new Date(),
       });
 
-      await radiology.save();
-
-      res.status(200).json({
-        message: "Image uploaded successfully",
-        data: radiology,
-      });
+      await newRequest.save();
+      res
+        .status(201)
+        .json({ message: 'تم إرسال الطلب بنجاح', request: newRequest });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Server error" });
+      console.error('خطأ أثناء إرسال الطلب:', error);
+      res
+        .status(500)
+        .json({ message: 'حدث خطأ أثناء إرسال الطلب', error: error.message });
     }
   }
 );
-router.get("/imagesForRadiology/:radiologyId", async (req, res) => {
+router.get('/radiology-requests/:radiologyId', async (req, res) => {
   try {
-    const { radiologyId } = req.params;
-    const radiology = await Pharmacy.findById(radiologyId);
-    const notify = [radiology.notifications];
-    res.status(201).json({ success: true, notify });
+    const radiology = await Radiology.findById(req.params.radiologyId);
+    if (!radiology)
+      return res.status(404).json({ message: 'الصيدلي غير موجود' });
+
+    // البحث عن الطلبات في نفس المدينة والمنطقة
+    const requests = await PrescriptionRadiologyRequest.find({
+      city: radiology.city,
+      region: radiology.region,
+    }).populate('patientId');
+
+    res.status(200).json({ requests });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: 'خطأ أثناء جلب الطلبات',error: error.message });
   }
 });
+router.post('/respond-request-from-radiology', async (req, res) => {
+  try {
+    const { requestId, radiologyId, price, accepted } = req.body;
+
+    const request = await PrescriptionRadiologyRequest.findById(requestId);
+    if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
+    if (accepted && !price) {
+      res.status(400).json({ message: 'price is required' });
+    }
+    // إضافة رد الصيدلي إلى الطلب
+    request.PrescriptionRadiologyRequest.push({ radiologyId, price, accepted });
+    await request.save();
+
+    res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
+  } catch (error) {
+    res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error });
+  }
+});
+
+router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
+  try {
+    const patientRequests = await PrescriptionRadiologyRequest.find({
+      patientId: req.params.patientId,
+    }).populate('PrescriptionRadiologyRequest.radiologyId', 'fullName phone city region');
+    let responses = [];
+    patientRequests.forEach((request) => {
+      request.PrescriptionRadiologyRequest.forEach((response) => {
+        if (response.accepted) {
+          responses.push({
+            radiologyName: response.radiologyId.fullName,
+            phone: response.radiologyId.phone,
+            city: response.radiologyId.city,
+            region: response.radiologyId.region,
+            price: response.price,
+          });
+        }
+      });
+    });
+
+    res.status(200).json({ responses });
+  } catch (error) {
+    res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
+  }
+});
+  
 //End Radiology
 
 //Analyst Section
 
 router.post(
-  "/createNewAnalyst",
+  '/createNewAnalyst',
   [
-    body("fullName")
+    body('fullName')
       .trim()
       .isLength({ min: 2 })
-      .withMessage("Full name must be at least 3 characters long"),
-    body("email")
+      .withMessage('Full name must be at least 3 characters long'),
+    body('email')
       .trim()
       .isEmail()
-      .withMessage("Please provide a valid email address"),
-    body("password")
+      .withMessage('Please provide a valid email address'),
+    body('password')
       .isLength({ min: 8 })
-      .withMessage("Password must be at least 8 characters long"),
-    body("region").trim().notEmpty().withMessage("region is required"),
-    body("address").trim().notEmpty().withMessage("Address is required"),
+      .withMessage('Password must be at least 8 characters long'),
+    body('region').trim().notEmpty().withMessage('region is required'),
+    body('address').trim().notEmpty().withMessage('Address is required'),
 
-    body("city").trim().notEmpty().withMessage("City is required"),
-    body("phone").notEmpty().withMessage("phone is required"),
+    body('city').trim().notEmpty().withMessage('City is required'),
+    body('phone').notEmpty().withMessage('phone is required'),
   ],
   analystController.createNewAnalyst
 );
-router.post("/isApprovedAnalyst" , async(req,res)=>{
-  const email = req.body.email
-  if(!email){
-    res.status(404).json({success:false , message:"Email Not found"})
+router.post('/isApprovedAnalyst', async (req, res) => {
+  const email = req.body.email;
+  if (!email) {
+    res.status(404).json({ success: false, message: 'Email Not found' });
   }
-  const user = await Analyst.findOne({email})
-  if(!user){
-    res.status(404).json({success:false , message:"User Not found"})
+  const user = await Analyst.findOne({ email });
+  if (!user) {
+    res.status(404).json({ success: false, message: 'User Not found' });
   }
-  if(!user.approved){
-    res.status(400).json({success:false , message:"user is not approved yet!"})
+  if (!user.approved) {
+    res
+      .status(400)
+      .json({ success: false, message: 'user is not approved yet!' });
   }
-  res.status(201).json({success:true , message:"user is  approved sucessfully!"})
-
-})
-router.get("/approve/analyst/:id", analystController.approveAnalyst);
-router.get("/reject/analyst/:id", analystController.rejectAnalyst);
+  res
+    .status(201)
+    .json({ success: true, message: 'user is  approved sucessfully!' });
+});
+router.get('/approve/analyst/:id', analystController.approveAnalyst);
+router.get('/reject/analyst/:id', analystController.rejectAnalyst);
 router.get(
-  "/getAnalystsinCity/:city?/:region?",
+  '/getAnalystsinCity/:city?/:region?',
   checkprov.checkifLoggedIn,
   analystController.getAnalyst
 );

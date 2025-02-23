@@ -25,6 +25,9 @@ exports.createNewAnalyst = async (req, res) => {
     StartJob,
     EndJob,
   } = req.body;
+  if(!fullName || !email || !password || !city || !region || !address || !phone || !StartJob || !EndJob){
+    return res.status(404).json({success:false , message:'All fields are required'})
+  }
   try {
     const existingUser = await Analyst.findOne({ email });
     if (existingUser) {

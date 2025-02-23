@@ -1,17 +1,17 @@
 const mongoose = require("mongoose");
 
-const requestSchema = new mongoose.Schema({
+const requestRadiologySchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Seek" },
   imageUrl: String, // رابط صورة الروشتة
   city: String,
   region: String,
-  pharmacistsResponded: [
+  radiologysResponded: [
     {
-      pharmacistId: { type: mongoose.Schema.Types.ObjectId, ref: "pharmatic" },
+      radiologyId: { type: mongoose.Schema.Types.ObjectId, ref: "radiology" },
       price: Number,
       accepted: Boolean,
     },
   ],
 });
 
-module.exports = mongoose.model("PrescriptionRequest", requestSchema);
+module.exports = mongoose.model("requestRadiologySchema", requestRadiologySchema);
