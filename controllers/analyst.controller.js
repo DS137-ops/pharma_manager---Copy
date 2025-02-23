@@ -109,7 +109,7 @@ exports.loginAna = async (req, res) => {
     const token = await jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
     RefreshToken.create({ token });
 
-    res.status(200).json({ success: true, message: 'Login successful', token });
+    res.status(200).json({ success: true, message: 'Login successful', token , user });
   } catch (err) {
     console.error('Error logging in:', err);
     res

@@ -26,8 +26,20 @@ exports.createNewRadiology = async (req, res) => {
     StartJob,
     EndJob,
   } = req.body;
-  if(!fullName || !email || !password || !city || !region || !address || !phone || !StartJob || !EndJob){
-    return res.status(404).json({success:false , message:'All fields are required'})
+  if (
+    !fullName ||
+    !email ||
+    !password ||
+    !city ||
+    !region ||
+    !address ||
+    !phone ||
+    !StartJob ||
+    !EndJob
+  ) {
+    return res
+      .status(404)
+      .json({ success: false, message: 'All fields are required' });
   }
   try {
     const existingUser = await Radiology.findOne({ email });
@@ -132,11 +144,11 @@ exports.rejectRadiology = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: 'User not found' });
-        const mailOptions = {
-          from: 'nabd142025@gmail.com',
-          to: user.email,
-          subject: 'الرد على طلب التسجيل',
-          html: `
+    const mailOptions = {
+      from: 'nabd142025@gmail.com',
+      to: user.email,
+      subject: 'الرد على طلب التسجيل',
+      html: `
                   <h3>بعد مراجعة حالة طلبك التالي:</h3>
                   <p>Name: ${user.fullName}</p>
                   <p>Email: ${user.email}</p>
@@ -149,8 +161,8 @@ exports.rejectRadiology = async (req, res) => {
                   <h3>لم تتم الموافقة على طلبك يرجى إعادة تفقد البيانات وإرسال الطلب مجددا </h3>
                   <h5>مع أطيب التمنيات</h5>
                 `,
-        };
-        await transporter.sendMail(mailOptions);
+    };
+    await transporter.sendMail(mailOptions);
     await Radiology.deleteOne({ _id: req.params.id });
 
     res
@@ -166,14 +178,13 @@ exports.getradiology = async (req, res) => {
     region = req.params.region;
   const query = { role: 'radiology', city: city, region: region };
   const findradiology = await Radiology.find(query);
-  console.log(findradiology)
+  console.log(findradiology);
   if (findradiology) {
     res.status(201).json({ status: true, findradiology });
   } else {
     res.status(404).json({ status: false, message: 'No result' });
   }
 };
-
 
 exports.rateRadiology = async (req, res) => {
   try {
@@ -228,7 +239,6 @@ exports.rateRadiology = async (req, res) => {
   }
 };
 
-
 exports.getFinalRateForRadiology = async (req, res) => {
   try {
     const radiologyId = req.params.radiologyId;
@@ -261,8 +271,8 @@ exports.getFinalRateForRadiology = async (req, res) => {
 
 exports.loginRadio = async (req, res) => {
   const { email, password } = req.body;
-  if(!email || !password){
-    res.status(404).json({message:'all fields are required'})
+  if (!email || !password) {
+    res.status(404).json({ message: 'all fields are required' });
   }
   try {
     const { email, password } = req.body;
@@ -278,10 +288,15 @@ exports.loginRadio = async (req, res) => {
         .status(401)
         .json({ success: false, message: 'password is Not the same' });
     }
-    const token = await jwt.sign({ id: user._id, role: 'radiology' }, '1001110');
+    const token = await jwt.sign(
+      { id: user._id, role: 'radiology' },
+      '1001110'
+    );
     RefreshToken.create({ token });
 
-    res.status(200).json({ success: true, message: 'Login successful', token });
+    res
+      .status(200)
+      .json({ success: true, message: 'Login successful', token, user });
   } catch (err) {
     console.error('Error logging in:', err);
     res

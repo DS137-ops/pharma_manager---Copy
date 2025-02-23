@@ -650,7 +650,7 @@ exports.loginPhar = async (req, res) => {
     );
     RefreshToken.create({ token });
 
-    res.status(200).json({ success: true, message: 'Login successful', token });
+    res.status(200).json({ success: true, message: 'Login successful', token , user });
   } catch (err) {
     console.error('Error logging in:', err);
     res
