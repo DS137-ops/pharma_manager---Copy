@@ -64,8 +64,20 @@ exports.createNewPharmatic = async (req, res) => {
     StartJob,
     EndJob,
   } = req.body;
-  if(!fullName || !email || !password || !city || !region || !address || !phone || !StartJob || !EndJob){
-    return res.status(404).json({success:false , message:'All fields are required'})
+  if (
+    !fullName ||
+    !email ||
+    !password ||
+    !city ||
+    !region ||
+    !address ||
+    !phone ||
+    !StartJob ||
+    !EndJob
+  ) {
+    return res
+      .status(404)
+      .json({ success: false, message: 'All fields are required' });
   }
   try {
     const existingUser = await Pharmatic.findOne({ email });
@@ -627,11 +639,10 @@ exports.createNewSeek = async (req, res) => {
 
 exports.loginPhar = async (req, res) => {
   const { email, password } = req.body;
-  if(!email || !password){
-    res.status(403).json({message:'all fields are required'})
+  if (!email || !password) {
+    res.status(403).json({ message: 'all fields are required' });
   }
   try {
-    
     const user = await Pharmatic.findOne({ email });
     if (!user) {
       return res
@@ -649,8 +660,12 @@ exports.loginPhar = async (req, res) => {
       '1001110'
     );
     RefreshToken.create({ token });
-
-    res.status(200).json({ success: true, message: 'Login successful', token , user });
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user
+    });
   } catch (err) {
     console.error('Error logging in:', err);
     res

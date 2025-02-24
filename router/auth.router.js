@@ -82,7 +82,7 @@ router.post(
 
 router.get('/approve/doctor/:id', authController.approveDoctor);
 router.get('/reject/doctor/:id', authController.rejectDoctor);
-router.post('/signinDoctor', authController.loginDoctor);
+router.post('/signinDoctor', checkprov.isProvvedDoctor ,authController.loginDoctor);
 router.post(
   '/rateDoctor/:DoctorId',
   checkprov.checkifLoggedIn,
@@ -232,7 +232,7 @@ router.post(
 router.get('/final-rate-pharmacy/:pharmaticId', authController.getFinalRate);
 router.get('/approve/pharmatic/:id', authController.approvePharmatic);
 router.get('/reject/pharmatic/:id', authController.rejectPharmatic);
-router.post('/signinPharmatic', checkprov.isProvved, authController.loginPhar);
+router.post('/signinPharmatic', checkprov.isProvvedPharm , authController.loginPhar);
 router.post(
   '/updatePharInfo/:id',
   checkprov.checkifLoggedIn,
@@ -410,7 +410,7 @@ router.get(
 );
 router.post(
   '/signinRadiology',
-  checkprov.isProvved,
+  checkprov.isProvvedRadio,
   RadiologyController.loginRadio
 );
 router.post(
@@ -543,7 +543,7 @@ router.post(
 );
 router.post(
   '/signinAnalyst',
-  checkprov.isProvved,
+  checkprov.isProvvedAna,
   analystController.loginAna
 );
 router.post('/isApprovedAnalyst', async (req, res) => {

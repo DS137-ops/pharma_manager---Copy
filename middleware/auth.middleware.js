@@ -1,12 +1,14 @@
 const User = require('../model/auth.model');
+const Analyst = require('../model/analyst.model');
 const Doctor = require('../model/doctor.model');
+const Radiology = require('../model/radiology.model');
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
 const Seek = require('../model/seek.model');
 const jwt = require('jsonwebtoken');
 
 //if the spec is approved  Common for all specs
-exports.isProvved = async (req, res, next) => {
+exports.isProvvedPharm = async (req, res, next) => {
   try {
     const { email } = req.body;
     console.log(email);
@@ -15,13 +17,13 @@ exports.isProvved = async (req, res, next) => {
         .status(401)
         .json({ success: false, message: 'Email is required' });
     }
-    const userlog = await User.find({ email });
+    const userlog = await User.findOne({ email });
     if (!userlog) {
       return res
         .status(404)
         .json({ success: false, message: 'Email is inCorrect' });
     }
-    if (!userlog[0].approved) {
+    if (!userlog.approved) {
       return res.status(403).json({
         success: false,
         message:
@@ -30,6 +32,99 @@ exports.isProvved = async (req, res, next) => {
     }
     next();
   } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: 'Internal server error', error });
+  }
+};
+
+exports.isProvvedDoctor = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    console.log(email);
+    if (!email) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'Email is required' });
+    }
+    const userlog = await Doctor.findOne({ email });
+    if (!userlog) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Email is inCorrect' });
+    }
+    if (!userlog.approved) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Your account is not approved yet. Please wait for admin approval.',
+      });
+    }
+    next();
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: 'Internal server error', error });
+  }
+};
+exports.isProvvedAna = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    console.log(email);
+    if (!email) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'Email is required' });
+    }
+    const userlog = await Analyst.findOne({ email });
+    if (!userlog) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Email is inCorrect' });
+    }
+    if (!userlog.approved) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Your account is not approved yet. Please wait for admin approval.',
+      });
+    }
+    next();
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: 'Internal server error', error });
+  }
+};
+
+exports.isProvvedRadio = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    console.log(email);
+    if (!email) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'Email is required' });
+    }
+    const userlog = await Radiology.findOne({ email });
+    if (!userlog) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Email is inCorrect' });
+    }
+    if (!userlog.approved) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Your account is not approved yet. Please wait for admin approval.',
+      });
+    }
+    next();
+  } catch (error) {
+    console.log(error);
     res
       .status(500)
       .json({ success: false, message: 'Internal server error', error });
@@ -117,4 +212,16 @@ exports.authMiddleware = async (req, res, next) => {
   } catch (error) {
     res.status(401).json({ message: 'المصادقة فشلت', error: error.message });
   }
+};
+
+exports.checkifLoggedOut = async (req, res) => {
+  const token = req.header('Authorization')?.split(' ')[1];
+  console.log(token);
+
+  const refreshtoken = await Blacklist.findOne({ token });
+  console.log(refreshtoken);
+  if (!refreshtoken) {
+    return res.status(401).json({ message: 'You are Logged In' });
+  }
+  next();
 };
