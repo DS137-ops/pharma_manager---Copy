@@ -31,10 +31,10 @@ mongoose
   .then(() => console.log("MongoDB connected!"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-app.use("/api/pharma", PharmaticRouter);
-app.use("/api/analyst", AnalystRouter);
-app.use("/api/radiology", RadiologyRouter);
-app.use("/api/doctor", DoctorRouter);
+app.use("/api/Pharmatic", PharmaticRouter);
+app.use("/api/Analyst", AnalystRouter);
+app.use("/api/Radiology", RadiologyRouter);
+app.use("/api/Doctor", DoctorRouter);
 app.use("/admin", adminRouter);
 
 server.listen(PORT, () => {
