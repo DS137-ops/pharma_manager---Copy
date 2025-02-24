@@ -85,8 +85,8 @@ exports.createNewPharmatic = async (req, res) => {
 
     // https://pharma-manager-copy-2.onrender.com
     await newUser.save();
-    const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/approve/pharmatic/${newUser._id}`;
-    const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/reject/pharmatic/${newUser._id}`;
+    const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/Pharmatic/approve/pharmatic/${newUser._id}`;
+    const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/Pharmatic/reject/pharmatic/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
@@ -362,10 +362,7 @@ exports.rejectPharmatic = async (req, res) => {
   }
 };
 
-
 const moment = require('moment');
-
-
 
 exports.createNewSeek = async (req, res) => {
   try {
@@ -425,7 +422,7 @@ exports.loginPhar = async (req, res) => {
       success: true,
       message: 'Login successful',
       token,
-      user
+      user,
     });
   } catch (err) {
     console.error('Error logging in:', err);
