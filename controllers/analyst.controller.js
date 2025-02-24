@@ -1,9 +1,7 @@
 const bcrypt = require('bcryptjs');
-const path = require('path');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
-const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
 const Analyst = require('../model/analyst.model');
 const transporter = nodemailer.createTransport({
@@ -49,8 +47,8 @@ exports.createNewAnalyst = async (req, res) => {
     });
     // https://pharma-manager-copy-1.onrender.com
     await newUser.save();
-    const approvalLink = `pharma-manager-copy-2.onrender.com/api/approve/analyst/${newUser._id}`;
-    const rejectLink = `pharma-manager-copy-2.onrender.com/api/reject/analyst/${newUser._id}`;
+    const approvalLink = `pharma-manager-copy-2.onrender.com/api/analyst/approve/analyst/${newUser._id}`;
+    const rejectLink = `pharma-manager-copy-2.onrender.com/api/analyst/reject/analyst/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',

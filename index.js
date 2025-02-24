@@ -1,8 +1,11 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const authRouter = require("./router/auth.router");
+const PharmaticRouter = require("./router/auth.router");
+const AnalystRouter = require("./router/analyst.router");
 const adminRouter = require("./router/admin.router");
+const RadiologyRouter = require("./router/radiology.router");
+const DoctorRouter = require("./router/doctor.router");
 const http = require("http");
 app.use("/uploads", express.static("uploads"));
 const mongoose = require("mongoose");
@@ -17,26 +20,8 @@ app.use(express.json());
 app.use(mongoSanitize());
 app.use(xss());
 app.use(helmet());
-const multer = require("multer");
-const Booking = require("./model/book.model");
-const moment = require("moment");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("cloudinary").v2;
 
-cloudinary.config({
-  cloud_name: "dqk8dzdoo",
-  api_key: "687124232966245",
-  api_secret: "LhIKcexhYtHUK-bZSiIoT8jsMqc",
-});
 
-// Multer Storage Configuration
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: async (req, file) => ({
-    folder: `pharmacies/${req.params.id}`,
-    allowed_formats: ["jpg", "png", "jpeg"],
-  }),
-});
 const server = http.createServer(app);
 const localUri = "mongodb://localhost:27017/medicalapp",
   GlobalUri =
@@ -46,7 +31,10 @@ mongoose
   .then(() => console.log("MongoDB connected!"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-app.use("/api", authRouter);
+app.use("/api/pharma", PharmaticRouter);
+app.use("/api/analyst", AnalystRouter);
+app.use("/api/radiology", RadiologyRouter);
+app.use("/api/doctor", DoctorRouter);
 app.use("/admin", adminRouter);
 
 server.listen(PORT, () => {

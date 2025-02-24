@@ -1,0 +1,131 @@
+const router = require('express').Router();
+const doctorController = require('../controllers/doctor.controller');
+const { body } = require('express-validator');
+const checkprov = require('../middleware/auth.middleware');
+const ckeckSeek = require('../middleware/seek.middleware');
+const Doctor = require('../model/doctor.model');
+const mongoose = require('mongoose');
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloud_name: 'dqk8dzdoo',
+  api_key: '687124232966245',
+  api_secret: 'LhIKcexhYtHUK-bZSiIoT8jsMqc',
+});
+const storage_for_Doctor = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: async (req, file) => ({
+      folder: `Doctors/${req.params.id}`, // Creates a unique folder for each pharmacy
+      allowed_formats: ['jpg', 'png', 'jpeg'],
+    }),
+  });
+  const uploadfordoctor = multer({ storage: storage_for_Doctor });
+
+  //api doctor
+router.post(
+    '/createNewDoctor',
+    [
+      body('fullName')
+        .trim()
+        .isLength({ min: 2 })
+        .withMessage('Full name must be at least 3 characters long'),
+      body('email')
+        .trim()
+        .isEmail()
+        .withMessage('Please provide a valid email address'),
+      body('password')
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters long'),
+      body('region').trim().notEmpty().withMessage('region is required'),
+      body('address').trim().notEmpty().withMessage('Address is required'),
+      body('specilizate')
+        .trim()
+        .notEmpty()
+        .withMessage('specilizate is required'),
+  
+      body('city').trim().notEmpty().withMessage('City is required'),
+      body('phone').notEmpty().withMessage('phone is required'),
+    ],
+    doctorController.createNewDoctor
+  );
+  
+  router.get('/approve/doctor/:id', doctorController.approveDoctor);
+  router.get('/reject/doctor/:id', doctorController.rejectDoctor);
+  router.post('/signinDoctor', checkprov.isProvvedDoctor ,doctorController.loginDoctor);
+  router.post(
+    '/rateDoctor/:DoctorId',
+    checkprov.checkifLoggedIn,
+    ckeckSeek.authenticateSeek,
+    doctorController.rateDoctor
+  );
+  router.get(
+    '/final-rate-doctor/:doctorId',
+    doctorController.getFinalRateforDoctor
+  );
+  router.get(
+    '/getDoctorsinCity/:city?/:region?/:spec?',
+    checkprov.checkifLoggedIn,
+    ckeckSeek.authenticateSeek,
+    doctorController.getDoctors
+  );
+  
+  router.post(
+    '/createNewBook',
+     checkprov.checkifLoggedIn,
+     ckeckSeek.authenticateSeek,
+    doctorController.createNewBook
+  );
+  router.post(
+    '/updateDoctorInfo/:id',
+    body('phone').notEmpty().withMessage('phone is required'),
+    checkprov.isDoctor,
+    checkprov.checkifLoggedIn,
+    doctorController.updateDoctorInfo
+  );
+  router.post(
+    '/upload-doctor-photo/:id',
+    checkprov.checkifLoggedIn,
+    uploadfordoctor.single('image'),
+    async (req, res) => {
+      try {
+        const DoctorId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(DoctorId)) {
+          return res.status(400).json({ message: 'Invalid pharmacy ID' });
+        }
+        const TheDoctor = await Doctor.findById(DoctorId);
+        if (!TheDoctor) {
+          return res.status(404).json({ message: 'Doctor not found' });
+        }
+        if (!req.file) {
+          return res.status(400).json({ message: 'No file uploaded' });
+        }
+  
+        const image = req.file.path;
+        TheDoctor.doctorimage.push({
+          imageUrl: image,
+          date: new Date(),
+        });
+        await TheDoctor.save();
+        res.status(200).json({
+          message: 'Image uploaded successfully',
+          data: TheDoctor,
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Internal server', error });
+      }
+    }
+  );
+  
+  router.get('/get-doctor-image/:id', async (req, res) => {
+    try {
+      const doctorId = req.params.id;
+      const doctor = await Doctor.findById(doctorId);
+      const notify = doctor.doctorimage;
+  
+      res.status(201).json({ success: true, notify });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  module.exports = router;
