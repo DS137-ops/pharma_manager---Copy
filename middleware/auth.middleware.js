@@ -9,11 +9,12 @@ const jwt = require('jsonwebtoken');
 
 //if the spec is approved  Common for all specs
 exports.isProvvedPharm = async (req, res, next) => {
+  const { email } = req.body;
   if(!email){
     res.json({message:'email should not empty'})
   }
   try {
-    const { email } = req.body;
+
     if (!email) {
       return res
         .status(401)
