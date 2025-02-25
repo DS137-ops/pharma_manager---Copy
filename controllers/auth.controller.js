@@ -85,8 +85,8 @@ exports.createNewPharmatic = async (req, res) => {
 
     // https://pharma-manager-copy-2.onrender.com
     await newUser.save();
-    const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/Pharmatic/approve/pharmatic/${newUser._id}`;
-    const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/Pharmatic/reject/pharmatic/${newUser._id}`;
+    const approvalLink = `http://localhost:8080/api/Pharmatic/approve/pharmatic/${newUser._id}`;
+    const rejectLink = `http://localhost:8080/api/Pharmatic/reject/pharmatic/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',

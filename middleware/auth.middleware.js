@@ -214,14 +214,30 @@ exports.authMiddleware = async (req, res, next) => {
   }
 };
 
-exports.checkifLoggedOut = async (req, res) => {
-  const token = req.header('Authorization')?.split(' ')[1];
-  console.log(token);
+exports.checkifLoggedOut = async (req, res, next) => {
+  try {
+      const token = req.header('Authorization')?.split(' ')[1];
 
-  const refreshtoken = await Blacklist.findOne({ token });
-  console.log(refreshtoken);
-  if (!refreshtoken) {
-    return res.status(401).json({ message: 'You are Logged In' });
+      if (!token) {
+          // No token found → User is logged out → Allow login
+          return next();
+      }
+
+      // Check if the token is in the blacklist (meaning the user logged out)
+      const isBlacklisted = await Blacklist.findOne({ token });
+
+      if (isBlacklisted) {
+          // Token is blacklisted → Allow login
+          return next();
+      }
+
+      // If token exists but is not blacklisted → User is still logged in
+      return res.status(401).json({ message: 'You are already logged in. Please logout first.' });
+
+  } catch (error) {
+      console.error("Error in checkifLoggedOut middleware:", error);
+      res.status(500).json({ message: 'Internal Server Error' });
   }
-  next();
 };
+
+

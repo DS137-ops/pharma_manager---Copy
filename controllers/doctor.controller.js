@@ -85,8 +85,8 @@ exports.createNewDoctor = async (req, res) => {
       });
       //pharma-manager-copy-2.onrender.com
       await newUser.save();
-      const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/Doctor/approve/doctor/${newUser._id}`;
-      const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/Doctor/reject/doctor/${newUser._id}`;
+      const approvalLink = `http://localhost:8080/api/Doctor/approve/doctor/${newUser._id}`;
+      const rejectLink = `http://localhost:8080/api/Doctor/reject/doctor/${newUser._id}`;
       const mailOptions = {
         from: email,
         to: 'feadkaffoura@gmail.com',
