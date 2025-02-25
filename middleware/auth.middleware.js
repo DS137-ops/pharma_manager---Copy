@@ -9,9 +9,11 @@ const jwt = require('jsonwebtoken');
 
 //if the spec is approved  Common for all specs
 exports.isProvvedPharm = async (req, res, next) => {
+  if(!email){
+    res.json({message:'email should not empty'})
+  }
   try {
     const { email } = req.body;
-    console.log(email);
     if (!email) {
       return res
         .status(401)
@@ -32,7 +34,6 @@ exports.isProvvedPharm = async (req, res, next) => {
     }
     next();
   } catch (error) {
-    console.log(error);
     res
       .status(500)
       .json({ success: false, message: 'Internal server error', error });
@@ -42,7 +43,6 @@ exports.isProvvedPharm = async (req, res, next) => {
 exports.isProvvedDoctor = async (req, res, next) => {
   try {
     const { email } = req.body;
-    console.log(email);
     if (!email) {
       return res
         .status(401)
@@ -63,7 +63,6 @@ exports.isProvvedDoctor = async (req, res, next) => {
     }
     next();
   } catch (error) {
-    console.log(error);
     res
       .status(500)
       .json({ success: false, message: 'Internal server error', error });
