@@ -113,6 +113,9 @@ const doctorSchema = new mongoose.Schema({
       ],
     },
   ],
+  Gallery:[
+    {imageUrl:String , date:{type:Date , default:Date.now} , about:String}
+  ]
 });
 
 doctorSchema.methods.verifyPassword = async function (password) {

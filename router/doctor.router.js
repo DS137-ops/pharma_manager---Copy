@@ -14,118 +14,161 @@ cloudinary.config({
   api_secret: 'LhIKcexhYtHUK-bZSiIoT8jsMqc',
 });
 const storage_for_Doctor = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: async (req, file) => ({
-      folder: `Doctors/${req.params.id}`, // Creates a unique folder for each pharmacy
-      allowed_formats: ['jpg', 'png', 'jpeg'],
-    }),
-  });
-  const uploadfordoctor = multer({ storage: storage_for_Doctor });
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `Doctors/${req.params.id}`, // Creates a unique folder for each pharmacy
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+const uploadfordoctor = multer({ storage: storage_for_Doctor });
 
-  //api doctor
+
+const storage_for_gallery_Doctor = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `gallery/${req.params.id}`, // Creates a unique folder for each pharmacy
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+const galleryfordoctor = multer({ storage: storage_for_gallery_Doctor });
+
+//api doctor
 router.post(
-    '/createNewDoctor',
-    [
-      body('fullName')
-        .trim()
-        .isLength({ min: 2 })
-        .withMessage('Full name must be at least 3 characters long'),
-      body('email')
-        .trim()
-        .isEmail()
-        .withMessage('Please provide a valid email address'),
-      body('password')
-        .isLength({ min: 8 })
-        .withMessage('Password must be at least 8 characters long'),
-      body('region').trim().notEmpty().withMessage('region is required'),
-      body('address').trim().notEmpty().withMessage('Address is required'),
-      body('specilizate')
-        .trim()
-        .notEmpty()
-        .withMessage('specilizate is required'),
-  
-      body('city').trim().notEmpty().withMessage('City is required'),
-      body('phone').notEmpty().withMessage('phone is required'),
-    ],
-    doctorController.createNewDoctor
-  );
-  
-  router.get('/approve/doctor/:id', doctorController.approveDoctor);
-  router.get('/reject/doctor/:id', doctorController.rejectDoctor);
-  router.post('/signinDoctor', checkprov.isProvvedDoctor ,doctorController.loginDoctor);
-  router.post(
-    '/rateDoctor/:DoctorId',
-    checkprov.checkifLoggedIn,
-    ckeckSeek.authenticateSeek,
-    doctorController.rateDoctor
-  );
-  router.get(
-    '/final-rate-doctor/:doctorId',
-    doctorController.getFinalRateforDoctor
-  );
-  router.get(
-    '/getDoctorsinCity/:city?/:region?/:spec?',
-    checkprov.checkifLoggedIn,
-    ckeckSeek.authenticateSeek,
-    doctorController.getDoctors
-  );
-  
-  router.post(
-    '/createNewBook',
-     checkprov.checkifLoggedIn,
-     ckeckSeek.authenticateSeek,
-    doctorController.createNewBook
-  );
-  router.post(
-    '/updateDoctorInfo/:id',
+  '/createNewDoctor',
+  [
+    body('fullName')
+      .trim()
+      .isLength({ min: 2 })
+      .withMessage('Full name must be at least 3 characters long'),
+    body('email')
+      .trim()
+      .isEmail()
+      .withMessage('Please provide a valid email address'),
+    body('password')
+      .isLength({ min: 8 })
+      .withMessage('Password must be at least 8 characters long'),
+    body('region').trim().notEmpty().withMessage('region is required'),
+    body('address').trim().notEmpty().withMessage('Address is required'),
+    body('specilizate')
+      .trim()
+      .notEmpty()
+      .withMessage('specilizate is required'),
+
+    body('city').trim().notEmpty().withMessage('City is required'),
     body('phone').notEmpty().withMessage('phone is required'),
-    checkprov.isDoctor,
-    checkprov.checkifLoggedIn,
-    doctorController.updateDoctorInfo
-  );
-  router.post(
-    '/upload-doctor-photo/:id',
-    checkprov.checkifLoggedIn,
-    uploadfordoctor.single('image'),
-    async (req, res) => {
-      try {
-        const DoctorId = req.params.id;
-        if (!mongoose.Types.ObjectId.isValid(DoctorId)) {
-          return res.status(400).json({ message: 'Invalid pharmacy ID' });
-        }
-        const TheDoctor = await Doctor.findById(DoctorId);
-        if (!TheDoctor) {
-          return res.status(404).json({ message: 'Doctor not found' });
-        }
-        if (!req.file) {
-          return res.status(400).json({ message: 'No file uploaded' });
-        }
-  
-        const image = req.file.path;
-        TheDoctor.doctorimage.push({
-          imageUrl: image,
-          date: new Date(),
-        });
-        await TheDoctor.save();
-        res.status(200).json({
-          message: 'Image uploaded successfully',
-          data: TheDoctor,
-        });
-      } catch (error) {
-        res.status(500).json({ message: 'Internal server', error });
-      }
-    }
-  );
-  
-  router.get('/get-doctor-image/:id', async (req, res) => {
+  ],
+  doctorController.createNewDoctor
+);
+
+router.get('/approve/doctor/:id', doctorController.approveDoctor);
+router.get('/reject/doctor/:id', doctorController.rejectDoctor);
+router.post(
+  '/signinDoctor',
+  checkprov.isProvvedDoctor,
+  doctorController.loginDoctor
+);
+router.post(
+  '/rateDoctor/:DoctorId',
+  checkprov.checkifLoggedIn,
+  ckeckSeek.authenticateSeek,
+  doctorController.rateDoctor
+);
+router.get(
+  '/final-rate-doctor/:doctorId',
+  doctorController.getFinalRateforDoctor
+);
+router.get(
+  '/getDoctorsinCity/:city?/:region?/:spec?',
+  checkprov.checkifLoggedIn,
+  ckeckSeek.authenticateSeek,
+  doctorController.getDoctors
+);
+
+router.post(
+  '/createNewBook',
+  //checkprov.checkifLoggedIn,
+  // ckeckSeek.authenticateSeek,
+  doctorController.createNewBook
+);
+router.post(
+  '/updateDoctorInfo/:id',
+  body('phone').notEmpty().withMessage('phone is required'),
+  checkprov.isDoctor,
+  checkprov.checkifLoggedIn,
+  doctorController.updateDoctorInfo
+);
+router.post(
+  '/upload-doctor-photo/:id',
+  checkprov.checkifLoggedIn,
+  uploadfordoctor.single('image'),
+  async (req, res) => {
     try {
-      const doctorId = req.params.id;
-      const doctor = await Doctor.findById(doctorId);
-      const notify = doctor.doctorimage;
-  
-      res.status(201).json({ success: true, notify });
+      const DoctorId = req.params.id;
+      if (!mongoose.Types.ObjectId.isValid(DoctorId)) {
+        return res.status(400).json({ message: 'Invalid pharmacy ID' });
+      }
+      const TheDoctor = await Doctor.findById(DoctorId);
+      if (!TheDoctor) {
+        return res.status(404).json({ message: 'Doctor not found' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const image = req.file.path;
+      TheDoctor.doctorimage.push({
+        imageUrl: image,
+        date: new Date(),
+      });
+      await TheDoctor.save();
+      res.status(200).json({
+        message: 'Image uploaded successfully',
+        data: TheDoctor,
+      });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ message: 'Internal server', error });
     }
-  });
-  module.exports = router;
+  }
+);
+
+router.get('/get-doctor-image/:id', async (req, res) => {
+  try {
+    const doctorId = req.params.id;
+    const doctor = await Doctor.findById(doctorId);
+    const notify = doctor.doctorimage;
+
+    res.status(201).json({ success: true, notify });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post(
+  '/add-for-gallery/:id',
+  galleryfordoctor.single('image'),
+  async (req, res) => {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(404).json({ message: 'no Id available' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    try {
+      const doctor = await Doctor.findById(id);
+      const about = req.body.about
+      if (!doctor) {
+        return res.status(404).json({ message: 'No Doctor here' });
+      }
+      const imageUrl = req.file.path
+    doctor.Gallery.push({
+        imageUrl:imageUrl,
+        about:about
+    })
+await doctor.save()
+    } catch (err) {
+      res.status(500).json({err:err})
+    }
+  }
+);
+module.exports = router;

@@ -3,9 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
-const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
-
+const moment = require('moment')
 function generateTimeSlots(start, end) {
   const slots = [];
   let [sh, sm] = start.split(':').map(Number);
@@ -35,7 +34,43 @@ const transporter = nodemailer.createTransport({
 });
 
 exports.createNewDoctor = async (req, res) => {
-    const {
+  const {
+    fullName,
+    email,
+    password,
+    city,
+    region,
+    address,
+    phone,
+    specilizate,
+    NumberState,
+    rangeBooking,
+  } = req.body;
+
+  try {
+    const existingUser = await Doctor.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: `Email already exists`,
+      });
+    }
+    console.log(rangeBooking);
+    let booking = Array(7);
+    rangeBooking.map((bookingDay) => {
+      const countHalfHours = (bookingDay.end - bookingDay.start) * 2;
+      let bookingHours = Array(countHalfHours);
+      Array.from({ length: countHalfHours }, (_, i) => {
+        bookingHours.push({
+          idHour: i,
+          patientIDs: [],
+        });
+      });
+
+      booking.push({ bookingHours });
+    });
+
+    newUser = new Doctor({
       fullName,
       email,
       password,
@@ -46,52 +81,17 @@ exports.createNewDoctor = async (req, res) => {
       specilizate,
       NumberState,
       rangeBooking,
-    } = req.body;
-  
-    try {
-      const existingUser = await Doctor.findOne({ email });
-      if (existingUser) {
-        return res.status(409).json({
-          success: false,
-          message: `Email already exists`,
-        });
-      }
-      let booking = Array(7);
-      rangeBooking.map((bookingDay) => {
-        const countHalfHours = (bookingDay.end - bookingDay.start) * 2;
-        let bookingHours = Array(countHalfHours);
-        Array.from({ length: countHalfHours }, (_, i) => {
-          bookingHours.push({
-            idHour: i,
-            patientIDs: [],
-          });
-        });
-  
-        booking.push({ bookingHours });
-      });
-  
-      newUser = new Doctor({
-        fullName,
-        email,
-        password,
-        city,
-        region,
-        address,
-        phone,
-        specilizate,
-        NumberState,
-        rangeBooking,
-        booking,
-      });
-      //pharma-manager-copy-2.onrender.com
-      await newUser.save();
-      const approvalLink = `http://localhost:8080/api/Doctor/approve/doctor/${newUser._id}`;
-      const rejectLink = `http://localhost:8080/api/Doctor/reject/doctor/${newUser._id}`;
-      const mailOptions = {
-        from: email,
-        to: 'feadkaffoura@gmail.com',
-        subject: 'Test Email with Hotmail',
-        html: `
+      booking,
+    });
+    //pharma-manager-copy-2.onrender.com
+    await newUser.save();
+    const approvalLink = `http://localhost:8080/api/Doctor/approve/doctor/${newUser._id}`;
+    const rejectLink = `http://localhost:8080/api/Doctor/reject/doctor/${newUser._id}`;
+    const mailOptions = {
+      from: email,
+      to: 'feadkaffoura@gmail.com',
+      subject: 'Test Email with Hotmail',
+      html: `
             <h3>New Registration Request</h3>
             <p>Name: ${fullName}</p>
             <p>Email: ${email}</p>
@@ -102,41 +102,40 @@ exports.createNewDoctor = async (req, res) => {
             <p>Click below to approve or reject:</p>
             <a href="${approvalLink}" style="color:green">Approve</a> | <a href="${rejectLink}" style="color:red">Reject</a>
           `,
-      };
-      await transporter.sendMail(mailOptions);
-  
-      res
-        .status(200)
-        .json({ success: true, message: `Registration request sent to admin` });
-    } catch (err) {
-      console.error('Error registering user:', err);
-      if (err.name === 'ValidationError') {
-        const errors = Object.values(err.errors).map((e) => e.message);
-        return res
-          .status(400)
-          .json({ success: false, message: errors.join(', ') });
-      }
-  
-      res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-  };
+    };
+    await transporter.sendMail(mailOptions);
 
-  
+    res
+      .status(200)
+      .json({ success: true, message: `Registration request sent to admin` });
+  } catch (err) {
+    console.error('Error registering user:', err);
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map((e) => e.message);
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
+    }
+
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 exports.approveDoctor = async (req, res) => {
-    try {
-      const user = await Doctor.findById(req.params.id);
-      if (!user)
-        return res
-          .status(404)
-          .json({ success: false, message: 'User not found' });
-  
-      user.approved = true;
-      await user.save();
-      const mailOptions = {
-        from: 'nabd142025@gmail.com',
-        to: user.email,
-        subject: 'الرد على طلب التسجيل',
-        html: `
+  try {
+    const user = await Doctor.findById(req.params.id);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
+
+    user.approved = true;
+    await user.save();
+    const mailOptions = {
+      from: 'nabd142025@gmail.com',
+      to: user.email,
+      subject: 'الرد على طلب التسجيل',
+      html: `
             <h3>بعد مراجعة حالة طلبك التالي:</h3>
             <p>Name: ${user.fullName}</p>
             <p>Email: ${user.email}</p>
@@ -147,29 +146,29 @@ exports.approveDoctor = async (req, res) => {
             <h3>تمت الموافقة على طلبك بنجاح </h3>
             <h5>مع أطيب التمنيات</h5>
           `,
-      };
-      await transporter.sendMail(mailOptions);
-      res
-        .status(200)
-        .json({ success: true, user, message: 'User approved successfully' });
-    } catch (err) {
-      res
-        .status(500)
-        .json({ success: false, message: `Internal server error ${err}` });
-    }
-  };
-  exports.rejectDoctor = async (req, res) => {
-    try {
-      const user = await Doctor.findById(req.params.id);
-      if (!user)
-        return res
-          .status(404)
-          .json({ success: false, message: 'User not found' });
-      const mailOptions = {
-        from: 'nabd142025@gmail.com',
-        to: user.email,
-        subject: 'الرد على طلب التسجيل',
-        html: `
+    };
+    await transporter.sendMail(mailOptions);
+    res
+      .status(200)
+      .json({ success: true, user, message: 'User approved successfully' });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ success: false, message: `Internal server error ${err}` });
+  }
+};
+exports.rejectDoctor = async (req, res) => {
+  try {
+    const user = await Doctor.findById(req.params.id);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
+    const mailOptions = {
+      from: 'nabd142025@gmail.com',
+      to: user.email,
+      subject: 'الرد على طلب التسجيل',
+      html: `
                 <h3>بعد مراجعة حالة طلبك التالي:</h3>
                 <p>Name: ${user.fullName}</p>
             <p>Email: ${user.email}</p>
@@ -180,53 +179,50 @@ exports.approveDoctor = async (req, res) => {
                 <h3>لم تتم الموافقة على طلبك يرجى إعادة تفقد البيانات وإرسال الطلب مجددا </h3>
                 <h5>مع أطيب التمنيات</h5>
               `,
-      };
-      await transporter.sendMail(mailOptions);
-      await Doctor.deleteOne({ _id: req.params.id });
-  
-      res
-        .status(200)
-        .json({ success: true, message: 'User rejected successfully' });
-    } catch (err) {
-      res.status(500).json({ success: false, message: 'Internal server error' });
+    };
+    await transporter.sendMail(mailOptions);
+    await Doctor.deleteOne({ _id: req.params.id });
+
+    res
+      .status(200)
+      .json({ success: true, message: 'User rejected successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+exports.loginDoctor = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await Doctor.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Email is Not Correct' });
     }
-  };
-
-  
-
-  exports.loginDoctor = async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const user = await Doctor.findOne({ email });
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: 'Email is Not Correct' });
-      }
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res
-          .status(401)
-          .json({ success: false, message: 'password is Not the same' });
-      }
-  
-      const token = await jwt.sign({ id: user._id, role: 'doctor' }, '1001110');
-      RefreshToken.create({ token });
-  
-      res.status(200).json({
-        success: true,
-        message: 'Login successful',
-        token,
-      });
-    } catch (err) {
-      console.error('Error logging in:', err);
-      res
-        .status(500)
-        .json({ success: false, message: `Internal server error ${err}` });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'password is Not the same' });
     }
-  };
 
-  
+    const token = await jwt.sign({ id: user._id, role: 'doctor' }, '1001110');
+    RefreshToken.create({ token });
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+    });
+  } catch (err) {
+    console.error('Error logging in:', err);
+    res
+      .status(500)
+      .json({ success: false, message: `Internal server error ${err}` });
+  }
+};
+
 exports.rateDoctor = async (req, res) => {
   try {
     const { DoctorId } = req.params;
@@ -362,20 +358,18 @@ exports.createNewBook = async (req, res) => {
     if (idDay > hourIndex || idDay < 0) {
       return res.status(404).json({ status: false, message: 'Hour not found' });
     }
+    if(doctor.booking[idDay].bookingHours[idHour].patientIDs.length>=2)return res.status(404).json({message:'No appo provide'})
 
     const existingPatient = doctor.booking[idDay].bookingHours[
       idHour
     ].patientIDs.some((p) => p.id.toString() === patientId);
-
     const todayUTC = moment().utc();
 
-    // حساب اليوم القادم المناسب بناءً على idDay
     let nextAppointmentDate = todayUTC.clone().day(idDay);
     if (nextAppointmentDate.isBefore(todayUTC, 'day')) {
-      nextAppointmentDate.add(7, 'days'); // إذا اليوم المحدد مرّ، اختار الأسبوع القادم
+      nextAppointmentDate.add(7, 'days');
     }
 
-    // البحث عن وقت البدء من rangeBooking
     const range = doctor.rangeBooking.find((r) => r.day === idDay);
     if (!range) {
       return res
@@ -383,12 +377,11 @@ exports.createNewBook = async (req, res) => {
         .json({ status: false, message: 'No rangeBooking for this day' });
     }
 
-    // حساب وقت الموعد بالـ UTC
     const appointmentTimeUTC = moment
       .utc(nextAppointmentDate)
-      .hour(range.start) // ضبط الساعة بناءً على rangeBooking.start
-      .minute(0) // ضبط الدقائق إلى 0
-      .add(idHour * 30, 'minutes'); // حساب وقت الموعد
+      .hour(range.start)
+      .minute(0)
+      .add(idHour * 30, 'minutes');
 
     if (!existingPatient) {
       doctor.booking[idDay].bookingHours[idHour].patientIDs.push({
