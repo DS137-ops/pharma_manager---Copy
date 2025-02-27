@@ -6,7 +6,22 @@ const AnalystAdvert = require('../model/analystAdvert.model');
 const SeekAdvert = require('../model/seekAdvert.model');
 const { createAdmin, adminLogin } = require("../controllers/adminController.controller");
 const { body } = require("express-validator");
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloud_name: 'dqk8dzdoo',
+  api_key: '687124232966245',
+  api_secret: 'LhIKcexhYtHUK-bZSiIoT8jsMqc',
+});
 
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `pharmacyAdvert`,
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+const Advert_for_pharmacy = multer({ storage: storage });
 
 const router = express.Router();
   const validateAdmin = [
@@ -46,8 +61,11 @@ router.get('/adverts-for-doctor', async (req, res) => {
 });
 
 
-router.post('/add-advert-for-pharmacy', async (req, res) => {
-  const {imageUrl } = req.body;
+router.post('/add-advert-for-pharmacy',Advert_for_pharmacy('image'), async (req, res) => {
+  if(!req.file){
+    return res.status(404).json({message:'no file uploaded'})
+  }
+  const {imageUrl} = req.file.path;
 
     if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
