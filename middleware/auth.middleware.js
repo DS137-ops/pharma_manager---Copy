@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken');
 exports.isProvvedPharm = async (req, res, next) => {
   const { email } = req.body;
   if(!email){
-    res.json({message:'email should not empty'})
+   return  res.json({message:'email should not empty'})
   }
   try {
 
