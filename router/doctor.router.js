@@ -169,4 +169,32 @@ router.post(
     }
   }
 );
+
+router.delete('/remove-from-gallery/:doctorId/:imageId', async (req, res) => {
+  const { doctorId, imageId } = req.params;
+
+  if (!doctorId || !imageId) {
+    return res.status(400).json({ message: 'Doctor ID and Image ID are required' });
+  }
+
+  try {
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    const updatedGallery = doctor.Gallery.filter(image => image._id.toString() !== imageId);
+
+    if (doctor.Gallery.length === updatedGallery.length) {
+      return res.status(404).json({ message: 'Image not found in gallery' });
+    }
+
+    doctor.Gallery = updatedGallery;
+    await doctor.save();
+
+    return res.status(200).json({ message: 'Image removed successfully' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;
