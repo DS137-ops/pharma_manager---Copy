@@ -62,7 +62,7 @@ router.get('/adverts-for-doctor', async (req, res) => {
 });
 
 
-router.post('/add-advert-for-pharmacy',Advert_for_pharmacy('image'), async (req, res) => {
+router.post('/add-advert-for-pharmacy',Advert_for_pharmacy.single('image'), async (req, res) => {
   if(!req.file){
     return res.status(404).json({message:'no file uploaded'})
   }
