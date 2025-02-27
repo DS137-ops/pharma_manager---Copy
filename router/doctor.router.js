@@ -22,7 +22,6 @@ const storage_for_Doctor = new CloudinaryStorage({
 });
 const uploadfordoctor = multer({ storage: storage_for_Doctor });
 
-
 const storage_for_gallery_Doctor = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => ({
@@ -156,18 +155,17 @@ router.post(
     }
     try {
       const doctor = await Doctor.findById(id);
-      const about = req.body.about
       if (!doctor) {
         return res.status(404).json({ message: 'No Doctor here' });
       }
-      const imageUrl = req.file.path
-    doctor.Gallery.push({
-        imageUrl:imageUrl,
-        about:about
-    })
-await doctor.save()
+      const imageUrl = req.file.path;
+      doctor.Gallery.push({
+        imageUrl: imageUrl,
+      });
+      await doctor.save();
+      return res.status(200).json({message:'image add to gallery'})
     } catch (err) {
-      res.status(500).json({err:err})
+      res.status(500).json({ err: err });
     }
   }
 );
