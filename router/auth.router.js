@@ -96,8 +96,8 @@ router.post(
 router.get('/final-rate-pharmacy/:pharmaticId', authController.getFinalRate);
 router.get('/approve/pharmatic/:id', authController.approvePharmatic);
 router.get('/reject/pharmatic/:id', authController.rejectPharmatic);
-router.post('/signinPharmatic', authController.loginPhar);
-//checkprov.isProvvedPharm , checkprov.checkifLoggedOut 
+router.post('/signinPharmatic',checkprov.checkifLoggedOut, authController.loginPhar);
+//checkprov.isProvvedPharm ,  
 router.post(
   '/updatePharInfo/:id',
   checkprov.checkifLoggedIn,
