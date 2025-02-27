@@ -398,10 +398,11 @@ exports.createNewSeek = async (req, res) => {
 exports.loginPhar = async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
+  if (!email) {
     return res.status(403).json({ message: 'all fields are required' });
   }
-
+  if(!password)
+    return res.status(400).json({ message: 'all fields are required' });
   try {
     const user = await Pharmatic.findOne({ email });
     if (!user) {
