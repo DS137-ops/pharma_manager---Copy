@@ -6,6 +6,7 @@ const AnalystAdvert = require('../model/analystAdvert.model');
 const SeekAdvert = require('../model/seekAdvert.model');
 const { createAdmin, adminLogin } = require("../controllers/adminController.controller");
 const { body } = require("express-validator");
+const multer = require("multer")
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
