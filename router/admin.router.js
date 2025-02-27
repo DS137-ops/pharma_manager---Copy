@@ -1,4 +1,9 @@
 const express = require("express");
+const doctorAdvert = require('../model/doctorAdvert.model');
+const PharmacyAdvert = require('../model/pharmacyAdvert.model');
+const RadiologyAdvert = require('../model/radiologyAdvert.model');
+const AnalystAdvert = require('../model/analystAdvert.model');
+const SeekAdvert = require('../model/seekAdvert.model');
 const { createAdmin, adminLogin } = require("../controllers/adminController.controller");
 const { body } = require("express-validator");
 
@@ -11,5 +16,158 @@ const router = express.Router();
 
 router.post("/create", validateAdmin, createAdmin);
 router.post("/login", validateAdmin, adminLogin);
+
+router.post('/add-advert-for-doctor', async (req, res) => {
+  try {
+    const { title, description, imageUrl } = req.body;
+
+    if (!title || !description || !imageUrl) {
+      return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
+    }
+
+    const newAdvert = new doctorAdvert({
+      title,
+      description,
+      imageUrl
+    });
+
+    await newAdvert.save();
+    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.get('/adverts-for-doctor', async (req, res) => {
+  try {
+    const adverts = await doctorAdvert.find().sort({ createdAt: -1 });
+    res.status(200).json({ adverts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+router.post('/add-advert-for-pharmacy', async (req, res) => {
+  const { title, description, imageUrl } = req.body;
+
+    if (!title || !description || !imageUrl) {
+      return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
+    }
+  try {
+    
+    const newAdvert = new PharmacyAdvert({
+      title,
+      description,
+      imageUrl
+    });
+
+    await newAdvert.save();
+    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.get('/adverts-for-pharmacy', async (req, res) => {
+  try {
+    const adverts = await PharmacyAdvert.find().sort({ createdAt: -1 });
+    res.status(200).json({ adverts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+router.post('/add-advert-for-radiology', async (req, res) => {
+  const { title, description, imageUrl } = req.body;
+
+    if (!title || !description || !imageUrl) {
+      return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
+    }
+  try {
+    
+    const newAdvert = new RadiologyAdvert({
+      title,
+      description,
+      imageUrl
+    });
+
+    await newAdvert.save();
+    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.get('/adverts-for-radiology', async (req, res) => {
+  try {
+    const adverts = await RadiologyAdvert.find().sort({ createdAt: -1 });
+    res.status(200).json({ adverts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+router.post('/add-advert-for-analyst', async (req, res) => {
+  const { title, description, imageUrl } = req.body;
+
+    if (!title || !description || !imageUrl) {
+      return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
+    }
+  try {
+    
+    const newAdvert = new AnalystAdvert({
+      title,
+      description,
+      imageUrl
+    });
+
+    await newAdvert.save();
+    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.get('/adverts-for-analyst', async (req, res) => {
+  try {
+    const adverts = await AnalystAdvert.find().sort({ createdAt: -1 });
+    res.status(200).json({ adverts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/add-advert-for-seek', async (req, res) => {
+  const { title, description, imageUrl } = req.body;
+
+    if (!title || !description || !imageUrl) {
+      return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
+    }
+  try {
+    
+    const newAdvert = new SeekAdvert({
+      title,
+      description,
+      imageUrl
+    });
+
+    await newAdvert.save();
+    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.get('/adverts-for-analyst', async (req, res) => {
+  try {
+    const adverts = await AnalystAdvert.find().sort({ createdAt: -1 });
+    res.status(200).json({ adverts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
