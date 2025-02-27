@@ -19,15 +19,13 @@ router.post("/login", validateAdmin, adminLogin);
 
 router.post('/add-advert-for-doctor', async (req, res) => {
   try {
-    const { title, description, imageUrl } = req.body;
+    const {  imageUrl } = req.body;
 
-    if (!title || !description || !imageUrl) {
+    if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
     }
 
     const newAdvert = new doctorAdvert({
-      title,
-      description,
       imageUrl
     });
 
@@ -49,16 +47,14 @@ router.get('/adverts-for-doctor', async (req, res) => {
 
 
 router.post('/add-advert-for-pharmacy', async (req, res) => {
-  const { title, description, imageUrl } = req.body;
+  const {imageUrl } = req.body;
 
-    if (!title || !description || !imageUrl) {
+    if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
     }
   try {
     
     const newAdvert = new PharmacyAdvert({
-      title,
-      description,
       imageUrl
     });
 
@@ -80,16 +76,14 @@ router.get('/adverts-for-pharmacy', async (req, res) => {
 
 
 router.post('/add-advert-for-radiology', async (req, res) => {
-  const { title, description, imageUrl } = req.body;
+  const {imageUrl } = req.body;
 
-    if (!title || !description || !imageUrl) {
+    if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
     }
   try {
     
     const newAdvert = new RadiologyAdvert({
-      title,
-      description,
       imageUrl
     });
 
@@ -111,16 +105,14 @@ router.get('/adverts-for-radiology', async (req, res) => {
 
 
 router.post('/add-advert-for-analyst', async (req, res) => {
-  const { title, description, imageUrl } = req.body;
+  const {imageUrl } = req.body;
 
-    if (!title || !description || !imageUrl) {
+    if ( !imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
     }
   try {
     
     const newAdvert = new AnalystAdvert({
-      title,
-      description,
       imageUrl
     });
 
@@ -141,16 +133,14 @@ router.get('/adverts-for-analyst', async (req, res) => {
 });
 
 router.post('/add-advert-for-seek', async (req, res) => {
-  const { title, description, imageUrl } = req.body;
+  const {imageUrl } = req.body;
 
-    if (!title || !description || !imageUrl) {
+    if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
     }
   try {
     
     const newAdvert = new SeekAdvert({
-      title,
-      description,
       imageUrl
     });
 
