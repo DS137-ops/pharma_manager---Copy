@@ -143,7 +143,7 @@ exports.checkifLoggedIn = async (req, res, next) => {
 
 exports.isPharmatic = async (req, res, next) => {
   try {
-    const { pharmaticId } = req.params;
+    const  pharmaticId  = req.params.id;
     if (!pharmaticId) {
       return res
         .status(404)
