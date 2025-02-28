@@ -124,7 +124,7 @@ exports.createNewPharmatic = async (req, res) => {
 };
 exports.ratePharmatic = async (req, res) => {
   try {
-    const { pharmaticId } = req.params;
+    const  pharmaticId  = req.params.pharmaticId;
     const { userId, rating, review } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(pharmaticId)) {
