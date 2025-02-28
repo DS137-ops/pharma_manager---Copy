@@ -198,7 +198,7 @@ exports.getFinalRate = async (req, res) => {
     const total = ratings.reduce((sum, rating) => sum + rating, 0);
     const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
 
-    res.json({ pharmaticId, finalRate: parseFloat(averageRating) });
+    res.status(200).json({ pharmaticId, finalRate: parseFloat(averageRating) });
   } catch (error) {
     console.error('Error calculating rating:', error);
     res.status(500).json({ message: 'Internal server error' });
