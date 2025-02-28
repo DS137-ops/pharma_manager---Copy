@@ -192,8 +192,13 @@ exports.rejectDoctor = async (req, res) => {
 };
 
 exports.loginDoctor = async (req, res) => {
+  const { email, password } = req.body;
+  if (!email) {
+    return res.status(403).json({ message: 'email is required' });
+  }
+  if(!password)
+    return res.status(400).json({ message: 'password is required' });
   try {
-    const { email, password } = req.body;
     const user = await Doctor.findOne({ email });
     if (!user) {
       return res

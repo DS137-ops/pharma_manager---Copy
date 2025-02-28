@@ -268,14 +268,14 @@ exports.getFinalRateForRadiology = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-var indexId = 0
+
 exports.loginRadio = async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    res.status(404).json({ message: 'all fields are required' });
+  if (!email ) {
+    return res.status(403).json({ message: 'email is required' });
   }
+  if(!password) return res.status(403).json({ message: 'password is required' });
   try {
-    const { email, password } = req.body;
     const user = await Radiology.findOne({ email });
     if (!user) {
       return res
@@ -293,10 +293,10 @@ exports.loginRadio = async (req, res) => {
       '1001110'
     );
     RefreshToken.create({ token });
-indexId++
+
     res
       .status(200)
-      .json({ success: true, message: 'Login successful', token, user , indexId });
+      .json({ success: true, message: 'Login successful', token, user  });
   } catch (err) {
     console.error('Error logging in:', err);
     res

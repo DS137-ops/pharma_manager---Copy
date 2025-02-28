@@ -399,10 +399,10 @@ exports.loginPhar = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email) {
-    return res.status(403).json({ message: 'all fields are required' });
+    return res.status(403).json({ message: 'email is required' });
   }
   if(!password)
-    return res.status(400).json({ message: 'all fields are required' });
+    return res.status(400).json({ message: 'password is required' });
   try {
     const user = await Pharmatic.findOne({ email });
     if (!user) {

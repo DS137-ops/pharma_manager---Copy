@@ -87,11 +87,13 @@ exports.createNewAnalyst = async (req, res) => {
 
 exports.loginAna = async (req, res) => {
   const { email, password } = req.body;
-  if(!email || !password){
-    res.status(404).json({message:'all fields are required'})
+  if(!email){
+    return res.status(403).json({message:'email is required'})
+  }
+  if(!password){
+    return res.status(400).json({message:'password is required'})
   }
   try {
-    const { email, password } = req.body;
     const user = await Analyst.findOne({ email });
     if (!user) {
       return res

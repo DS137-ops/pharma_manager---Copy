@@ -64,6 +64,7 @@ router.get('/reject/doctor/:id', doctorController.rejectDoctor);
 router.post(
   '/signinDoctor',
   checkprov.isProvvedDoctor,
+  checkprov.checkifLoggedOut,
   doctorController.loginDoctor
 );
 router.post(

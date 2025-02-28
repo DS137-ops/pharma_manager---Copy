@@ -48,6 +48,7 @@ router.post(
   router.post(
     '/signinAnalyst',
     checkprov.isProvvedAna,
+    checkprov.checkifLoggedOut,
     analystController.loginAna
   );
   router.post('/isApprovedAnalyst', async (req, res) => {

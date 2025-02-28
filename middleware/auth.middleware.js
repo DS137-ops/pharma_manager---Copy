@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken');
 exports.isProvvedPharm = async (req, res, next) => {
   const { email } = req.body;
   if(!email){
-   return  res.json({message:'email should not empty'})
+   return  res.status(404).json({message:'email should not empty'})
   }
   try {
 
@@ -70,14 +70,13 @@ exports.isProvvedDoctor = async (req, res, next) => {
   }
 };
 exports.isProvvedAna = async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) {
+    return res
+      .status(404)
+      .json({ success: false, message: 'Email is required' });
+  }
   try {
-    const { email } = req.body;
-    console.log(email);
-    if (!email) {
-      return res
-        .status(401)
-        .json({ success: false, message: 'Email is required' });
-    }
     const userlog = await Analyst.findOne({ email });
     if (!userlog) {
       return res
@@ -101,14 +100,13 @@ exports.isProvvedAna = async (req, res, next) => {
 };
 
 exports.isProvvedRadio = async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) {
+    return res
+      .status(404)
+      .json({ success: false, message: 'Email is required' });
+  }
   try {
-    const { email } = req.body;
-    console.log(email);
-    if (!email) {
-      return res
-        .status(401)
-        .json({ success: false, message: 'Email is required' });
-    }
     const userlog = await Radiology.findOne({ email });
     if (!userlog) {
       return res
