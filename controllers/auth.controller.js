@@ -222,8 +222,6 @@ exports.updatePharmaticInfo = async (req, res) => {
       {
         $set: {
           fullName: fullName,
-          email: email,
-          password: password,
           city: city,
           region: region,
           address: address,
