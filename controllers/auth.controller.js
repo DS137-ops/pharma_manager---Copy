@@ -204,6 +204,11 @@ exports.getFinalRate = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+function extractTime(timeString) {
+  const match = timeString.match(/\((\d{2}:\d{2})\)/);
+  return match ? `[${match[1]}]` : null;
+}
+
 exports.updatePharmaticInfo = async (req, res) => {
   try {
     const {
@@ -216,7 +221,10 @@ exports.updatePharmaticInfo = async (req, res) => {
       EndJob,
     } = req.body;
     const id = req.params.id;
-
+    
+  const startjob= await extractTime(StartJob);
+  const endjob= await extractTime(EndJob);
+  
     await Pharmatic.updateMany(
       { _id: new mongoose.Types.ObjectId(id) },
       {
@@ -226,8 +234,8 @@ exports.updatePharmaticInfo = async (req, res) => {
           region: region,
           address: address,
           phone: phone,
-          StartJob: StartJob,
-          EndJob: EndJob,
+          StartJob: startjob,
+          EndJob: endjob,
         },
       }
     );
