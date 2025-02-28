@@ -208,8 +208,6 @@ exports.updatePharmaticInfo = async (req, res) => {
   try {
     const {
       fullName,
-      email,
-      password,
       city,
       region,
       address,
