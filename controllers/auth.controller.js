@@ -206,7 +206,7 @@ exports.getFinalRate = async (req, res) => {
 };
 function extractTime(timeString) {
   const match = timeString.match(/\((\d{2}:\d{2})\)/);
-  return match ? `[${match[1]}]` : null;
+  return match ? `${match[1]}` : null;
 }
 
 exports.updatePharmaticInfo = async (req, res) => {
