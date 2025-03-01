@@ -19,7 +19,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => ({
-    folder: `pharmacies/${req.params.id}`, // Creates a unique folder for each pharmacy
+    folder: `pharmacies/${req.params.id}`,
     allowed_formats: ['jpg', 'png', 'jpeg'],
   }),
 });
@@ -42,7 +42,6 @@ router.post(
   checkprov.checkifLoggedIn,
   authController.logoutSeek
 );
-
 //End Seek
 
 //Pharmatic Section
@@ -106,8 +105,8 @@ router.post(
 );
 router.get(
   '/getPharmainCity/:city?/:region?',
-  checkprov.checkifLoggedIn,
-  ckeckSeek.authenticateSeek,
+  // checkprov.checkifLoggedIn,
+  // ckeckSeek.authenticateSeek,
   authController.getPharmas
 );
 
@@ -118,7 +117,7 @@ router.post(
     try {
       const { patientId, city, region } = req.params;
 
-      const imageUrl = req.file.path; // رابط الصورة
+      const imageUrl = req.file.path;
       if (!mongoose.Types.ObjectId.isValid(patientId)) {
         return res.status(400).json({ message: 'Invalid Seek ID' });
       }
@@ -150,8 +149,6 @@ router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
     const pharmacist = await Pharmatic.findById(req.params.pharmacistId);
     if (!pharmacist)
       return res.status(404).json({ message: 'الصيدلي غير موجود' });
-
-    // البحث عن الطلبات في نفس المدينة والمنطقة
     const requests = await PrescriptionRequest.find({
       city: pharmacist.city,
       region: pharmacist.region,

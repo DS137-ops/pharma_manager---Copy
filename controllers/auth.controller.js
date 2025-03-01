@@ -206,6 +206,7 @@ exports.getFinalRate = async (req, res) => {
 };
 function extractTime(timeString) {
   const match = timeString.match(/\((\d{2}:\d{2})\)/);
+  
   return match ? `${match[1]}` : null;
 }
 
@@ -252,48 +253,6 @@ exports.updatePharmaticInfo = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
-// exports.sendImageToPhar = async (req, res) => {
-//   try {
-//     const { pharmaticId, sickId } = req.params;
-
-//     // Check if the pharmacist exists
-//     const pharmatic = await Pharmatic.findById(pharmaticId);
-//     if (!pharmatic) {
-//       return res.status(404).json({ message: 'Pharmacist not found' });
-//     }
-
-//     if (!req.file) {
-//       return res.status(400).json({ message: 'No file uploaded' });
-//     }
-
-//     // Construct the image URL (assuming you're hosting on Render)
-//     const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${
-//       req.file.filename
-//     }`;
-
-//     // Save the image reference (you may want to store it in a database)
-//     if (!pharmatic.notifications) pharmatic.notifications = [];
-//     pharmatic.notifications.push({
-//       sickId,
-//       imageUrl,
-//       date: new Date(),
-//     });
-
-//     await pharmatic.save();
-
-//     res.status(200).json({
-//       message: 'Image sent successfully',
-//       imageUrl,
-//       pharmaticId,
-//       sickId,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// };
-
 exports.approvePharmatic = async (req, res) => {
   try {
     const user = await Pharmatic.findById(req.params.id);
@@ -336,7 +295,7 @@ exports.rejectPharmatic = async (req, res) => {
     if (!user)
       return res
         .status(404)
-        .json({ success: false, message: 'User not found' });
+        .json({ success: false, message: 'User not found'});
     const mailOptions = {
       from: 'nabd142025@gmail.com',
       to: user.email,
@@ -366,11 +325,17 @@ exports.rejectPharmatic = async (req, res) => {
   }
 };
 
-const moment = require('moment');
 
 exports.createNewSeek = async (req, res) => {
+  const { fullName, phone } = req.body;
+  if(!fullName) return res
+  .status(409)
+  .json({ success: false, message: 'fullname is not correct' });
+  if(!phone) return res
+  .status(407)
+  .json({ success: false, message: 'phone is not correct' });
   try {
-    const { fullName, phone } = req.body;
+   
     const existSeek = await Seek.findOne({ phone });
     if (existSeek) {
       return res

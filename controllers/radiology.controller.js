@@ -304,7 +304,11 @@ exports.loginRadio = async (req, res) => {
       .json({ success: false, message: `Internal server error ${err}` });
   }
 };
-
+function extractTime(timeString) {
+  const match = timeString.match(/\((\d{2}:\d{2})\)/);
+  
+  return match ? `${match[1]}` : null;
+}
 exports.updateRadiologyInfo = async (req, res) => {
   try {
     const {
@@ -319,6 +323,8 @@ exports.updateRadiologyInfo = async (req, res) => {
       EndJob,
     } = req.body;
     const id = req.params.id;
+    const startjob= await extractTime(StartJob);
+    const endjob= await extractTime(EndJob);
 
     await Radiology.updateMany(
       { _id: new mongoose.Types.ObjectId(id) },
@@ -331,8 +337,8 @@ exports.updateRadiologyInfo = async (req, res) => {
           region: region,
           address: address,
           phone: phone,
-          StartJob: StartJob,
-          EndJob: EndJob,
+          StartJob: startjob,
+          EndJob: endjob,
         },
       }
     );

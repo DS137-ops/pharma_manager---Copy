@@ -51,6 +51,52 @@ router.post(
     checkprov.checkifLoggedOut,
     analystController.loginAna
   );
+
+  exports.updatePharmaticInfo = async (req, res) => {
+    try {
+      const {
+        fullName,
+        city,
+        region,
+        address,
+        phone,
+        StartJob,
+        EndJob,
+      } = req.body;
+      const id = req.params.id;
+      
+    const startjob= await extractTime(StartJob);
+    const endjob= await extractTime(EndJob);
+    
+      await Pharmatic.updateMany(
+        { _id: new mongoose.Types.ObjectId(id) },
+        {
+          $set: {
+            fullName: fullName,
+            city: city,
+            region: region,
+            address: address,
+            phone: phone,
+            StartJob: startjob,
+            EndJob: endjob,
+          },
+        }
+      );
+      res.status(201).json({ success: true, message: 'UpdatedSuccesffuly' });
+    } catch (err) {
+      console.error('Error registering user:', err);
+      if (err.name === 'ValidationError') {
+        const errors = Object.values(err.errors).map((e) => e.message);
+        return res
+          .status(400)
+          .json({ success: false, message: errors.join(', ') });
+      }
+  
+      res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  };
+
+
   router.post('/isApprovedAnalyst', async (req, res) => {
     const email = req.body.email;
     if (!email) {
