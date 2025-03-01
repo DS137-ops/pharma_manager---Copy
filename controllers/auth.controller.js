@@ -197,7 +197,7 @@ exports.getPharmas = async (req, res) => {
       };
     });
 
-    res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
+    return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
