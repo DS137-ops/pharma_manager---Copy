@@ -174,39 +174,32 @@ exports.ratePharmatic = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+exports.getPharmas = async (req, res) => {
+  const city = req.params.city,
+    region = req.params.region;
+  const query = { role: 'pharmatic', city: city, region: region };
 
-exports.getFinalRate = async (req, res) => {
-  try {
-    const pharmaticId = req.params.pharmaticId;
-    const pharmatic = await Pharmatic.findById(pharmaticId);
-    if (!pharmatic) {
-      return res.status(404).json({ message: 'Pharmatic not found' });
-    }
-
-    // Get all ratings
-    const ratings = pharmatic.rate.map((r) => r.rating);
-
+  const findPharma = await Pharmatic.find(query);
+  
+  if (findPharma) {
+    const ratings = findPharma.rate.map((r) => r.rating);
     if (ratings.length === 0) {
       return res.json({
-        pharmaticId,
         finalRate: 0,
         message: 'No ratings available',
       });
     }
-
-    // Calculate average rating
     const total = ratings.reduce((sum, rating) => sum + rating, 0);
-    const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
-
-    res.status(200).json({ pharmaticId, finalRate: parseFloat(averageRating) });
-  } catch (error) {
-    console.error('Error calculating rating:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    const averageRating = (total / ratings.length).toFixed(1);
+    res.status(200).json({ finalRate: parseFloat(averageRating) ,findPharma });
+  } else {
+    res.status(404).json({ status: false, message: 'No result' });
   }
 };
+
 function extractTime(timeString) {
   const match = timeString.match(/\((\d{2}:\d{2})\)/);
-  
+
   return match ? `${match[1]}` : null;
 }
 
@@ -429,15 +422,4 @@ exports.logoutSeek = async (req, res) => {
   }
 };
 
-exports.getPharmas = async (req, res) => {
-  const city = req.params.city,
-    region = req.params.region;
-  const query = { role: 'pharmatic', city: city, region: region };
 
-  const findPharma = await Pharmatic.find(query);
-  if (findPharma) {
-    res.status(201).json({ status: true, findPharma });
-  } else {
-    res.status(404).json({ status: false, message: 'No result' });
-  }
-};
