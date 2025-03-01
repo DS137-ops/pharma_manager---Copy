@@ -179,23 +179,31 @@ exports.getPharmas = async (req, res) => {
     region = req.params.region;
   const query = { role: 'pharmatic', city: city, region: region };
 
-  const findPharma = await Pharmatic.find(query);
-  
-  if (findPharma) {
-    const ratings = findPharma.rate.map((r) => r.rating);
-    if (ratings.length === 0) {
-      return res.json({
-        finalRate: 0,
-        message: 'No ratings available',
-      });
+  try {
+    const findPharma = await Pharmatic.find(query);
+
+    if (!findPharma || findPharma.length === 0) {
+      return res.status(404).json({ status: false, message: 'No result' });
     }
-    const total = ratings.reduce((sum, rating) => sum + rating, 0);
-    const averageRating = (total / ratings.length).toFixed(1);
-    res.status(200).json({ finalRate: parseFloat(averageRating) ,findPharma });
-  } else {
-    res.status(404).json({ status: false, message: 'No result' });
+    const pharmaciesWithRatings = findPharma.map((pharma) => {
+      const ratings = pharma.rate?.map((r) => r.rating) || [];
+
+      const total = ratings.reduce((sum, rating) => sum + rating, 0);
+      const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+
+      return {
+        ...pharma.toObject(),
+        finalRate: parseFloat(averageRating),
+      };
+    });
+
+    res.status(200).json({ status: true, findPharma , pharmacies: pharmaciesWithRatings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: false, message: 'Server error' });
   }
 };
+
 
 function extractTime(timeString) {
   const match = timeString.match(/\((\d{2}:\d{2})\)/);
