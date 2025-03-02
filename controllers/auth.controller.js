@@ -338,11 +338,7 @@ exports.createNewSeek = async (req, res) => {
   try {
    
     const existSeek = await Seek.findOne({ phone });
-    if (existSeek) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'Phone already used' });
-    }
+    
     const newSeek = new Seek({ fullName, phone });
     await newSeek.save();
     const token = await jwt.sign({ id: newSeek._id }, '1001110');
@@ -417,7 +413,7 @@ exports.logoutSpec = async (req, res, next) => {
 exports.logoutSeek = async (req, res) => {
   const id = req.params.id;
   const newSeek = await Seek.findOne({ id });
-  const deletedSeek = await Seek.deleteOne({ newSeek });
+  //const deletedSeek = await Seek.deleteOne({ newSeek });
   await RefreshToken.deleteOne({ newSeek });
   if (deletedSeek) {
     return res
