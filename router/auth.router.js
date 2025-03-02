@@ -181,14 +181,15 @@ router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
 });
 
 router.post('/respond-request', async (req, res) => {
-  try {
-    const { requestId, pharmacistId, price, accepted } = req.body;
+  const { requestId, pharmacistId, price, accepted } = req.body;
 
-    const request = await PrescriptionRequest.findById(requestId);
-    if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
-    if (accepted && !price) {
-      res.status(400).json({ message: 'price is required' });
-    }
+  const request = await PrescriptionRequest.findById(requestId);
+  if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
+  if (accepted && !price) {
+    res.status(400).json({ message: 'price is required' });
+  }
+  try {
+   
     // إضافة رد الصيدلي إلى الطلب
     request.pharmacistsResponded.push({ pharmacistId, price, accepted });
     await request.save();
