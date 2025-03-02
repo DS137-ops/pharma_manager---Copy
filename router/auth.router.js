@@ -143,21 +143,43 @@ router.post(
     }
   }
 );
+// router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
+//   const pharmacist = await Pharmatic.findById(req.params.pharmacistId);
+//   if (!pharmacist)
+//     return res.status(404).json({ message: 'الصيدلي غير موجود'  })
+//   try {
+//     const requests = await PrescriptionRequest.find({
+//       city: pharmacist.city,
+//       region: pharmacist.region,
+//     }).populate('patientId');
+//     res.status(200).json({ requests });
+//   } catch (error) {
+//     res.status(500).json({ message: 'خطأ أثناء جلب الطلبات',error: error.message });
+//   }
+// });
+
 router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
   const pharmacist = await Pharmatic.findById(req.params.pharmacistId);
   if (!pharmacist)
-    return res.status(404).json({ message: 'الصيدلي غير موجود'  })
+    return res.status(404).json({ message: 'الصيدلي غير موجود' });
+
   try {
     const requests = await PrescriptionRequest.find({
       city: pharmacist.city,
       region: pharmacist.region,
     }).populate('patientId');
-    res.status(200).json({ requests   });
-   
+    const formattedRequests = requests.map(req => ({
+      ...req.toObject(),
+      dateFormatted: new Date(req.date).toISOString().split('T')[0], // yyyy-mm-dd
+      timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5), // hh:mm
+    }));
+
+    res.status(200).json({ requests: formattedRequests });
   } catch (error) {
-    res.status(500).json({ message: 'خطأ أثناء جلب الطلبات',error: error.message });
+    res.status(500).json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
   }
 });
+
 router.post('/respond-request', async (req, res) => {
   try {
     const { requestId, pharmacistId, price, accepted } = req.body;
