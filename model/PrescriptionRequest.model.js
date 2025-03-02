@@ -5,6 +5,10 @@ const requestSchema = new mongoose.Schema({
   imageUrl: String, // رابط صورة الروشتة
   city: String,
   region: String,
+  date:{
+    type:Date,
+    default:Date.now()
+  },
   pharmacistsResponded: [
     {
       pharmacistId: { type: mongoose.Schema.Types.ObjectId, ref: "pharmatic" },

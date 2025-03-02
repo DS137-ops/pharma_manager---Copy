@@ -153,7 +153,7 @@ router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
       region: pharmacist.region,
     }).populate('patientId');
 
-    res.status(200).json({ requests });
+    res.status(200).json({ requests   });
   } catch (error) {
     res.status(500).json({ message: 'خطأ أثناء جلب الطلبات',error: error.message });
   }
