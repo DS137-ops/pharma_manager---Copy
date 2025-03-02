@@ -2,9 +2,13 @@ const mongoose = require("mongoose");
 
 const requestAnalystSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Seek" },
-  imageUrl: String, // رابط صورة الروشتة
+  imageUrl: String,
   city: String,
   region: String,
+  date:{
+    type:Date,
+    default:Date.now()
+  },
   analystsResponded: [
     {
       analystId: { type: mongoose.Schema.Types.ObjectId, ref: "analyst" },

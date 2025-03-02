@@ -144,16 +144,16 @@ router.post(
   }
 );
 router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
+  const pharmacist = await Pharmatic.findById(req.params.pharmacistId);
+  if (!pharmacist)
+    return res.status(404).json({ message: 'الصيدلي غير موجود'  })
   try {
-    const pharmacist = await Pharmatic.findById(req.params.pharmacistId);
-    if (!pharmacist)
-      return res.status(404).json({ message: 'الصيدلي غير موجود' });
     const requests = await PrescriptionRequest.find({
       city: pharmacist.city,
       region: pharmacist.region,
     }).populate('patientId');
-
     res.status(200).json({ requests   });
+   
   } catch (error) {
     res.status(500).json({ message: 'خطأ أثناء جلب الطلبات',error: error.message });
   }
