@@ -77,10 +77,6 @@ router.post(
     ckeckSeek.authenticateSeek,
     RadiologyController.rateRadiology
   );
-  router.get(
-    '/final-rate-radiology/:radiologyId',
-    RadiologyController.getFinalRateForRadiology
-  );
   router.post(
     '/signinRadiology',
     checkprov.isProvvedRadio,
@@ -128,20 +124,24 @@ router.post(
     }
   );
   router.get('/radiology-requests/:radiologyId', async (req, res) => {
-    try {
-      const radiology = await Radiology.findById(req.params.radiologyId);
-      if (!radiology)
-        return res.status(404).json({ message: 'الصيدلي غير موجود' });
+    const radiology = await Radiology.findById(req.params.radiologyId);
+    if (!radiology)
+      return res.status(404).json({ message: 'الصيدلي غير موجود' });
   
-      // البحث عن الطلبات في نفس المدينة والمنطقة
-      const requests = await PrescriptionRadiologyRequest.find({
+    try {
+      const requests = await PrescriptionRequest.find({
         city: radiology.city,
         region: radiology.region,
       }).populate('patientId');
+      const formattedRequests = requests.map(req => ({
+        ...req.toObject(),
+        dateFormatted: new Date(req.date).toISOString().split('T')[0], // yyyy-mm-dd
+        timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5), // hh:mm
+      }));
   
-      res.status(200).json({ requests });
+      res.status(200).json({ requests: formattedRequests });
     } catch (error) {
-      res.status(500).json({ message: 'خطأ أثناء جلب الطلبات',error: error.message });
+      res.status(500).json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
     }
   });
   router.post('/respond-request-from-radiology', async (req, res) => {
@@ -153,7 +153,6 @@ router.post(
       if (accepted && !price) {
         res.status(400).json({ message: 'price is required' });
       }
-      // إضافة رد الصيدلي إلى الطلب
       request.PrescriptionRadiologyRequest.push({ radiologyId, price, accepted });
       await request.save();
   
@@ -162,7 +161,6 @@ router.post(
       res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error });
     }
   });
-  
   router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
     try {
       const patientRequests = await PrescriptionRadiologyRequest.find({

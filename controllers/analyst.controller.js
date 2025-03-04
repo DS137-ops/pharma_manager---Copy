@@ -23,8 +23,20 @@ exports.createNewAnalyst = async (req, res) => {
     StartJob,
     EndJob,
   } = req.body;
-  if(!fullName || !email || !password || !city || !region || !address || !phone || !StartJob || !EndJob){
-    return res.status(404).json({success:false , message:'All fields are required'})
+  if (
+    !fullName ||
+    !email ||
+    !password ||
+    !city ||
+    !region ||
+    !address ||
+    !phone ||
+    !StartJob ||
+    !EndJob
+  ) {
+    return res
+      .status(404)
+      .json({ success: false, message: 'All fields are required' });
   }
   try {
     const existingUser = await Analyst.findOne({ email });
@@ -87,11 +99,11 @@ exports.createNewAnalyst = async (req, res) => {
 
 exports.loginAna = async (req, res) => {
   const { email, password } = req.body;
-  if(!email){
-    return res.status(403).json({message:'email is required'})
+  if (!email) {
+    return res.status(403).json({ message: 'email is required' });
   }
-  if(!password){
-    return res.status(400).json({message:'password is required'})
+  if (!password) {
+    return res.status(400).json({ message: 'password is required' });
   }
   try {
     const user = await Analyst.findOne({ email });
@@ -109,7 +121,9 @@ exports.loginAna = async (req, res) => {
     const token = await jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
     RefreshToken.create({ token });
 
-    res.status(200).json({ success: true, message: 'Login successful', token , user });
+    res
+      .status(200)
+      .json({ success: true, message: 'Login successful', token, user });
   } catch (err) {
     console.error('Error logging in:', err);
     res
@@ -117,7 +131,52 @@ exports.loginAna = async (req, res) => {
       .json({ success: false, message: `Internal server error ${err}` });
   }
 };
+exports.rateAnalyst = async (req, res) => {
+  try {
+    const  analystId  = req.params.AnalystId;
+    const { userId, rating, review } = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(analystId)) {
+      return res.status(400).json({ message: 'Invalid Analyst ID format' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid User ID format' });
+    }
+    if (rating < 1 || rating > 5) {
+      return res
+        .status(400)
+        .json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    const analyst = await Analyst.findById(analystId);
+    if (!analyst) {
+      return res.status(404).json({ message: 'Analyst not found' });
+    }
+    if (!analyst.rate) {
+      analyst.rate = [];
+    }
+    const existingRatingIndex = analyst.rate.findIndex(
+      (r) => r.userId.toString() === userId.toString()
+    );
+
+    if (existingRatingIndex !== -1) {
+      analyst.rate[existingRatingIndex].rating = rating;
+      analyst.rate[existingRatingIndex].review = review;
+      analyst.rate[existingRatingIndex].date = new Date();
+    } else {
+      analyst.rate.push({ userId, rating, review, date: new Date() });
+    }
+
+    await analyst.save();
+
+    res
+      .status(200)
+      .json({ message: 'Rating submitted successfully', data: analyst.rate });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 exports.approveAnalyst = async (req, res) => {
   try {
     const user = await Analyst.findById(req.params.id);
@@ -157,12 +216,30 @@ exports.rejectAnalyst = async (req, res) => {
 
 exports.getAnalyst = async (req, res) => {
   const city = req.params.city,
-  region = req.params.region;
+    region = req.params.region;
   const query = { role: 'analyst', city: city, region: region };
-  const findAnalyst = await Analyst.find(query);
-  if (findAnalyst) {
-    res.status(201).json({ status: true, findAnalyst });
-  } else {
-    res.status(404).json({ status: false, message: 'No result' });
+
+  try {
+    const findAnalyst = await Analyst.find(query);
+
+    if (!findAnalyst || findAnalyst.length === 0) {
+      return res.status(404).json({ status: false, message: 'No result' });
+    }
+    const analystWithRatings = findAnalyst.map((analyst) => {
+      const ratings = analyst.rate?.map((r) => r.rating) || [];
+
+      const total = ratings.reduce((sum, rating) => sum + rating, 0);
+      const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+
+      return {
+        ...analyst.toObject(),
+        finalRate: parseFloat(averageRating),
+      };
+    });
+
+    return res.status(200).json({ status: true, findAnalyst: analystWithRatings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: false, message: 'Server error' });
   }
 };

@@ -143,24 +143,18 @@ exports.ratePharmatic = async (req, res) => {
     if (!pharmatic) {
       return res.status(404).json({ message: 'Pharmacist not found' });
     }
-
-    // تأكد من أن rate هو مصفوفة
     if (!pharmatic.rate) {
       pharmatic.rate = [];
     }
-
-    // التحقق مما إذا كان المستخدم قد قيم سابقًا
     const existingRatingIndex = pharmatic.rate.findIndex(
       (r) => r.userId.toString() === userId.toString()
     );
 
     if (existingRatingIndex !== -1) {
-      // تحديث التقييم الحالي
       pharmatic.rate[existingRatingIndex].rating = rating;
       pharmatic.rate[existingRatingIndex].review = review;
       pharmatic.rate[existingRatingIndex].date = new Date();
     } else {
-      // إضافة تقييم جديد
       pharmatic.rate.push({ userId, rating, review, date: new Date() });
     }
 

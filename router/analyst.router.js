@@ -2,6 +2,7 @@ const router = require('express').Router();
 const analystController = require('../controllers/analyst.controller');
 const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
+const ckeckSeek = require('../middleware/seek.middleware');
 const Analyst = require('../model/analyst.model');
 const PrescriptionAnalystRequest = require('../model/PrescriptionAnalystRequest.model');
 const mongoose = require('mongoose');
@@ -122,6 +123,13 @@ router.post(
     checkprov.checkifLoggedIn,
     analystController.getAnalyst
   );
+
+  router.post(
+    '/rateAnalyst/:AnalystId',
+    checkprov.checkifLoggedIn,
+    ckeckSeek.authenticateSeek,
+    analystController.rateAnalyst
+  );
   router.post(
     '/send-request-for-analyst/:patientId/:city/:region',
     uploadForAnalyst.single('image'),
@@ -157,19 +165,24 @@ router.post(
     }
   );
   router.get('/analyst-requests/:analystId', async (req, res) => {
+    const analystId = await Analyst.findById(req.params.analystId);
+    if (!analystId)
+      return res.status(404).json({ message: ' غير موجود' });
+  
     try {
-      const analyst = await Analyst.findById(req.params.analystId);
-      if (!analyst)
-        return res.status(404).json({ message: 'الصيدلي غير موجود' });
-  
       const requests = await PrescriptionAnalystRequest.find({
-        city: analyst.city,
-        region: analyst.region,
+        city: analystId.city,
+        region: analystId.region,
       }).populate('patientId');
+      const formattedRequests = requests.map(req => ({
+        ...req.toObject(),
+        dateFormatted: new Date(req.date).toISOString().split('T')[0],
+        timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5),
+      }));
   
-      res.status(200).json({ requests });
+      res.status(200).json({ requests: formattedRequests });
     } catch (error) {
-      res.status(500).json({ message: 'خطأ أثناء جلب الطلبات',error: error.message });
+      res.status(500).json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
     }
   });
   router.post('/respond-request-from-analyst', async (req, res) => {

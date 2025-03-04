@@ -177,12 +177,29 @@ exports.getradiology = async (req, res) => {
   const city = req.params.city,
     region = req.params.region;
   const query = { role: 'radiology', city: city, region: region };
-  const findradiology = await Radiology.find(query);
-  console.log(findradiology);
-  if (findradiology) {
-    res.status(201).json({ status: true, findradiology });
-  } else {
-    res.status(404).json({ status: false, message: 'No result' });
+
+  try {
+    const findRadiology = await Radiology.find(query);
+
+    if (!findRadiology || findRadiology.length === 0) {
+      return res.status(404).json({ status: false, message: 'No result' });
+    }
+    const radiologiesWithRatings = findRadiology.map((radiology) => {
+      const ratings = radiology.rate?.map((r) => r.rating) || [];
+
+      const total = ratings.reduce((sum, rating) => sum + rating, 0);
+      const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+
+      return {
+        ...radiology.toObject(),
+        finalRate: parseFloat(averageRating),
+      };
+    });
+
+    return res.status(200).json({ status: true, findRadiology: radiologiesWithRatings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: false, message: 'Server error' });
   }
 };
 
