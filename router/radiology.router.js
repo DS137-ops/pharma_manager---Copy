@@ -137,7 +137,7 @@ router.get('/Radiology-requests/:radiologyId', async (req, res) => {
       timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5), // hh:mm
     }));
 
-    res.status(200).json({ requests: formattedRequests , reqs:requests });
+    res.status(200).json({ requests: formattedRequests });
   } catch (error) {
     res
       .status(500)
@@ -153,7 +153,7 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
     if (accepted && !price) {
       res.status(400).json({ message: 'price is required' });
     }
-    request.PrescriptionRadiologyRequest.push({ specId, price, accepted });
+    request.radiologysResponded.push({ specId, price, accepted });
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
