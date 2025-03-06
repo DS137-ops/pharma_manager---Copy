@@ -127,7 +127,7 @@ router.get('/Radiology-requests/:radiologyId', async (req, res) => {
   if (!radiology) return res.status(404).json({ message: 'الصيدلي غير موجود' });
 
   try {
-    const requests = await PrescriptionRequest.find({
+    const requests = await PrescriptionRadiologyRequest.find({
       city: radiology.city,
       region: radiology.region,
     }).populate('patientId');
