@@ -123,7 +123,7 @@ router.post(
       }
     }
   );
-  router.get('/radiology-requests/:radiologyId', async (req, res) => {
+  router.get('/Radiology-requests/:radiologyId', async (req, res) => {
     const radiology = await Radiology.findById(req.params.radiologyId);
     if (!radiology)
       return res.status(404).json({ message: 'الصيدلي غير موجود' });

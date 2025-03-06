@@ -94,8 +94,13 @@ router.post(
 );
 router.get('/approve/pharmatic/:id', authController.approvePharmatic);
 router.get('/reject/pharmatic/:id', authController.rejectPharmatic);
-router.post('/signinPharmatic',checkprov.isProvvedPharm , checkprov.checkifLoggedOut, authController.loginPhar);
-//checkprov.isProvvedPharm ,  
+router.post(
+  '/signinPharmatic',
+  checkprov.isProvvedPharm,
+  checkprov.checkifLoggedOut,
+  authController.loginPhar
+);
+//checkprov.isProvvedPharm ,
 router.post(
   '/updatePharInfo/:id',
   checkprov.checkifLoggedIn,
@@ -128,7 +133,6 @@ router.post(
         imageUrl,
         city,
         region,
-
       });
 
       await newRequest.save();
@@ -144,8 +148,7 @@ router.post(
   }
 );
 
-
-router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
+router.get('/Pharmatic-requests/:pharmacistId', async (req, res) => {
   const pharmacist = await Pharmatic.findById(req.params.pharmacistId);
   if (!pharmacist)
     return res.status(404).json({ message: 'الصيدلي غير موجود' });
@@ -155,7 +158,7 @@ router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
       city: pharmacist.city,
       region: pharmacist.region,
     }).populate('patientId');
-    const formattedRequests = requests.map(req => ({
+    const formattedRequests = requests.map((req) => ({
       ...req.toObject(),
       dateFormatted: new Date(req.date).toISOString().split('T')[0], // yyyy-mm-dd
       timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5), // hh:mm
@@ -163,7 +166,9 @@ router.get('/pharmacist-requests/:pharmacistId', async (req, res) => {
 
     res.status(200).json({ requests: formattedRequests });
   } catch (error) {
-    res.status(500).json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
   }
 });
 
@@ -188,7 +193,10 @@ router.get('/patient-responses/:patientId', async (req, res) => {
   try {
     const patientRequests = await PrescriptionRequest.find({
       patientId: req.params.patientId,
-    }).populate('pharmacistsResponded.pharmacistId', 'fullName phone city region');
+    }).populate(
+      'pharmacistsResponded.pharmacistId',
+      'fullName phone city region'
+    );
     let responses = [];
     patientRequests.forEach((request) => {
       request.pharmacistsResponded.forEach((response) => {
@@ -209,7 +217,6 @@ router.get('/patient-responses/:patientId', async (req, res) => {
     res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
   }
 });
-
 
 router.post(
   '/logoutSpec',

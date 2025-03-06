@@ -55,6 +55,9 @@ router.post('/add-advert-for-doctor', async (req, res) => {
 router.get('/adverts-for-doctor', async (req, res) => {
   try {
     const adverts = await doctorAdvert.find().sort({ createdAt: -1 });
+    if (adverts.length === 0) {
+      return res.status(404).json({ message: 'No Adverts Yet' });
+    }
     res.status(200).json({ adverts });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -87,6 +90,9 @@ router.post('/add-advert-for-pharmacy',Advert_for_pharmacy.single('image'), asyn
 router.get('/adverts-for-pharmacy', async (req, res) => {
   try {
     const adverts = await PharmacyAdvert.find().sort({ createdAt: -1 });
+    if (adverts.length === 0) {
+      return res.status(404).json({ message: 'No Adverts Yet' });
+    }
     res.status(200).json({ adverts });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -116,6 +122,9 @@ router.post('/add-advert-for-radiology', async (req, res) => {
 router.get('/adverts-for-radiology', async (req, res) => {
   try {
     const adverts = await RadiologyAdvert.find().sort({ createdAt: -1 });
+    if (adverts.length === 0) {
+      return res.status(404).json({ message: 'No Adverts Yet' });
+    }
     res.status(200).json({ adverts });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -145,6 +154,9 @@ router.post('/add-advert-for-analyst', async (req, res) => {
 router.get('/adverts-for-analyst', async (req, res) => {
   try {
     const adverts = await AnalystAdvert.find().sort({ createdAt: -1 });
+    if (adverts.length === 0) {
+      return res.status(404).json({ message: 'No Adverts Yet' });
+    }
     res.status(200).json({ adverts });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -152,29 +164,35 @@ router.get('/adverts-for-analyst', async (req, res) => {
 });
 
 router.post('/add-advert-for-seek', async (req, res) => {
-  const {imageUrl } = req.body;
+  try {
+    const { imageUrl } = req.body;
 
     if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
     }
-  try {
-    
-    const newAdvert = new SeekAdvert({
-      imageUrl
-    });
 
+    const newAdvert = new SeekAdvert({ imageUrl });
     await newAdvert.save();
+
     res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
 
   } catch (error) {
+    console.error('Error adding advert:', error);
     res.status(500).json({ error: error.message });
   }
 });
-router.get('/adverts-for-analyst', async (req, res) => {
+
+router.get('/adverts-for-seek', async (req, res) => {
   try {
-    const adverts = await AnalystAdvert.find().sort({ createdAt: -1 });
+    const adverts = await SeekAdvert.find().sort({ createdAt: -1 });
+
+    if (adverts.length === 0) {
+      return res.status(404).json({ message: 'No Adverts Yet' });
+    }
+
     res.status(200).json({ adverts });
   } catch (error) {
+    console.error('Error fetching adverts:', error);
     res.status(500).json({ error: error.message });
   }
 });
