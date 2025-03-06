@@ -124,13 +124,13 @@ router.post(
   }
 );
 router.get('/Analyst-requests/:analystId', async (req, res) => {
-  const analystId = await Analyst.findById(req.params.analystId);
-  if (!analystId) return res.status(404).json({ message: ' غير موجود' });
+  const analyst = await Analyst.findById(req.params.analystId);
+  if (!analyst) return res.status(404).json({ message: ' غير موجود' });
 
   try {
     const requests = await PrescriptionAnalystRequest.find({
-      city: analystId.city,
-      region: analystId.region,
+      city: analyst.city,
+      region: analyst.region,
     }).populate('patientId');
     const formattedRequests = requests.map((req) => ({
       ...req.toObject(),
