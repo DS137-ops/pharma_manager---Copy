@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const requestRadiologySchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Seek' },
-  imageUrl: String, // رابط صورة الروشتة
+  imageUrl: String,
   city: String,
   region: String,
   date: {

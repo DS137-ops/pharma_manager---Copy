@@ -137,7 +137,7 @@ router.get('/Radiology-requests/:radiologyId', async (req, res) => {
       timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5), // hh:mm
     }));
 
-    res.status(200).json({ requests: formattedRequests });
+    res.status(200).json({ requests: formattedRequests , reqs:requests });
   } catch (error) {
     res
       .status(500)
