@@ -145,16 +145,16 @@ router.get('/Analyst-requests/:analystId', async (req, res) => {
       .json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
   }
 });
-router.post('/respond-request-from-analyst', async (req, res) => {
+router.post('/respond-request-from-Analyst', async (req, res) => {
   try {
-    const { requestId, analystId, price, accepted } = req.body;
+    const { requestId, specId, price, accepted } = req.body;
 
     const request = await PrescriptionAnalystRequest.findById(requestId);
     if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
     if (accepted && !price) {
       res.status(400).json({ message: 'price is required' });
     }
-    request.PrescriptionAnalystRequest.push({ analystId, price, accepted });
+    request.PrescriptionAnalystRequest.push({ specId, price, accepted });
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
