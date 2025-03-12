@@ -406,7 +406,7 @@ exports.logoutSpec = async (req, res, next) => {
 };
 exports.logoutSeek = async (req, res) => {
   const id = req.params.id;
-  const newSeek = await Seek.findOne({ id });
+  const newSeek = await Seek.findById(id);
   //const deletedSeek = await Seek.deleteOne({ newSeek });
   if(!newSeek){
     return res
