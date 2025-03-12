@@ -408,16 +408,21 @@ exports.logoutSeek = async (req, res) => {
   const id = req.params.id;
   const newSeek = await Seek.findOne({ id });
   //const deletedSeek = await Seek.deleteOne({ newSeek });
-  await RefreshToken.deleteOne({ newSeek });
-  if (deletedSeek) {
+  if(!newSeek){
+    return res
+    .status(404)
+    .json({ success: false, message: 'sick not found' });
+  }
+   const deletetoken = await RefreshToken.deleteOne({ newSeek });
+   if(!deletetoken){
+    return res
+    .status(404)
+    .json({ success: false, message: 'token not found' });
+   }
     return res
       .status(201)
       .json({ success: true, deletedSeek, message: 'logout Successfully' });
-  } else {
-    return res
-      .status(201)
-      .json({ success: false, message: 'logout Not Successfully' });
-  }
+
 };
 
 
