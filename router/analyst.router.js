@@ -192,5 +192,11 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
   }
 });
 
+router.post("/forgot-password-for-analyst", analystController.forgetPassForAnalyst);
+
+router.post("/verify-code-for-analyst", analystController.verifyCodeAnalyst);
+
+router.post("/reset-password-for-analyst", analystController.resetAnalystPass);
+
 //End Analyst
 module.exports = router;

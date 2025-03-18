@@ -60,10 +60,10 @@ exports.createNewRadiology = async (req, res) => {
       StartJob,
       EndJob,
     });
-    // https://pharma-manager-copy-1.onrender.com
+    // https://pharma-manager-copy-2.onrender.com
     await newUser.save();
-    const approvalLink = `http://localhost:8080/api/Radiology/approve/radiology/${newUser._id}`;
-    const rejectLink = `http://localhost:8080/api/Radiology/reject/radiology/${newUser._id}`;
+    const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/Radiology/approve/radiology/${newUser._id}`;
+    const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/Radiology/reject/radiology/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
@@ -372,3 +372,53 @@ exports.updateRadiologyInfo = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+exports.forgetPassForRadiology = async (req, res) => {
+  const { email } = req.body;
+  const user = await Radiology.findOne({ email });
+
+  if (!user) return res.status(400).json({ message: "User not found" });
+
+  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+  user.resetCode = resetCode;
+  user.resetCodeExpires = Date.now() + 20 * 60 * 1000;
+  await user.save();
+
+  await transporter.sendMail({
+      from: 'nabd142025@gmail.com',
+      to: email,
+      subject: "Password Reset Code",
+      html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
+  });
+
+  res.json({ message: "Reset code sent to your email" });
+}
+
+exports.verifyCodeRadiology = async (req, res) => {
+  const { email, code } = req.body;
+  const user = await Radiology.findOne({ email });
+
+  if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+  }
+
+  res.json({ message: "Code verified successfully" });
+}
+
+
+exports.resetRadiologyPass = async (req, res) => {
+  const { email, code, newPassword } = req.body;
+  const user = await Radiology.findOne({ email });
+
+  if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+  user.resetCode = null;
+  user.resetCodeExpires = null;
+  await user.save();
+
+  res.json({ message: "Password reset successfully" });
+}

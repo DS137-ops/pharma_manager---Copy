@@ -199,4 +199,10 @@ router.delete('/remove-from-gallery/:doctorId/:imageId', async (req, res) => {
   }
 });
 
+router.post("/forgot-password-for-doctor", authController.forgetPassForDoctor);
+
+router.post("/verify-code-for-doctor", authController.verifyCodeDoctor);
+
+router.post("/reset-password-for-doctor", authController.resetDoctorPass);
+
 module.exports = router;

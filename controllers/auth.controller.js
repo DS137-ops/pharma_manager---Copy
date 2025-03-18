@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
-
+require('dotenv').config();
 function generateTimeSlots(start, end) {
   const slots = [];
   let [sh, sm] = start.split(':').map(Number);
@@ -171,7 +171,7 @@ exports.ratePharmatic = async (req, res) => {
 exports.getPharmas = async (req, res) => {
   const city = req.params.city,
     region = req.params.region;
-  const query = { role: 'pharmatic', city: city, region: region };
+  const query = { role: 'pharmatic', city: city, region: region , approved:true };
 
   try {
     const findPharma = await Pharmatic.find(query);
@@ -322,26 +322,27 @@ exports.rejectPharmatic = async (req, res) => {
 
 
 exports.createNewSeek = async (req, res) => {
-  const { fullName, phone } = req.body;
+  const { fullName, phone , password } = req.body;
+  if(!password) return res
+  .status(409)
+  .json({ success: false, message: 'password should not empty' });
   if(!fullName) return res
   .status(409)
-  .json({ success: false, message: 'fullname is not correct' });
+  .json({ success: false, message: 'fullname should not empty' });
   if(!phone) return res
-  .status(407)
-  .json({ success: false, message: 'phone is not correct' });
+  .status(409)
+  .json({ success: false, message: 'phone should not empty' });
   try {
    
     const existSeek = await Seek.findOne({ phone });
+    if(existSeek)return res.status(400).json({success:false , messsage:'phone is already exist'})
     
-    const newSeek = new Seek({ fullName, phone });
+    const newSeek = new Seek({ fullName, phone ,password });
+
     await newSeek.save();
-    const token = await jwt.sign({ id: newSeek._id }, '1001110');
-    RefreshToken.create({ token, userRef: newSeek._id });
     return res.status(201).json({
       success: true,
-      newSeek,
       message: 'user register succesfully',
-      token,
     });
   } catch (err) {
     console.error('Error registering user:', err);
@@ -352,6 +353,42 @@ exports.createNewSeek = async (req, res) => {
         .json({ success: false, message: errors.join(', ') });
     }
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+exports.loginSeek = async (req, res) => {
+  const { phone, password } = req.body;
+
+  if (!phone) {
+    return res.status(403).json({ message: 'phone is required' });
+  }
+  if(!password)
+    return res.status(400).json({ message: 'password is required' });
+  try {
+    const user = await Seek.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'phone is Not Correct' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'password is Not the same' });
+    }
+
+    const token = await jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET);
+
+    await RefreshToken.create({ token });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user,
+    });
+
+  } catch (err) {
+    console.error('Error logging in:', err);
+    return res.status(500).json({ success: false, message: `Internal server error: ${err.message}` });
   }
 };
 
@@ -404,25 +441,65 @@ exports.logoutSpec = async (req, res, next) => {
 
   res.status(200).json({ success: true });
 };
-exports.logoutSeek = async (req, res) => {
-  const id = req.params.id;
-  const newSeek = await Seek.findById(id);
-  //const deletedSeek = await Seek.deleteOne({ newSeek });
-  if(!newSeek){
-    return res
-    .status(404)
-    .json({ success: false, message: 'sick not found' });
+exports.logoutSeek = async (req, res, next) => {
+  const token =
+    req.headers.authorization && req.headers.authorization.split(' ')[1];
+  const { refreshToken } = token;
+  if (token) {
+    console.log(token);
+    await Blacklist.create({ token });
+    await RefreshToken.deleteOne({ refreshToken });
   }
-   const deletetoken = await RefreshToken.deleteOne({ newSeek });
-   if(!deletetoken){
-    return res
-    .status(404)
-    .json({ success: false, message: 'token not found' });
-   }
-    return res
-      .status(201)
-      .json({ success: true, deletedSeek, message: 'logout Successfully' });
 
+  res.status(200).json({ success: true });
 };
 
+exports.forgetPassForPharmatic = async (req, res) => {
+  const { email } = req.body;
+  const user = await Pharmatic.findOne({ email });
 
+  if (!user) return res.status(400).json({ message: "User not found" });
+
+  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+  user.resetCode = resetCode;
+  user.resetCodeExpires = Date.now() + 20 * 60 * 1000;
+  await user.save();
+
+  await transporter.sendMail({
+      from: 'nabd142025@gmail.com',
+      to: email,
+      subject: "Password Reset Code",
+      html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
+  });
+
+  res.json({ message: "Reset code sent to your email" });
+}
+
+exports.verifyCodePharmatic = async (req, res) => {
+  const { email, code } = req.body;
+  const user = await Pharmatic.findOne({ email });
+
+  if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+  }
+
+  res.json({ message: "Code verified successfully" });
+}
+
+
+exports.resetPharmaPass = async (req, res) => {
+  const { email, code, newPassword } = req.body;
+  const user = await Pharmatic.findOne({ email });
+
+  if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+  user.resetCode = null;
+  user.resetCodeExpires = null;
+  await user.save();
+
+  res.json({ message: "Password reset successfully" });
+}

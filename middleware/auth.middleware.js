@@ -133,8 +133,7 @@ exports.checkifLoggedIn = async (req, res, next) => {
   const token = req.header('Authorization')?.split(' ')[1];
   console.log(token);
 
-  const refreshtoken = await RefreshToken.findOne({ token });
-  console.log(refreshtoken);
+  const refreshtoken = await RefreshToken.find({ token });
   if (!refreshtoken) {
     return res.status(401).json({ message: 'You are Logged Out' });
   }

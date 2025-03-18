@@ -34,14 +34,18 @@ router.post(
       .isLength({ min: 2 })
       .withMessage('Full name must be at least 3 characters long'),
     body('phone').notEmpty().withMessage('phone is required'),
+    body('password').notEmpty().withMessage('password is required'),
   ],
   authController.createNewSeek
 );
+router.post('/loginSeek', checkprov.checkifLoggedOut, authController.loginSeek);
 router.post(
   '/logoutSeek/:id',
   checkprov.checkifLoggedIn,
   authController.logoutSeek
 );
+
+
 //End Seek
 
 //Pharmatic Section
@@ -109,8 +113,7 @@ router.post(
 );
 router.get(
   '/getPharmainCity/:city?/:region?',
-  // checkprov.checkifLoggedIn,
-  // ckeckSeek.authenticateSeek,
+  checkprov.checkifLoggedIn,
   authController.getPharmas
 );
 
@@ -181,7 +184,7 @@ router.post('/respond-request-from-Pharmatic', async (req, res) => {
     res.status(400).json({ message: 'price is required' });
   }
   try {
-    request.pharmacistsResponded.push({ specId, price, accepted });
+    request.pharmacistsResponded.push({ pharmacistId:specId, price, accepted  });
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
@@ -191,6 +194,7 @@ router.post('/respond-request-from-Pharmatic', async (req, res) => {
 });
 router.get('/patient-responses/:patientId', async (req, res) => {
   try {
+    console.log(req.params.patientId)
     const patientRequests = await PrescriptionRequest.find({
       patientId: req.params.patientId,
     }).populate(
@@ -214,7 +218,7 @@ router.get('/patient-responses/:patientId', async (req, res) => {
 
     res.status(200).json({ responses });
   } catch (error) {
-    res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
+    res.status(500).json({ message: ` ${error}خطأ أثناء جلب الردود`, error:error });
   }
 });
 
@@ -223,6 +227,13 @@ router.post(
   checkprov.checkifLoggedIn,
   authController.logoutSpec
 );
+
+router.post("/forgot-password-for-pharmatic", authController.forgetPassForPharmatic);
+
+router.post("/verify-code-for-pharmatic", authController.verifyCodePharmatic);
+
+router.post("/reset-password-for-pharmatic", authController.resetPharmaPass);
+
 
 //End Pharmatic
 

@@ -190,4 +190,10 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
   }
 });
 
+router.post("/forgot-password-for-radiology", RadiologyController.forgetPassForRadiology);
+
+router.post("/verify-code-for-radiology", RadiologyController.verifyCodeRadiology);
+
+router.post("/reset-password-for-radiology", RadiologyController.resetRadiologyPass);
+
 module.exports = router;
