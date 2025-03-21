@@ -6,7 +6,7 @@ const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
 const Seek = require('../model/seek.model');
 const jwt = require('jsonwebtoken');
-
+require('dotenv').config();
 //if the spec is approved  Common for all specs
 exports.isProvvedPharm = async (req, res, next) => {
   const { email } = req.body;
@@ -185,31 +185,7 @@ exports.isDoctor = async (req, res, next) => {
   }
 };
 
-exports.authMiddleware = async (req, res, next) => {
-  try {
-    const token = req.header('Authorization')?.split(' ')[1];
 
-    if (!token) {
-      return res.status(401).json({ message: 'يجب تسجيل الدخول' });
-    }
-
-    const decoded = jwt.verify(token, '1001110');
-    const patient = await Seek.findById(decoded.id);
-
-    if (!patient) {
-      return res.status(404).json({ message: 'المريض غير موجود' });
-    }
-
-    req.user = {
-      patientId: patient._id,
-      name: patient.name,
-    };
-
-    next();
-  } catch (error) {
-    res.status(401).json({ message: 'المصادقة فشلت', error: error.message });
-  }
-};
 
 exports.checkifLoggedOut = async (req, res, next) => {
   try {
@@ -238,3 +214,64 @@ exports.checkifLoggedOut = async (req, res, next) => {
 };
 
 
+
+
+
+exports.authMiddlewareforPharmatic = async (req, res, next) => {
+  const token = req.header('Authorization')?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: "No token, authorization denied" });
+console.log(token)
+  try {
+    const decoded = jwt.verify(token,  process.env.JWT_SECRET);
+    req.user = await Pharmatic.findById(decoded.id);
+    if (!req.user) return res.status(404).json({ message: "User not found" });
+
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token"  , error:error});
+  }
+};
+
+exports.authMiddlewareforAnalyst = async (req, res, next) => {
+  const token = req.header('Authorization')?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: "No token, authorization denied" });
+console.log(token)
+  try {
+    const decoded = jwt.verify(token,  process.env.JWT_SECRET);
+    req.user = await Analyst.findById(decoded.id);
+    if (!req.user) return res.status(404).json({ message: "User not found" });
+
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token"  , error:error});
+  }
+};
+exports.authMiddlewareforRadiology = async (req, res, next) => {
+  const token = req.header('Authorization')?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: "No token, authorization denied" });
+console.log(token)
+  try {
+    const decoded = jwt.verify(token,  process.env.JWT_SECRET);
+    req.user = await Radiology.findById(decoded.id);
+    if (!req.user) return res.status(404).json({ message: "User not found" });
+
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token"  , error:error});
+  }
+};
+
+exports.authMiddlewareforDoctor = async (req, res, next) => {
+  const token = req.header('Authorization')?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: "No token, authorization denied" });
+console.log(token)
+  try {
+    const decoded = jwt.verify(token,  process.env.JWT_SECRET);
+    req.user = await Doctor.findById(decoded.id);
+    if (!req.user) return res.status(404).json({ message: "User not found" });
+
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token"  , error:error});
+  }
+};

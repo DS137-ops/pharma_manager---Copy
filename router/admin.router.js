@@ -3,10 +3,12 @@ const doctorAdvert = require('../model/doctorAdvert.model');
 const PharmacyAdvert = require('../model/pharmacyAdvert.model');
 const RadiologyAdvert = require('../model/radiologyAdvert.model');
 const AnalystAdvert = require('../model/analystAdvert.model');
+const SupportTicket = require('../model/supportSchema.model');
 const SeekAdvert = require('../model/seekAdvert.model');
 const { createAdmin, adminLogin } = require("../controllers/adminController.controller");
 const { body } = require("express-validator");
 const multer = require("multer")
+const { v4: uuidv4 } = require("uuid");
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
@@ -197,4 +199,54 @@ router.get('/adverts-for-seek', async (req, res) => {
   }
 });
 
+router.post("/contact-us", async (req, res) => {
+  try {
+    const { userId, userType, name, email, message } = req.body;
+
+    if (!userId || !userType || !name || !email || !message) {
+      return res.status(400).json({ error: "جميع الحقول مطلوبة" });
+    }
+    const ticketNumber = `TICKET-${uuidv4().slice(0, 8)}`;
+    const newTicket = new SupportTicket({
+      userId,
+      userType,
+      name,
+      email,
+      message,
+      ticketNumber,
+    });
+
+    await newTicket.save();
+
+    res.status(201).json({
+      message: "تم استلام رسالتك بنجاح",
+      ticketNumber,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "حدث خطأ أثناء إرسال الرسالة", err:error });
+  }
+});
+router.get("/support-tickets", async (req, res) => {
+  try {
+    const tickets = await SupportTicket.find().sort({ createdAt: -1 }); // ترتيب من الأحدث إلى الأقدم
+    res.status(200).json(tickets);
+  } catch (error) {
+    res.status(500).json({ error: "حدث خطأ أثناء جلب الرسائل" });
+  }
+});
+
+router.get("/support-tickets/:ticketNumber", async (req, res) => {
+  try {
+    const { ticketNumber } = req.params;
+    const ticket = await SupportTicket.findOne({ ticketNumber });
+
+    if (!ticket) {
+      return res.status(404).json({ error: "لم يتم العثور على التذكرة" });
+    }
+
+    res.status(200).json(ticket);
+  } catch (error) {
+    res.status(500).json({ error: "حدث خطأ أثناء جلب تفاصيل التذكرة" , err:error });
+  }
+});
 module.exports = router;

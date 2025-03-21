@@ -9,6 +9,11 @@ const requestSchema = new mongoose.Schema({
     type:Date,
     default:Date.now()
   },
+  status: {
+    type: String,
+    enum: ["unread", "read"],
+    default: "unread",
+  },
   pharmacistsResponded: [
     {
       pharmacistId: { type: mongoose.Schema.Types.ObjectId, ref: "pharmatic" },

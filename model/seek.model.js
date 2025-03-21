@@ -17,11 +17,16 @@ var mongoose = require('mongoose')
             required: [true, 'Password is required'],
             minlength: [8, 'Password must be at least 8 characters long']
         },
-        
+        resetCode: { type: String, default: null },
+        resetCodeExpires: { type: Date, default: null },
         role:{
             type:String,
             default:"user",
             enum:["user"]
+        },
+        age:{
+          type:Number,
+          default:null
         },
         city:{
             type:String,

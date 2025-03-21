@@ -87,8 +87,8 @@ exports.createNewDoctor = async (req, res) => {
     });
     //pharma-manager-copy-2.onrender.com
     await newUser.save();
-    const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/Doctor/approve/doctor/${newUser._id}`;
-    const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/Doctor/reject/doctor/${newUser._id}`;
+    const approvalLink = `http://147.93.106.92/api/Doctor/approve/doctor/${newUser._id}`;
+    const rejectLink = `http://147.93.106.92/api/Doctor/reject/doctor/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
@@ -122,7 +122,21 @@ exports.createNewDoctor = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+exports.deleteDoctorAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const user = req.user;
 
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
+
+    await Doctor.findByIdAndDelete(user._id);
+
+    res.status(200).json({ message: "Account deleted successfully" , data:[] });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+}
 exports.approveDoctor = async (req, res) => {
   try {
     const user = await Doctor.findById(req.params.id);
@@ -416,7 +430,6 @@ exports.updateDoctorInfo = async (req, res) => {
   try {
     const {
       fullName,
-      password,
       city,
       region,
       address,
@@ -444,7 +457,6 @@ exports.updateDoctorInfo = async (req, res) => {
       {
         $set: {
           fullName,
-          password,
           city,
           region,
           address,

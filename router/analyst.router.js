@@ -46,6 +46,10 @@ router.post(
   ],
   analystController.createNewAnalyst
 );
+
+router.delete("/delete-analyst-account", checkprov.authMiddlewareforAnalyst, analystController.deleteAnalystAccount );
+
+
 router.post(
   '/signinAnalyst',
   checkprov.isProvvedAna,
@@ -197,6 +201,18 @@ router.post("/forgot-password-for-analyst", analystController.forgetPassForAnaly
 router.post("/verify-code-for-analyst", analystController.verifyCodeAnalyst);
 
 router.post("/reset-password-for-analyst", analystController.resetAnalystPass);
+
+router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
+  const { id } = req.params
+   if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    const user = await Analyst.findById(id)
+    if(!user){
+       return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({success:true , data:user})
+})
 
 //End Analyst
 module.exports = router;

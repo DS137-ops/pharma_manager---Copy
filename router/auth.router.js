@@ -4,6 +4,7 @@ const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Pharmatic = require('../model/auth.model');
+const Seek = require('../model/seek.model');
 const mongoose = require('mongoose');
 const PrescriptionRequest = require('../model/PrescriptionRequest.model');
 const multer = require('multer');
@@ -44,8 +45,23 @@ router.post(
   checkprov.checkifLoggedIn,
   authController.logoutSeek
 );
+router.delete("/delete-sick-account", ckeckSeek.authMiddlewareforSeek, authController.deleteSeekAccount );
+router.get("/get-sick-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
+  const { id } = req.params
+   if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    const user = await Seek.findById(id)
+    if(!user){
+       return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({success:true , data:user})
+})
+router.post("/forgot-password-for-sick" , authController.forgetPassForSick);
 
+router.post("/verify-code-for-sick", authController.verifyCodeSick);
 
+router.post("/reset-password-for-sick", authController.resetSickPass);
 //End Seek
 
 //Pharmatic Section
@@ -72,6 +88,8 @@ router.post(
 
   authController.createNewPharmatic
 );
+router.delete("/delete-pharmatic-account", checkprov.authMiddlewareforPharmatic, authController.deletePharmaticAccount );
+
 router.post('/isApprovedPharmatic', async (req, res) => {
   const email = req.body.email;
   if (!email) {
@@ -120,6 +138,7 @@ router.get(
 router.post(
   '/send-request/:patientId/:city/:region',
   upload.single('image'),
+  ckeckSeek.authMiddlewareforSeek,
   async (req, res) => {
     try {
       const { patientId, city, region } = req.params;
@@ -136,6 +155,7 @@ router.post(
         imageUrl,
         city,
         region,
+        status: "unread",
       });
 
       await newRequest.save();
@@ -161,8 +181,13 @@ router.get('/Pharmatic-requests/:pharmacistId', async (req, res) => {
       city: pharmacist.city,
       region: pharmacist.region,
     }).populate('patientId');
+    await PrescriptionRequest.updateMany(
+      { city: pharmacist.city, region: pharmacist.region },
+      { $set: { status: "read" } }
+    );
     const formattedRequests = requests.map((req) => ({
       ...req.toObject(),
+      status: req.status,
       dateFormatted: new Date(req.date).toISOString().split('T')[0], // yyyy-mm-dd
       timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5), // hh:mm
     }));
@@ -211,6 +236,7 @@ router.get('/patient-responses/:patientId', async (req, res) => {
             city: response.pharmacistId.city,
             region: response.pharmacistId.region,
             price: response.price,
+            status: request.status,
           });
         }
       });
@@ -221,6 +247,25 @@ router.get('/patient-responses/:patientId', async (req, res) => {
     res.status(500).json({ message: ` ${error}خطأ أثناء جلب الردود`, error:error });
   }
 });
+router.put("/update-request-status/:requestId", async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!["read", "unread"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const request = await PrescriptionRequest.findById(req.params.requestId);
+    if (!request) return res.status(404).json({ message: "الطلب غير موجود" });
+
+    request.status = status;
+    await request.save();
+
+    res.status(200).json({ message: `تم تحديث حالة الطلب إلى ${status}` });
+  } catch (error) {
+    res.status(500).json({ message: "خطأ أثناء تحديث الحالة", error });
+  }
+});
 
 router.post(
   '/logoutSpec',
@@ -228,12 +273,50 @@ router.post(
   authController.logoutSpec
 );
 
-router.post("/forgot-password-for-pharmatic", authController.forgetPassForPharmatic);
+router.post("/forgot-password-for-pharmatic" , authController.forgetPassForPharmatic);
 
 router.post("/verify-code-for-pharmatic", authController.verifyCodePharmatic);
 
 router.post("/reset-password-for-pharmatic", authController.resetPharmaPass);
 
+
+router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
+  const { id } = req.params
+   if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    const user = await Pharmatic.findById(id)
+    if(!user){
+       return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({success:true , data:user})
+})
+
+// router.delete("/delete-notification/:id", checkprov.checkifLoggedIn, async (req, res) => {
+//   try {
+//     const notificationId = req.params.id;
+
+//     if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+//       return res.status(400).json({ message: "Invalid notification ID" });
+//     }
+
+//     const notification = await Notification.findById(notificationId);
+
+//     if (!notification) {
+//       return res.status(404).json({ message: "Notification not found" });
+//     }
+
+//     if (notification.userId.toString() !== req.user.id) {
+//       return res.status(403).json({ message: "Unauthorized action" });
+//     }
+
+//     await Notification.findByIdAndDelete(notificationId);
+
+//     res.json({ message: "Notification deleted successfully" });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
 
 //End Pharmatic
 

@@ -46,6 +46,9 @@ router.post(
   ],
   RadiologyController.createNewRadiology
 );
+
+router.delete("/delete-radiology-account", checkprov.authMiddlewareforRadiology, RadiologyController.deleteRadiologyAccount );
+
 router.post('/isApprovedRadiology', async (req, res) => {
   const email = req.body.email;
   if (!email) {
@@ -195,5 +198,17 @@ router.post("/forgot-password-for-radiology", RadiologyController.forgetPassForR
 router.post("/verify-code-for-radiology", RadiologyController.verifyCodeRadiology);
 
 router.post("/reset-password-for-radiology", RadiologyController.resetRadiologyPass);
+
+router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
+  const { id } = req.params
+   if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    const user = await Radiology.findById(id)
+    if(!user){
+       return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({success:true , data:user})
+})
 
 module.exports = router;

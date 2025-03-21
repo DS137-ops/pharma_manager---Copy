@@ -58,6 +58,7 @@ router.post(
   ],
   doctorController.createNewDoctor
 );
+router.delete("/delete-doctor-account", checkprov.authMiddlewareforDoctor, doctorController.deleteDoctorAccount );
 
 router.get('/approve/doctor/:id', doctorController.approveDoctor);
 router.get('/reject/doctor/:id', doctorController.rejectDoctor);
@@ -205,4 +206,15 @@ router.post("/verify-code-for-doctor", doctorController.verifyCodeDoctor);
 
 router.post("/reset-password-for-doctor", doctorController.resetDoctorPass);
 
+router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
+  const { id } = req.params
+   if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    const user = await Doctor.findById(id)
+    if(!user){
+       return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({success:true , data:user})
+})
 module.exports = router;

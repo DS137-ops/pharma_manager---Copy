@@ -85,8 +85,8 @@ exports.createNewPharmatic = async (req, res) => {
 
     // https://pharma-manager-copy-2.onrender.com
     await newUser.save();
-    const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/Pharmatic/approve/pharmatic/${newUser._id}`;
-    const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/Pharmatic/reject/pharmatic/${newUser._id}`;
+    const approvalLink = `http://147.93.106.92/api/Pharmatic/approve/pharmatic/${newUser._id}`;
+    const rejectLink = `http://147.93.106.92/api/Pharmatic/reject/pharmatic/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
@@ -122,6 +122,23 @@ exports.createNewPharmatic = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+
+exports.deletePharmaticAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const user = req.user;
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
+
+    await Pharmatic.findByIdAndDelete(user._id);
+
+    res.status(200).json({ message: "Account deleted successfully" , data:[] });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+}
 exports.ratePharmatic = async (req, res) => {
   try {
     const  pharmaticId  = req.params.pharmaticId;
@@ -322,7 +339,7 @@ exports.rejectPharmatic = async (req, res) => {
 
 
 exports.createNewSeek = async (req, res) => {
-  const { fullName, phone , password } = req.body;
+  const { fullName, age , phone , password } = req.body;
   if(!password) return res
   .status(409)
   .json({ success: false, message: 'password should not empty' });
@@ -332,12 +349,15 @@ exports.createNewSeek = async (req, res) => {
   if(!phone) return res
   .status(409)
   .json({ success: false, message: 'phone should not empty' });
+  if(!age) return res
+  .status(409)
+  .json({ success: false, message: 'age should not empty' });
   try {
    
     const existSeek = await Seek.findOne({ phone });
     if(existSeek)return res.status(400).json({success:false , messsage:'phone is already exist'})
     
-    const newSeek = new Seek({ fullName, phone ,password });
+    const newSeek = new Seek({ fullName, age, phone ,password });
 
     await newSeek.save();
     return res.status(201).json({
@@ -392,6 +412,22 @@ exports.loginSeek = async (req, res) => {
   }
 };
 
+exports.deleteSeekAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const user = req.user;
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
+
+    await Seek.findByIdAndDelete(user._id);
+
+    res.status(200).json({ message: "Account deleted successfully" , data:[] });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+}
+
 exports.loginPhar = async (req, res) => {
   const { email, password } = req.body;
 
@@ -434,7 +470,6 @@ exports.logoutSpec = async (req, res, next) => {
     req.headers.authorization && req.headers.authorization.split(' ')[1];
   const { refreshToken } = req.body;
   if (token) {
-    console.log(token);
     await Blacklist.create({ token });
     await RefreshToken.deleteOne({ refreshToken });
   }
@@ -490,6 +525,60 @@ exports.verifyCodePharmatic = async (req, res) => {
 exports.resetPharmaPass = async (req, res) => {
   const { email, code, newPassword } = req.body;
   const user = await Pharmatic.findOne({ email });
+
+  if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+  user.resetCode = null;
+  user.resetCodeExpires = null;
+  await user.save();
+
+  res.json({ message: "Password reset successfully" });
+}
+
+
+
+
+
+exports.forgetPassForSick = async (req, res) => {
+  const { email } = req.body;
+  const user = await Seek.findOne({ email });
+
+  if (!user) return res.status(400).json({ message: "User not found" });
+
+  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+  user.resetCode = resetCode;
+  user.resetCodeExpires = Date.now() + 20 * 60 * 1000;
+  await user.save();
+
+  await transporter.sendMail({
+      from: 'nabd142025@gmail.com',
+      to: email,
+      subject: "Password Reset Code",
+      html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
+  });
+
+  res.json({ message: "Reset code sent to your email" });
+}
+
+exports.verifyCodeSick = async (req, res) => {
+  const { email, code } = req.body;
+  const user = await Seek.findOne({ email });
+
+  if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+  }
+
+  res.json({ message: "Code verified successfully" });
+}
+
+
+exports.resetSickPass = async (req, res) => {
+  const { email, code, newPassword } = req.body;
+  const user = await Seek.findOne({ email });
 
   if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
       return res.status(400).json({ message: "Invalid or expired code" });

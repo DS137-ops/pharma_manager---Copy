@@ -59,8 +59,8 @@ exports.createNewAnalyst = async (req, res) => {
     });
     // https://pharma-manager-copy-1.onrender.com
     await newUser.save();
-    const approvalLink = `https://pharma-manager-copy-2.onrender.com/api/Analyst/approve/analyst/${newUser._id}`;
-    const rejectLink = `https://pharma-manager-copy-2.onrender.com/api/Analyst/reject/analyst/${newUser._id}`;
+    const approvalLink = `http://147.93.106.92/api/Analyst/approve/analyst/${newUser._id}`;
+    const rejectLink = `http://147.93.106.92/api/Analyst/reject/analyst/${newUser._id}`;
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
@@ -97,6 +97,21 @@ exports.createNewAnalyst = async (req, res) => {
   }
 };
 
+exports.deleteAnalystAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const user = req.user;
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
+
+    await Analyst.findByIdAndDelete(user._id);
+
+    res.status(200).json({ message: "Account deleted successfully" , data:[] });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+}
 exports.loginAna = async (req, res) => {
   const { email, password } = req.body;
   if (!email) {
