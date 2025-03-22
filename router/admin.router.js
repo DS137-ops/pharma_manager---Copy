@@ -48,7 +48,7 @@ router.post('/add-advert-for-doctor', async (req, res) => {
     });
 
     await newAdvert.save();
-    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+    res.status(200).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -83,7 +83,7 @@ router.post('/add-advert-for-pharmacy',Advert_for_pharmacy.single('image'), asyn
     });
 
     await newAdvert.save();
-    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+    res.status(200).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -115,7 +115,7 @@ router.post('/add-advert-for-radiology', async (req, res) => {
     });
 
     await newAdvert.save();
-    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+    res.status(200).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -147,7 +147,7 @@ router.post('/add-advert-for-analyst', async (req, res) => {
     });
 
     await newAdvert.save();
-    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+    res.status(200).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -176,7 +176,7 @@ router.post('/add-advert-for-seek', async (req, res) => {
     const newAdvert = new SeekAdvert({ imageUrl });
     await newAdvert.save();
 
-    res.status(201).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+    res.status(200).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
 
   } catch (error) {
     console.error('Error adding advert:', error);
@@ -218,7 +218,7 @@ router.post("/contact-us", async (req, res) => {
 
     await newTicket.save();
 
-    res.status(201).json({
+    res.status(200).json({
       message: "تم استلام رسالتك بنجاح",
       ticketNumber,
     });

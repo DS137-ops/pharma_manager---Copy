@@ -45,6 +45,7 @@ router.post(
   checkprov.checkifLoggedIn,
   authController.logoutSeek
 );
+router.post("/update-profile/:id" ,checkprov.checkifLoggedIn , authController.updateSickInfo)
 router.delete("/delete-sick-account", ckeckSeek.authMiddlewareforSeek, authController.deleteSeekAccount );
 router.get("/get-sick-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
   const { id } = req.params
@@ -105,13 +106,12 @@ router.post('/isApprovedPharmatic', async (req, res) => {
       .json({ success: false, message: 'user is not approved yet!' });
   }
   res
-    .status(201)
+    .status(200)
     .json({ success: true, message: 'user is  approved sucessfully!' });
 });
 router.post(
   '/ratePharmacy/:pharmaticId',
   checkprov.checkifLoggedIn,
-  ckeckSeek.authenticateSeek,
   authController.ratePharmatic
 );
 router.get('/approve/pharmatic/:id', authController.approvePharmatic);
@@ -160,7 +160,7 @@ router.post(
 
       await newRequest.save();
       res
-        .status(201)
+        .status(200)
         .json({ message: 'تم إرسال الطلب بنجاح', request: newRequest });
     } catch (error) {
       console.error('خطأ أثناء إرسال الطلب:', error);

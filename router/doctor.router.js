@@ -138,7 +138,7 @@ router.get('/get-doctor-image/:id', async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     const notify = doctor.doctorimage;
 
-    res.status(201).json({ success: true, notify });
+    res.status(200).json({ success: true, notify });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

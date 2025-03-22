@@ -72,7 +72,7 @@ router.post('/isApprovedAnalyst', async (req, res) => {
       .json({ success: false, message: 'user is not approved yet!' });
   }
   res
-    .status(201)
+    .status(200)
     .json({ success: true, message: 'user is  approved sucessfully!' });
 });
 router.get('/approve/analyst/:id', analystController.approveAnalyst);
@@ -117,7 +117,7 @@ router.post(
 
       await newRequest.save();
       res
-        .status(201)
+        .status(200)
         .json({ message: 'تم إرسال الطلب بنجاح', request: newRequest });
     } catch (error) {
       console.error('خطأ أثناء إرسال الطلب:', error);

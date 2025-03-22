@@ -57,6 +57,9 @@ exports.createNewDoctor = async (req, res) => {
         message: `Email already exists`,
       });
     }
+     const token = await jwt.sign({  role: 'doctor' }, process.env.JWT_SECRET);
+    
+        await RefreshToken.create({ token });
     console.log(rangeBooking);
     let booking = Array(7);
     rangeBooking.map((bookingDay) => {
@@ -109,7 +112,7 @@ exports.createNewDoctor = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: true, message: `Registration request sent to admin` });
+      .json({ success: true, message: `Registration request sent to admin` ,token:token });
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {

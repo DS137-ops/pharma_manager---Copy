@@ -70,7 +70,9 @@ exports.createNewPharmatic = async (req, res) => {
         .status(409)
         .json({ success: false, message: 'Email already exists' });
     }
+    const token = await jwt.sign({  role: 'pharmatic' }, process.env.JWT_SECRET);
 
+    await RefreshToken.create({ token });
     newUser = new Pharmatic({
       fullName,
       email,
@@ -110,6 +112,7 @@ exports.createNewPharmatic = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Registration request sent to admin please wait for approved',
+      token:token
     });
   } catch (err) {
     console.error('Error registering user:', err);
@@ -141,9 +144,10 @@ exports.deletePharmaticAccount = async (req, res) => {
 }
 exports.ratePharmatic = async (req, res) => {
   try {
-    const  pharmaticId  = req.params.pharmaticId;
+    const pharmaticId = req.params.pharmaticId;
     const { userId, rating, review } = req.body;
 
+    // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(pharmaticId)) {
       return res.status(400).json({ message: 'Invalid Pharmacist ID format' });
     }
@@ -156,39 +160,41 @@ exports.ratePharmatic = async (req, res) => {
         .json({ message: 'Rating must be between 1 and 5' });
     }
 
+    // Find the pharmacist
     const pharmatic = await Pharmatic.findById(pharmaticId);
     if (!pharmatic) {
       return res.status(404).json({ message: 'Pharmacist not found' });
     }
-    if (!pharmatic.rate) {
+
+    // Ensure `rate` array exists
+    if (!Array.isArray(pharmatic.rate)) {
       pharmatic.rate = [];
     }
-    const existingRatingIndex = pharmatic.rate.findIndex(
-      (r) => r.userId.toString() === userId.toString()
-    );
 
-    if (existingRatingIndex !== -1) {
-      pharmatic.rate[existingRatingIndex].rating = rating;
-      pharmatic.rate[existingRatingIndex].review = review;
-      pharmatic.rate[existingRatingIndex].date = new Date();
-    } else {
-      pharmatic.rate.push({ userId, rating, review, date: new Date() });
-    }
+    // **Always push a new rating to keep all previous ones**
+    pharmatic.rate.push({
+      userId,
+      rating,
+      review,
+      date: new Date(),
+    });
 
+    // Save the updated pharmacist document
     await pharmatic.save();
 
-    res
-      .status(200)
-      .json({ message: 'Rating submitted successfully', data: pharmatic.rate });
+    res.status(200).json({
+      message: 'Rating added successfully',
+      data: pharmatic.rate, // Returns all ratings, including the new one
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 exports.getPharmas = async (req, res) => {
-  const city = req.params.city,
-    region = req.params.region;
-  const query = { role: 'pharmatic', city: city, region: region , approved:true };
+  const { city, region } = req.params;
+  const query = { role: 'pharmatic', city, region, approved: true };
 
   try {
     const findPharma = await Pharmatic.find(query);
@@ -198,7 +204,6 @@ exports.getPharmas = async (req, res) => {
     }
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
-
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
       const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
 
@@ -208,12 +213,15 @@ exports.getPharmas = async (req, res) => {
       };
     });
 
+    pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
+
     return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
+
 
 
 function extractTime(timeString) {
@@ -252,7 +260,7 @@ exports.updatePharmaticInfo = async (req, res) => {
         },
       }
     );
-    res.status(201).json({ success: true, message: 'UpdatedSuccesffuly' });
+    res.status(200).json({ success: true, message: 'UpdatedSuccesffuly' });
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {
@@ -356,13 +364,18 @@ exports.createNewSeek = async (req, res) => {
    
     const existSeek = await Seek.findOne({ phone });
     if(existSeek)return res.status(400).json({success:false , messsage:'phone is already exist'})
-    
+
+     const token = await jwt.sign({  role: 'user' }, process.env.JWT_SECRET);
+
+    await RefreshToken.create({ token });
+
     const newSeek = new Seek({ fullName, age, phone ,password });
 
     await newSeek.save();
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       message: 'user register succesfully',
+      token:token
     });
   } catch (err) {
     console.error('Error registering user:', err);
@@ -375,6 +388,41 @@ exports.createNewSeek = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+exports.updateSickInfo = async(req,res)=>{
+
+try {
+  const {
+    fullName,
+    age,
+    phone,
+    password
+  } = req.body;
+  const id = req.params.id;
+
+  await Seek.updateMany(
+    { _id: new mongoose.Types.ObjectId(id) },
+    {
+      $set: {
+        fullName: fullName,
+        age: age,
+        phone: phone,
+        password: password
+      },
+    }
+  );
+  res.status(200).json({ success: true, message: 'UpdatedSuccesffuly' });
+} catch (err) {
+  console.error('Error registering user:', err);
+  if (err.name === 'ValidationError') {
+    const errors = Object.values(err.errors).map((e) => e.message);
+    return res
+      .status(400)
+      .json({ success: false, message: errors.join(', ') });
+  }
+
+  res.status(500).json({ success: false, message: 'Internal server error' });
+}
+}
 
 exports.loginSeek = async (req, res) => {
   const { phone, password } = req.body;
@@ -399,7 +447,7 @@ exports.loginSeek = async (req, res) => {
 
     await RefreshToken.create({ token });
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       message: 'Login successful',
       token,
@@ -507,7 +555,7 @@ exports.forgetPassForPharmatic = async (req, res) => {
       html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
   });
 
-  res.json({ message: "Reset code sent to your email" });
+  res.status(200).json({ message: "Reset code sent to your email" });
 }
 
 exports.verifyCodePharmatic = async (req, res) => {
@@ -518,7 +566,7 @@ exports.verifyCodePharmatic = async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired code" });
   }
 
-  res.json({ message: "Code verified successfully" });
+  res.status(200).json({ message: "Code verified successfully" });
 }
 
 
@@ -536,10 +584,8 @@ exports.resetPharmaPass = async (req, res) => {
   user.resetCodeExpires = null;
   await user.save();
 
-  res.json({ message: "Password reset successfully" });
+  res.status(200).json({ message: "Password reset successfully" });
 }
-
-
 
 
 
@@ -561,7 +607,7 @@ exports.forgetPassForSick = async (req, res) => {
       html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
   });
 
-  res.json({ message: "Reset code sent to your email" });
+  res.status(200).json({ message: "Reset code sent to your email" });
 }
 
 exports.verifyCodeSick = async (req, res) => {
@@ -572,7 +618,7 @@ exports.verifyCodeSick = async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired code" });
   }
 
-  res.json({ message: "Code verified successfully" });
+  res.status(200).json({ message: "Code verified successfully" });
 }
 
 
@@ -590,5 +636,5 @@ exports.resetSickPass = async (req, res) => {
   user.resetCodeExpires = null;
   await user.save();
 
-  res.json({ message: "Password reset successfully" });
+  res.status(200).json({ message: "Password reset successfully" });
 }

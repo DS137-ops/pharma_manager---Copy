@@ -48,7 +48,9 @@ exports.createNewRadiology = async (req, res) => {
         .status(409)
         .json({ success: false, message: 'Email already exists' });
     }
+ const token = await jwt.sign({  role: 'radiology' }, process.env.JWT_SECRET);
 
+    await RefreshToken.create({ token });
     newUser = new Radiology({
       fullName,
       email,
@@ -86,7 +88,7 @@ exports.createNewRadiology = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: true, message: 'Registration request sent to admin' });
+      .json({ success: true, message: 'Registration request sent to admin' , token:token });
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {
@@ -375,7 +377,7 @@ exports.updateRadiologyInfo = async (req, res) => {
         },
       }
     );
-    res.status(201).json({ success: true, message: 'UpdatedSuccesffuly' });
+    res.status(200).json({ success: true, message: 'UpdatedSuccesffuly' });
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {

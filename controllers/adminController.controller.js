@@ -11,7 +11,7 @@ exports.createAdmin = async (req, res) => {
     const newAdmin = new Admin({ username, password });
     await newAdmin.save();
     
-    res.status(201).json({ message: "Admin created successfully" });
+    res.status(200).json({ message: "Admin created successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
