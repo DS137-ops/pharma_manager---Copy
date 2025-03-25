@@ -1,5 +1,8 @@
 const router = require('express').Router();
 const authController = require('../controllers/auth.controller');
+const analystController = require('../controllers/analyst.controller');
+const RadiologyController = require('../controllers/radiology.controller');
+const doctorController = require('../controllers/doctor.controller');
 const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
@@ -46,7 +49,7 @@ router.post(
   authController.logoutSeek
 );
 router.post("/update-profile/:id" ,checkprov.checkifLoggedIn , authController.updateSickInfo)
-router.delete("/delete-sick-account", ckeckSeek.authMiddlewareforSeek, authController.deleteSeekAccount );
+router.delete("/delete-sick-account", checkprov.checkifLoggedIn , ckeckSeek.authMiddlewareforSeek, authController.deleteSeekAccount );
 router.get("/get-sick-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
   const { id } = req.params
    if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -63,6 +66,13 @@ router.post("/forgot-password-for-sick" , authController.forgetPassForSick);
 router.post("/verify-code-for-sick", authController.verifyCodeSick);
 
 router.post("/reset-password-for-sick", authController.resetSickPass);
+
+router.get('/search', checkprov.checkifLoggedIn , authController.searchPharmaticsByName);
+// router.get('/pharmatic-information/:id' , checkprov.checkifLoggedIn , authController.getPharmaInfo)
+// router.get('/analyst-information/:id' , checkprov.checkifLoggedIn , analystController.getAnalystInfo)
+// router.get('/radiology-information/:id' , checkprov.checkifLoggedIn , RadiologyController.getRadiologyInfo)
+// router.get('/doctor-information/:id' , checkprov.checkifLoggedIn , doctorController.getDoctorInfo)
+
 //End Seek
 
 //Pharmatic Section
@@ -272,7 +282,7 @@ router.post(
   checkprov.checkifLoggedIn,
   authController.logoutSpec
 );
-
+router.get("/user-bookings/:patientId", checkprov.checkifLoggedIn , authController.getUserBookings);
 router.post("/forgot-password-for-pharmatic" , authController.forgetPassForPharmatic);
 
 router.post("/verify-code-for-pharmatic", authController.verifyCodePharmatic);
@@ -292,10 +302,15 @@ router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
     res.status(200).json({success:true , data:user})
 })
 
+router.post('/add-pharma-to-favourite', 
+  checkprov.checkifLoggedIn ,
+  authController.togglePharmaFavourite);
+router.get('/my-favourites/:userId',checkprov.checkifLoggedIn, authController.getFavourites);
+router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , authController.deleteFromFavo)
+
 // router.delete("/delete-notification/:id", checkprov.checkifLoggedIn, async (req, res) => {
 //   try {
 //     const notificationId = req.params.id;
-
 //     if (!mongoose.Types.ObjectId.isValid(notificationId)) {
 //       return res.status(400).json({ message: "Invalid notification ID" });
 //     }

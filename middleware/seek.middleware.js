@@ -31,7 +31,6 @@ exports.authenticateSeek = async (req, res, next) => {
 exports.authMiddlewareforSeek = async (req, res, next) => {
   const token = req.header('Authorization')?.split(' ')[1];
   if (!token) return res.status(401).json({ message: "No token, authorization denied" });
-console.log(token)
   try {
     const decoded = jwt.verify(token,  process.env.JWT_SECRET);
     req.user = await Seek.findById(decoded.id);

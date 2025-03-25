@@ -49,6 +49,10 @@ router.post(
 
 router.delete("/delete-analyst-account", checkprov.authMiddlewareforAnalyst, analystController.deleteAnalystAccount );
 
+router.post('/add-analyst-to-favourite', 
+  checkprov.checkifLoggedIn,
+  analystController.toggleAnalystFavourite);
+router.get('/my-analyst-favourites/:userId',checkprov.checkifLoggedIn, analystController.getFavourites);
 
 router.post(
   '/signinAnalyst',
@@ -213,6 +217,6 @@ router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
     }
     res.status(200).json({success:true , data:user})
 })
-
+router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , analystController.deleteFromFavo)
 //End Analyst
 module.exports = router;

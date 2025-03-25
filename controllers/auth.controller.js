@@ -1,6 +1,7 @@
 const Pharmatic = require('../model/auth.model');
 const Seek = require('../model/seek.model');
 const Doctor = require('../model/doctor.model');
+const Favourite = require('../model/FavouritePharma.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
@@ -347,7 +348,7 @@ exports.rejectPharmatic = async (req, res) => {
 
 
 exports.createNewSeek = async (req, res) => {
-  const { fullName, age , phone , password } = req.body;
+  const { fullName, phone , password , age , city , address } = req.body;
   if(!password) return res
   .status(409)
   .json({ success: false, message: 'password should not empty' });
@@ -360,6 +361,12 @@ exports.createNewSeek = async (req, res) => {
   if(!age) return res
   .status(409)
   .json({ success: false, message: 'age should not empty' });
+  if(!city) return res
+  .status(409)
+  .json({ success: false, message: 'city should not empty' });
+  if(!address) return res
+  .status(409)
+  .json({ success: false, message: 'address should not empty' });
   try {
    
     const existSeek = await Seek.findOne({ phone });
@@ -369,7 +376,7 @@ exports.createNewSeek = async (req, res) => {
 
     await RefreshToken.create({ token });
 
-    const newSeek = new Seek({ fullName, age, phone ,password });
+    const newSeek = new Seek({ fullName, phone , password , age , city , address });
 
     await newSeek.save();
     return res.status(200).json({
@@ -392,10 +399,7 @@ exports.updateSickInfo = async(req,res)=>{
 
 try {
   const {
-    fullName,
-    age,
-    phone,
-    password
+    fullName, phone , password , age , city , address
   } = req.body;
   const id = req.params.id;
 
@@ -403,10 +407,7 @@ try {
     { _id: new mongoose.Types.ObjectId(id) },
     {
       $set: {
-        fullName: fullName,
-        age: age,
-        phone: phone,
-        password: password
+        fullName, phone , password , age , city , address
       },
     }
   );
@@ -638,3 +639,155 @@ exports.resetSickPass = async (req, res) => {
 
   res.status(200).json({ message: "Password reset successfully" });
 }
+
+exports.searchPharmaticsByName = async (req, res) => {
+  try {
+    const { fullName } = req.query;
+
+    if (!fullName) {
+      return res.status(400).json({ status: false, message: 'Please provide a name' });
+    }
+
+    const pharmatics = await Pharmatic.find({
+      fullName: { $regex: fullName, $options: 'i' }
+    });
+
+    if (pharmatics.length === 0) {
+      return res.status(404).json({ status: false, message: 'No matching pharmatics found' });
+    }
+
+    return res.status(200).json({ status: true, pharmatics });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: false, message: 'Server error' });
+  }
+};
+
+// controllers/favouritesController.js
+
+
+
+exports.togglePharmaFavourite = async (req, res) => {
+  try {
+    const { userId, pharmaId } = req.body;
+
+    const pharma = await Pharmatic.findById(pharmaId);
+    if (!pharma) {
+      return res.status(404).json({ message: 'Pharma not found' });
+    }
+
+    const existingFavourite = await Favourite.findOne({ userId, pharmaId });
+
+    if (existingFavourite) {
+      existingFavourite.isFavourite = !existingFavourite.isFavourite;
+      await existingFavourite.save();
+      
+      return res.status(200).json({
+        message: existingFavourite.isFavourite ? 'Pharma added to favourites' : 'Pharma removed from favourites',
+        isFavourite: existingFavourite.isFavourite
+      });
+    } else {
+      const newFavourite = new Favourite({ userId, pharmaId, isFavourite: true });
+      await newFavourite.save();
+
+      return res.status(200).json({
+        message: 'Pharma added to favourites',
+        isFavourite: true
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getFavourites = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const favourites = await Favourite.find({ userId, isFavourite: true })
+      .populate('pharmaId')
+      .exec();
+
+    if (favourites.length === 0) {
+      return res.status(404).json({ message: 'No favourite doctors found' });
+    }
+
+    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.deleteFromFavo = async (req,res)=>{
+  try{
+    const {cardId} = req.params
+    if (!mongoose.Types.ObjectId.isValid(cardId)) {
+          return res.status(400).json({ message: 'Invalid User ID format' });
+    }
+    const user = await Favourite.findByIdAndDelete(cardId)
+    if(!user){
+      return res.status(404).json({message:'User not found'})
+    }
+    return res.status(200).json({message:'Delete succesfully'})
+  }catch(err){
+    return res.status(500).json({message:`Server error ${err}`})
+  }
+}
+exports.getUserBookings = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const doctors = await Doctor.find({
+      "booking.bookingHours.patientIDs.id": patientId,
+    }).select("fullName specilizate booking");
+
+    if (!doctors || doctors.length === 0) {
+      return res.status(404).json({ status: false, message: "No bookings found for this patient" });
+    }
+
+    let patientBookings = [];
+
+    doctors.forEach((doctor) => {
+      doctor.booking.forEach((day, idDay) => {
+        day.bookingHours.forEach((hour, idHour) => {
+          hour.patientIDs.forEach((patient) => {
+            if (patient.id.toString() === patientId) {
+              patientBookings.push({
+                doctorId: doctor._id,
+                doctorName: doctor.fullName,
+                specialization: doctor.specilizate,
+                idDay,
+                idHour,
+                appointmentDate: patient.date,
+              });
+            }
+          });
+        });
+      });
+    });
+
+    res.status(200).json({ status: true, bookings: patientBookings });
+  } catch (error) {
+    console.error("Error fetching user bookings:", error);
+    res.status(500).json({ status: false, message: "Server error" });
+  }
+};
+
+
+// exports.getPharmaInfo = async(req,res)=>{
+//   try{
+//     const id = req.params.id
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: 'Invalid User ID format' });
+//     }
+//     const pharma = await Pharmatic.findById(id)
+//     if(!pharma){
+//       return res.status(404).json({message:' user is not availble'})
+//     }
+//     return res.status(200).json({success:true , pharma })
+//   }catch(err){
+//     return res.status(500).json({message:'Server error'})
+//   }
+// }

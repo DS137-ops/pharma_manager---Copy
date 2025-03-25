@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const RefreshToken = require('../model/RefreshToken.model');
+const Favourite = require('../model/FavouriteAnalyst.model');
 const Analyst = require('../model/analyst.model');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -233,29 +234,29 @@ exports.rejectAnalyst = async (req, res) => {
 };
 
 exports.getAnalyst = async (req, res) => {
-  const city = req.params.city,
-    region = req.params.region;
-  const query = { role: 'analyst', city: city, region: region };
+  const { city, region } = req.params;
+  const query = { role: 'analyst', city, region, approved: true };
 
   try {
-    const findAnalyst = await Analyst.find(query);
+    const findPharma = await Analyst.find(query);
 
-    if (!findAnalyst || findAnalyst.length === 0) {
+    if (!findPharma || findPharma.length === 0) {
       return res.status(404).json({ status: false, message: 'No result' });
     }
-    const analystWithRatings = findAnalyst.map((analyst) => {
-      const ratings = analyst.rate?.map((r) => r.rating) || [];
-
+    const pharmaciesWithRatings = findPharma.map((pharma) => {
+      const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
       const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
 
       return {
-        ...analyst.toObject(),
+        ...pharma.toObject(),
         finalRate: parseFloat(averageRating),
       };
     });
 
-    return res.status(200).json({ status: true, findAnalyst: analystWithRatings });
+    pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
+
+    return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -361,3 +362,89 @@ exports.resetAnalystPass = async (req, res) => {
 
   res.json({ message: "Password reset successfully" });
 }
+
+exports.toggleAnalystFavourite = async (req, res) => {
+  try {
+    const { userId, analystId } = req.body;
+
+    const pharma = await Analyst.findById(analystId);
+    if (!pharma) {
+      return res.status(404).json({ message: 'Analyst not found' });
+    }
+
+    const existingFavourite = await Favourite.findOne({ userId, analystId });
+
+    if (existingFavourite) {
+      existingFavourite.isFavourite = !existingFavourite.isFavourite;
+      await existingFavourite.save();
+      
+      return res.status(200).json({
+        message: existingFavourite.isFavourite ? 'Analyst added to favourites' : 'Analyst removed from favourites',
+        isFavourite: existingFavourite.isFavourite
+      });
+    } else {
+      const newFavourite = new Favourite({ userId, analystId, isFavourite: true });
+      await newFavourite.save();
+
+      return res.status(200).json({
+        message: 'Analyst added to favourites',
+        isFavourite: true
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+exports.getFavourites = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const favourites = await Favourite.find({ userId, isFavourite: true })
+      .populate('analystId')
+      .exec();
+
+    if (favourites.length === 0) {
+      return res.status(404).json({ message: 'No favourite doctors found' });
+    }
+
+    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.deleteFromFavo = async (req,res)=>{
+  try{
+    const {cardId} = req.params
+    if (!mongoose.Types.ObjectId.isValid(cardId)) {
+          return res.status(400).json({ message: 'Invalid User ID format' });
+    }
+    const user = await Favourite.findByIdAndDelete(cardId)
+    if(!user){
+      return res.status(404).json({message:'User not found'})
+    }
+    return res.status(200).json({message:'Delete succesfully'})
+  }catch(err){
+    return res.status(500).json({message:`Server error ${err}`})
+  }
+}
+
+// exports.getAnalystInfo = async(req,res)=>{
+//   try{
+//     const id = req.params.id
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: 'Invalid User ID format' });
+//     }
+//     const pharma = await Analyst.findById(id)
+//     if(!pharma){
+//       return res.status(404).json({message:' user is not availble'})
+//     }
+//     return res.status(200).json({success:true , pharma })
+//   }catch(err){
+//     return res.status(500).json({message:'Server error'})
+//   }
+// }

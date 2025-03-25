@@ -130,14 +130,25 @@ exports.isProvvedRadio = async (req, res, next) => {
 };
 //if the spec is logged in ==> next()   Common for all specs
 exports.checkifLoggedIn = async (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1];
-  console.log(token);
+  const authHeader = req.headers.authorization;
 
-  const refreshtoken = await RefreshToken.find({ token });
-  if (!refreshtoken) {
-    return res.status(401).json({ message: 'You are Logged Out' });
-  }
-  next();
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Missing or invalid Authorization header." });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token.trim()) {
+        return res.status(401).json({ message: "Invalid or missing token." });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "Invalid token." });
+    }
 };
 
 exports.isPharmatic = async (req, res, next) => {
@@ -220,7 +231,6 @@ exports.checkifLoggedOut = async (req, res, next) => {
 exports.authMiddlewareforPharmatic = async (req, res, next) => {
   const token = req.header('Authorization')?.split(' ')[1];
   if (!token) return res.status(401).json({ message: "No token, authorization denied" });
-console.log(token)
   try {
     const decoded = jwt.verify(token,  process.env.JWT_SECRET);
     req.user = await Pharmatic.findById(decoded.id);

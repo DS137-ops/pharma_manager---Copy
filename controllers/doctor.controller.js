@@ -374,16 +374,26 @@ exports.createNewBook = async (req, res) => {
     }
 
     const dayIndex = doctor.booking.length;
-    if (idDay > dayIndex || idDay < 0) {
+    if (idDay >= doctor.booking.length || idDay < 0 || !doctor.booking[idDay]) { 
       return res.status(404).json({ status: false, message: 'Day not found' });
     }
+    
 
     const hourIndex = doctor.booking[idDay].length;
-    if (idDay > hourIndex || idDay < 0) {
+    if (!doctor.booking[idDay].bookingHours || idHour >= doctor.booking[idDay].bookingHours.length || idHour < 0) { 
       return res.status(404).json({ status: false, message: 'Hour not found' });
     }
-    if(doctor.booking[idDay].bookingHours[idHour].patientIDs.length>=2)return res.status(404).json({message:'No appo provide'})
-
+    if (!doctor.booking[idDay].bookingHours[idHour]) {
+      return res.status(404).json({ status: false, message: 'Hour slot not found' });
+    }
+    if (!doctor.booking[idDay].bookingHours[idHour].patientIDs) {
+      doctor.booking[idDay].bookingHours[idHour].patientIDs = []; // Initialize if empty
+    }
+    
+    if (doctor.booking[idDay].bookingHours[idHour].patientIDs.length >= 2) {
+      return res.status(400).json({ message: 'No appointment available' });
+    }
+    
     const existingPatient = doctor.booking[idDay].bookingHours[
       idHour
     ].patientIDs.some((p) => p.id.toString() === patientId);
@@ -534,3 +544,89 @@ exports.resetDoctorPass = async (req, res) => {
 
   res.json({ message: "Password reset successfully" });
 }
+
+
+
+exports.toggleDoctorFavourite = async (req, res) => {
+  try {
+    const { userId, doctorId } = req.body;
+
+    const pharma = await Doctor.findById(doctorId);
+    if (!pharma) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    const existingFavourite = await Favourite.findOne({ userId, doctorId });
+
+    if (existingFavourite) {
+      existingFavourite.isFavourite = !existingFavourite.isFavourite;
+      await existingFavourite.save();
+      
+      return res.status(200).json({
+        message: existingFavourite.isFavourite ? 'doctor added to favourites' : 'doctor removed from favourites',
+        isFavourite: existingFavourite.isFavourite
+      });
+    } else {
+      const newFavourite = new Favourite({ userId, radiologyId, isFavourite: true });
+      await newFavourite.save();
+
+      return res.status(200).json({
+        message: 'doctor added to favourites',
+        isFavourite: true
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getFavourites = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const favourites = await Favourite.find({ userId, isFavourite: true })
+      .populate('doctorId')
+      .exec();
+
+    if (favourites.length === 0) {
+      return res.status(404).json({ message: 'No favourite doctors found' });
+    }
+
+    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+exports.deleteFromFavo = async (req,res)=>{
+  try{
+    const {cardId} = req.params
+    if (!mongoose.Types.ObjectId.isValid(cardId)) {
+          return res.status(400).json({ message: 'Invalid User ID format' });
+    }
+    const user = await Favourite.findByIdAndDelete(cardId)
+    if(!user){
+      return res.status(404).json({message:'User not found'})
+    }
+    return res.status(200).json({message:'Delete succesfully'})
+  }catch(err){
+    return res.status(500).json({message:`Server error ${err}`})
+  }
+}
+
+// exports.getDoctorInfo = async(req,res)=>{
+//   try{
+//     const id = req.params.id
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: 'Invalid User ID format' });
+//     }
+//     const pharma = await Doctor.findById(id)
+//     if(!pharma){
+//       return res.status(404).json({message:' user is not availble'})
+//     }
+//     return res.status(200).json({success:true , pharma })
+//   }catch(err){
+//     return res.status(500).json({message:'Server error'})
+//   }
+// }

@@ -217,4 +217,10 @@ router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
     }
     res.status(200).json({success:true , data:user})
 })
+
+router.post('/add-doctor-to-favourite', 
+  checkprov.checkifLoggedIn ,
+  doctorController.toggleDoctorFavourite);
+router.get('/my-favourites/:userId',checkprov.checkifLoggedIn, doctorController.getFavourites);
+router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , doctorController.deleteFromFavo)
 module.exports = router;

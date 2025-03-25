@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
+const Favourite = require('../model/FavouriteRadiology.model');
 const Radiology = require('../model/radiology.model');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -192,29 +193,29 @@ exports.rejectRadiology = async (req, res) => {
 };
 
 exports.getradiology = async (req, res) => {
-  const city = req.params.city,
-    region = req.params.region;
-  const query = { role: 'radiology', city: city, region: region };
+  const { city, region } = req.params;
+  const query = { role: 'radiology', city, region, approved: true };
 
   try {
-    const findRadiology = await Radiology.find(query);
+    const findPharma = await Radiology.find(query);
 
-    if (!findRadiology || findRadiology.length === 0) {
+    if (!findPharma || findPharma.length === 0) {
       return res.status(404).json({ status: false, message: 'No result' });
     }
-    const radiologiesWithRatings = findRadiology.map((radiology) => {
-      const ratings = radiology.rate?.map((r) => r.rating) || [];
-
+    const pharmaciesWithRatings = findPharma.map((pharma) => {
+      const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
       const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
 
       return {
-        ...radiology.toObject(),
+        ...pharma.toObject(),
         finalRate: parseFloat(averageRating),
       };
     });
 
-    return res.status(200).json({ status: true, findRadiology: radiologiesWithRatings });
+    pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
+
+    return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -440,3 +441,87 @@ exports.resetRadiologyPass = async (req, res) => {
 
   res.json({ message: "Password reset successfully" });
 }
+
+
+exports.toggleRadiologyFavourite = async (req, res) => {
+  try {
+    const { userId, radiologyId } = req.body;
+
+    const pharma = await Radiology.findById(radiologyId);
+    if (!pharma) {
+      return res.status(404).json({ message: 'Radiology not found' });
+    }
+
+    const existingFavourite = await Favourite.findOne({ userId, radiologyId });
+
+    if (existingFavourite) {
+      existingFavourite.isFavourite = !existingFavourite.isFavourite;
+      await existingFavourite.save();
+      
+      return res.status(200).json({
+        message: existingFavourite.isFavourite ? 'radiology added to favourites' : 'radiology removed from favourites',
+        isFavourite: existingFavourite.isFavourite
+      });
+    } else {
+      const newFavourite = new Favourite({ userId, radiologyId, isFavourite: true });
+      await newFavourite.save();
+
+      return res.status(200).json({
+        message: 'radiology added to favourites',
+        isFavourite: true
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getFavourites = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const favourites = await Favourite.find({ userId, isFavourite: true })
+      .populate('radiologyId')
+      .exec();
+
+    if (favourites.length === 0) {
+      return res.status(404).json({ message: 'No favourite doctors found' });
+    }
+
+    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+exports.deleteFromFavo = async (req,res)=>{
+  try{
+    const {cardId} = req.params
+    if (!mongoose.Types.ObjectId.isValid(cardId)) {
+          return res.status(400).json({ message: 'Invalid User ID format' });
+    }
+    const user = await Favourite.findByIdAndDelete(cardId)
+    if(!user){
+      return res.status(404).json({message:'User not found'})
+    }
+    return res.status(200).json({message:'Delete succesfully'})
+  }catch(err){
+    return res.status(500).json({message:`Server error ${err}`})
+  }
+}
+// exports.getRadiologyInfo = async(req,res)=>{
+//   try{
+//     const id = req.params.id
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: 'Invalid User ID format' });
+//     }
+//     const pharma = await Radiology.findById(id)
+//     if(!pharma){
+//       return res.status(404).json({message:' user is not availble'})
+//     }
+//     return res.status(200).json({success:true , pharma })
+//   }catch(err){
+//     return res.status(500).json({message:'Server error'})
+//   }
+// }

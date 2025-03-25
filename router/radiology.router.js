@@ -92,6 +92,12 @@ router.post(
   RadiologyController.updateRadiologyInfo
 );
 
+router.post('/add-radiology-to-favourite', 
+  checkprov.checkifLoggedIn,
+  RadiologyController.toggleRadiologyFavourite);
+router.get('/my-radiology-favourites/:userId',checkprov.checkifLoggedIn, RadiologyController.getFavourites);
+router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , RadiologyController.deleteFromFavo)
+
 router.post(
   '/send-request-for-radiology/:patientId/:city/:region',
   uploadForRadiology.single('image'),
