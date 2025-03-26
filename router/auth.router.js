@@ -307,7 +307,16 @@ router.post('/add-pharma-to-favourite',
   authController.togglePharmaFavourite);
 router.get('/my-favourites/:userId',checkprov.checkifLoggedIn, authController.getFavourites);
 router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , authController.deleteFromFavo)
-
+router.get("/patient-orders/:patientId", checkprov.checkifLoggedIn  , async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const requests = await PrescriptionRequest.find({ patientId }, "-pharmacistsResponded")
+      if(!requests)return res.status(404).json({message:"No orders"});
+    return res.status(200).json({message:requests});
+  } catch (error) {
+   return res.status(500).json({ error: error.message });
+  }
+});
 // router.delete("/delete-notification/:id", checkprov.checkifLoggedIn, async (req, res) => {
 //   try {
 //     const notificationId = req.params.id;

@@ -217,6 +217,16 @@ router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
     }
     res.status(200).json({success:true , data:user})
 })
+router.get("/patient-orders/:patientId", checkprov.checkifLoggedIn  , async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const requests = await PrescriptionAnalystRequest.find({ patientId }, "-pharmacistsResponded")
+      if(!requests)return res.status(404).json({message:"No orders"});
+    return res.status(200).json({message:requests});
+  } catch (error) {
+   return res.status(500).json({ error: error.message });
+  }
+});
 router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , analystController.deleteFromFavo)
 //End Analyst
 module.exports = router;

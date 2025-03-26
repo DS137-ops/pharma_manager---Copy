@@ -97,7 +97,16 @@ router.post('/add-radiology-to-favourite',
   RadiologyController.toggleRadiologyFavourite);
 router.get('/my-radiology-favourites/:userId',checkprov.checkifLoggedIn, RadiologyController.getFavourites);
 router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , RadiologyController.deleteFromFavo)
-
+router.get("/patient-orders/:patientId", checkprov.checkifLoggedIn  , async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const requests = await PrescriptionRadiologyRequest.find({ patientId }, "-pharmacistsResponded")
+      if(!requests)return res.status(404).json({message:"No orders"});
+    return res.status(200).json({message:requests});
+  } catch (error) {
+   return res.status(500).json({ error: error.message });
+  }
+});
 router.post(
   '/send-request-for-radiology/:patientId/:city/:region',
   uploadForRadiology.single('image'),
