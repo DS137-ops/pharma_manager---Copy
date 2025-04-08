@@ -44,11 +44,8 @@ exports.createNewDoctor = async (req, res) => {
     phone,
     specilizate,
     NumberState,
-    rangeBooking,
   } = req.body;
-  if (!Array.isArray(rangeBooking) || rangeBooking.length === 0) {
-    return res.status(400).json({ error: "rangeBooking must be a valid array with elements." });
-}
+  
   try {
     const existingUser = await Doctor.findOne({ email });
     if (existingUser) {
@@ -60,20 +57,7 @@ exports.createNewDoctor = async (req, res) => {
      const token = await jwt.sign({  role: 'doctor' }, process.env.JWT_SECRET);
     
         await RefreshToken.create({ token });
-    console.log(rangeBooking);
-    let booking = Array(7);
-    rangeBooking.map((bookingDay) => {
-      const countHalfHours = (bookingDay.end - bookingDay.start) * 2;
-      let bookingHours = Array(countHalfHours);
-      Array.from({ length: countHalfHours }, (_, i) => {
-        bookingHours.push({
-          idHour: i,
-          patientIDs: [],
-        });
-      });
-
-      booking.push({ bookingHours });
-    });
+    
 
     newUser = new Doctor({
       fullName,
@@ -85,8 +69,6 @@ exports.createNewDoctor = async (req, res) => {
       phone,
       specilizate,
       NumberState,
-      rangeBooking,
-      booking,
     });
     //pharma-manager-copy-2.onrender.com
     await newUser.save();
@@ -123,6 +105,183 @@ exports.createNewDoctor = async (req, res) => {
     }
 
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+// exports.createBooking = async(req,res)=>{
+//   try{
+//    const  rangeBooking = req.body.rangeBooking
+//    const {id} = req.params
+//    if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: 'Invalid Doctor ID format' });
+//     }
+//    if (!Array.isArray(rangeBooking) || rangeBooking.length === 0) {
+//     return res.status(400).json({ error: "rangeBooking must be a valid array with elements." });
+// }
+// const doctor = await Doctor.findById(id)
+// if(!doctor){
+//   return res.status(404).json({ error: "Doctor is not found" });
+// }
+// let booking = Array(7);
+//     rangeBooking.map((bookingDay) => {
+//       const countHalfHours = (bookingDay.end - bookingDay.start) * 2;
+//       let bookingHours = Array(countHalfHours);
+//       Array.from({ length: countHalfHours }, (_, i) => {
+//         bookingHours.push({
+//           idHour: i,
+//           patientIDs: [],
+//         });
+//       });
+
+//       booking.push({ bookingHours });
+//     });
+//     doctor.rangeBooking = rangeBooking
+//     doctor.booking = booking
+//     await doctor.save()
+//     return res.status(200).json({ message: "Booking created successfully", doctor });
+//   }catch(err){
+//     return res.status(500).json({message:`err: ${err}`})
+//   }
+// }
+const dayMapping = {
+  "الأحد": 0,
+  "الإثنين": 1,
+  "الثلاثاء": 2,
+  "الأربعاء": 3,
+  "الخميس": 4,
+  "الجمعة": 5,
+  "السبت": 6
+};
+
+function convertTimeTo24Hour(timeStr) {
+  if (typeof timeStr !== "string") {
+    console.error(`Invalid time format received:`, timeStr);
+    return null; 
+  }
+
+  if (/^\d{1,2}$/.test(timeStr)) {
+    let hour = parseInt(timeStr, 10);
+    if (hour >= 0 && hour < 24) return hour;
+    return null;
+  }
+
+  const match = timeStr.match(/^(\d{1,2})(AM|PM)$/);
+  if (!match) {
+    console.error(`Invalid time string: ${timeStr}`);
+    return null;
+  }
+
+  let [_, hour, period] = match;
+  hour = parseInt(hour, 10);
+
+  if (hour < 1 || hour > 12) {
+    console.error(`Invalid 12-hour format: ${timeStr}`);
+    return null;
+  }
+
+  if (period === "PM" && hour !== 12) hour += 12;
+  if (period === "AM" && hour === 12) hour = 0;
+
+  return hour;
+}
+function convertIdHourToTime(idHour, startHour) {
+  let totalMinutes = startHour * 60 + idHour * 30;
+  let hours = Math.floor(totalMinutes / 60);
+  let minutes = totalMinutes % 60;
+  let period = hours >= 12 ? "PM" : "AM";
+  if (hours > 12) hours -= 12;
+  if (hours === 0) hours = 12;
+
+  return `${hours}:${minutes === 0 ? "00" : minutes}${period}`;
+}
+
+
+exports.getAvailableAppointments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Doctor ID format" });
+    }
+
+    const doctor = await Doctor.findById(id).select("rangeBooking booking");
+
+    if (!doctor) {
+      return res.status(404).json({ error: "Doctor not found" });
+    }
+
+    let availableAppointments = [];
+
+    doctor.booking.forEach((dayBooking, index) => {
+      if (dayBooking && dayBooking.bookingHours) {
+        let availableHours = dayBooking.bookingHours.filter((hour) => hour.patientIDs.length < 2);
+        
+        if (availableHours.length > 0) {
+          availableAppointments.push({
+            day: doctor.rangeBooking[index]?.day,
+            availableHours: availableHours.map(hour => ({
+              idHour: hour.idHour,
+              startTime: convertIdHourToTime(hour.idHour, doctor.rangeBooking[index]?.start)
+            }))
+          });
+        }
+      }
+    });
+
+    return res.status(200).json({ message: "Available appointments", data: availableAppointments });
+
+  } catch (err) {
+    return res.status(500).json({ message: `Error: ${err.message}` });
+  }
+};
+
+
+
+exports.createBooking = async (req, res) => {
+  try {
+    const rangeBooking = req.body.rangeBooking;
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Doctor ID format" });
+    }
+
+    if (!Array.isArray(rangeBooking) || rangeBooking.length === 0) {
+      return res.status(400).json({ error: "rangeBooking must be a valid array with elements." });
+    }
+
+    const doctor = await Doctor.findById(id);
+    if (!doctor) {
+      return res.status(404).json({ error: "Doctor is not found" });
+    }
+    const formattedRangeBooking = rangeBooking.map(({ day, start, end }) => ({
+      day: dayMapping[day] ?? null,
+      start: convertTimeTo24Hour(start),
+      end: convertTimeTo24Hour(end)
+    }));
+
+    if (formattedRangeBooking.some(rb => rb.day === null || rb.start === null || rb.end === null)) {
+      return res.status(400).json({ error: "Invalid day or time format." });
+    }
+
+    let booking = Array(7).fill(null).map(() => ({ bookingHours: [] }));
+
+    formattedRangeBooking.forEach((bookingDay) => {
+      const countHalfHours = (bookingDay.end - bookingDay.start) * 2;
+      let bookingHours = Array.from({ length: countHalfHours }, (_, i) => ({
+        idHour: i,
+        patientIDs: []
+      }));
+
+      booking[bookingDay.day] = { bookingHours };
+    });
+
+    doctor.rangeBooking = formattedRangeBooking;
+    doctor.booking = booking;
+    await doctor.save();
+
+    return res.status(200).json({ message: "Booking created successfully", doctor });
+  } catch (err) {
+    return res.status(500).json({ message: `Error: ${err}` });
   }
 };
 exports.deleteDoctorAccount = async (req, res) => {

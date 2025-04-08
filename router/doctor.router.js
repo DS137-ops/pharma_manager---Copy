@@ -58,6 +58,10 @@ router.post(
   ],
   doctorController.createNewDoctor
 );
+
+router.post("/createrangeBooking/:id" , checkprov.checkifLoggedIn , doctorController.createBooking)
+router.get("/getAvailableAppointments/:id", checkprov.checkifLoggedIn, doctorController.getAvailableAppointments);
+
 router.delete("/delete-doctor-account", checkprov.authMiddlewareforDoctor, doctorController.deleteDoctorAccount );
 
 router.get('/approve/doctor/:id', doctorController.approveDoctor);
@@ -87,8 +91,8 @@ router.get(
 
 router.post(
   '/createNewBook',
-  //checkprov.checkifLoggedIn,
-  // ckeckSeek.authenticateSeek,
+  checkprov.checkifLoggedIn,
+  ckeckSeek.authenticateSeek,
   doctorController.createNewBook
 );
 router.post(
