@@ -37,5 +37,5 @@ app.use('/api/Doctor', DoctorRouter);
 app.use('/admin', adminRouter);
 
 server.listen(PORT, () => {
-  console.log(`server is Running ${PORT}`);
+  console.log(`Server is Running ${PORT}`);
 });
