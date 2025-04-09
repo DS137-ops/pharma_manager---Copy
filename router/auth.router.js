@@ -8,6 +8,7 @@ const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Pharmatic = require('../model/auth.model');
 const Seek = require('../model/seek.model');
+const City = require('../model/cities.model');
 const mongoose = require('mongoose');
 const PrescriptionRequest = require('../model/PrescriptionRequest.model');
 const multer = require('multer');
@@ -152,6 +153,11 @@ router.post(
   async (req, res) => {
     try {
       const { patientId, city, region } = req.params;
+      const existCity = await City.findById(city)
+          const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+          if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+          const cityname = existCity.name
+          const regionname = existRegion.name
 
       const imageUrl = req.file.path;
       if (!mongoose.Types.ObjectId.isValid(patientId)) {
@@ -163,8 +169,8 @@ router.post(
       const newRequest = new PrescriptionRequest({
         patientId,
         imageUrl,
-        city,
-        region,
+        city:cityname,
+        region:regionname,
         status: "unread",
       });
 
