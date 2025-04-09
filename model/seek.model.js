@@ -32,7 +32,7 @@ var mongoose = require('mongoose')
             type:String,
             default:null
         },
-        address:{
+        region:{
             type:String,
             default:null
         },

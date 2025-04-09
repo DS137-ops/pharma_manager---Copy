@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const RefreshToken = require('../model/RefreshToken.model');
+const City = require('../model/cities.model');
 const Favourite = require('../model/FavouriteAnalyst.model');
 const Analyst = require('../model/analyst.model');
 const transporter = nodemailer.createTransport({
@@ -17,13 +18,15 @@ exports.createNewAnalyst = async (req, res) => {
     fullName,
     email,
     password,
-    city,
-    region,
+    city,   // city ID
+    region, // region ID
     address,
     phone,
     StartJob,
     EndJob,
   } = req.body;
+
+  // Check if all required fields are provided
   if (
     !fullName ||
     !email ||
@@ -39,64 +42,89 @@ exports.createNewAnalyst = async (req, res) => {
       .status(404)
       .json({ success: false, message: 'All fields are required' });
   }
+
   try {
+    // Check if the email already exists in the database
     const existingUser = await Analyst.findOne({ email });
     if (existingUser) {
       return res
         .status(409)
         .json({ success: false, message: 'Email already exists' });
     }
- const token = await jwt.sign({  role: 'analyst' }, process.env.JWT_SECRET);
 
+    // Look up the city by ID and get its name
+    const cityExists = await City.findById(city);
+    if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
+
+    // Look up the region by ID within the selected city
+    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
+    if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+
+    // Create a JWT token for the new analyst
+    const token = await jwt.sign({ role: 'analyst' }, process.env.JWT_SECRET);
     await RefreshToken.create({ token });
-    newUser = new Analyst({
+
+    // Create a new Analyst instance with the name of the city and region
+    const newUser = new Analyst({
       fullName,
       email,
       password,
-      city,
-      region,
+      city: cityExists.name,    // Store city name
+      region: regionExists.name, // Store region name
       address,
       phone,
       StartJob,
       EndJob,
     });
-    // https://pharma-manager-copy-1.onrender.com
+
+    // Save the new Analyst to the database
     await newUser.save();
+
+    // Create the approval and reject links
     const approvalLink = `http://147.93.106.92/api/Analyst/approve/analyst/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Analyst/reject/analyst/${newUser._id}`;
+
+    // Send an email to the admin for approval
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
-      subject: 'Test Email with Hotmail',
+      subject: 'New Registration Request',
       html: `
-            <h3>New Registration Request</h3>
-            <p>Name: ${fullName}</p>
-            <p>Email: ${email}</p>
-            <p>Role: ${newUser.role}</p>
-            <p>City: ${city}</p>
-            <p>Region: ${region}</p>
-             <p>Phone: ${phone}</p>
-             <p>StartJob: ${StartJob}</p>
-             <p>EndJob: ${EndJob}</p>
-            <p>Click below to approve or reject:</p>
-            <a href="${approvalLink}" style="color:green">Approve</a> | <a href="${rejectLink}" style="color:red">Reject</a>
-          `,
+        <h3>New Registration Request</h3>
+        <p>Name: ${fullName}</p>
+        <p>Email: ${email}</p>
+        <p>Role: ${newUser.role}</p>
+        <p>City: ${cityExists.name}</p>
+        <p>Region: ${regionExists.name}</p>
+        <p>Phone: ${phone}</p>
+        <p>Start Job: ${StartJob}</p>
+        <p>End Job: ${EndJob}</p>
+        <p>Click below to approve or reject:</p>
+        <a href="${approvalLink}" style="color:green">Approve</a> | 
+        <a href="${rejectLink}" style="color:red">Reject</a>
+      `,
     };
+
+    // Send the email to the admin
     await transporter.sendMail(mailOptions);
 
-    res
-      .status(200)
-      .json({ success: true, message: 'Registration request sent to admin' , token:token });
+    // Return the success response to the frontend
+    res.status(200).json({
+      success: true,
+      message: 'Registration request sent to admin. Please wait for approval.',
+      token: token,
+    });
 
   } catch (err) {
     console.error('Error registering user:', err);
+
+    // Handle validation errors and other types of errors
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      return res.status(400).json({ success: false, message: errors.join(', ') });
     }
-
+    
+    // General error response
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
@@ -235,7 +263,12 @@ exports.rejectAnalyst = async (req, res) => {
 
 exports.getAnalyst = async (req, res) => {
   const { city, region } = req.params;
-  const query = { role: 'analyst', city, region, approved: true };
+  const existCity = await City.findById(city)
+    const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    const cityname = existCity.name
+    const regionname = existRegion.name
+  const query = { role: 'analyst', city:cityname , region:regionname , approved: true };
 
   try {
     const findPharma = await Analyst.find(query);
@@ -285,13 +318,19 @@ exports.updateAnalystInfo = async (req, res) => {
   const startjob= await extractTime(StartJob);
   const endjob= await extractTime(EndJob);
   
+  const existCity = await City.findById(city)
+    const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    const cityname = existCity.name
+    const regionname = existRegion.name
+
     await Analyst.updateMany(
       { _id: new mongoose.Types.ObjectId(id) },
       {
         $set: {
           fullName: fullName,
-          city: city,
-          region: region,
+          city: cityname,
+          region: regionname,
           address: address,
           phone: phone,
           StartJob: startjob,

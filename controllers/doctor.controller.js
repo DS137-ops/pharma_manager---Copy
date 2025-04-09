@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const RefreshToken = require('../model/RefreshToken.model');
+const City = require('../model/cities.model');
 const moment = require('moment')
 function generateTimeSlots(start, end) {
   const slots = [];
@@ -38,70 +39,88 @@ exports.createNewDoctor = async (req, res) => {
     fullName,
     email,
     password,
-    city,
-    region,
+    city,   // city ID
+    region, // region ID
     address,
     phone,
     specilizate,
     NumberState,
   } = req.body;
-  
+
+  if (!fullName || !email || !password || !city || !region || !address || !phone || !specilizate || !NumberState) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
+
   try {
     const existingUser = await Doctor.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: `Email already exists`,
-      });
+      return res.status(409).json({ success: false, message: 'Email already exists' });
     }
-     const token = await jwt.sign({  role: 'doctor' }, process.env.JWT_SECRET);
-    
-        await RefreshToken.create({ token });
-    
+    const cityExists = await City.findById(city);
+    if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
+    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
+    if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
 
-    newUser = new Doctor({
+    // إنشاء توكن JWT للطبيب الجديد
+    const token = await jwt.sign({ role: 'doctor' }, process.env.JWT_SECRET);
+    await RefreshToken.create({ token });
+
+    // إنشاء حساب الطبيب مع تخزين اسم المدينة والمنطقة بدلاً من الـ ID
+    const newUser = new Doctor({
       fullName,
       email,
       password,
-      city,
-      region,
+      city: cityExists.name,    // تخزين اسم المدينة
+      region: regionExists.name, // تخزين اسم المنطقة
       address,
       phone,
       specilizate,
       NumberState,
     });
-    //pharma-manager-copy-2.onrender.com
+
+    // حفظ الطبيب الجديد في قاعدة البيانات
     await newUser.save();
+
+    // إنشاء روابط الموافقة والرفض
     const approvalLink = `http://147.93.106.92/api/Doctor/approve/doctor/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Doctor/reject/doctor/${newUser._id}`;
+
+    // إرسال بريد إلكتروني للإدارة لمراجعة الحساب الجديد
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
-      subject: 'Test Email with Hotmail',
+      subject: 'طلب تسجيل جديد',
       html: `
-            <h3>New Registration Request</h3>
-            <p>Name: ${fullName}</p>
-            <p>Email: ${email}</p>
-            <p>Role: ${newUser.role}</p>
-            <p>City: ${city}</p>
-            <p>Region: ${region}</p>
-             <p>Phone: ${phone}</p>
-            <p>Click below to approve or reject:</p>
-            <a href="${approvalLink}" style="color:green">Approve</a> | <a href="${rejectLink}" style="color:red">Reject</a>
-          `,
+        <h3>New Registration Request</h3>
+        <p>Name: ${fullName}</p>
+        <p>Email: ${email}</p>
+        <p>Role: Doctor</p>
+        <p>City: ${cityExists.name}</p>
+        <p>Region: ${regionExists.name}</p>
+        <p>Phone: ${phone}</p>
+        <p>Specialization: ${specilizate}</p>
+        <p>NumberState: ${NumberState}</p>
+        <p>Click below to approve or reject:</p>
+        <a href="${approvalLink}" style="color:green">Approve</a> | 
+        <a href="${rejectLink}" style="color:red">Reject</a>
+      `,
     };
+
     await transporter.sendMail(mailOptions);
 
-    res
-      .status(200)
-      .json({ success: true, message: `Registration request sent to admin` ,token:token });
+    // إرسال الاستجابة للفرونت إند
+    res.status(200).json({
+      success: true,
+      message: 'Registration request sent to admin. Please wait for approval.',
+      token: token,
+    });
+
   } catch (err) {
-    console.error('Error registering user:', err);
+    console.error('Error registering doctor:', err);
+
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      return res.status(400).json({ success: false, message: errors.join(', ') });
     }
 
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -493,8 +512,12 @@ exports.getDoctors = async (req, res) => {
     const city = req.params.city,
       region = req.params.region,
       spec = req.params.spec;
-
-    const query = { city: city, region: region, specilizate: spec };
+const existCity = await City.findById(city)
+    const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    const cityname = existCity.name
+    const regionname = existRegion.name
+    const query = { city: cityname, region: regionname, specilizate: spec };
 
     const doctors = await Doctor.find(query);
 
@@ -611,6 +634,12 @@ exports.updateDoctorInfo = async (req, res) => {
       schedule,
     } = req.body;
     const id = req.params.id;
+    const existCity = await City.findById(city)
+        const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+        if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+        const cityname = existCity.name
+        const regionname = existRegion.name
+
     const scheduleSlots = {};
     if (schedule && typeof schedule === 'object') {
       Object.entries(schedule).forEach(([day, times]) => {
@@ -629,8 +658,8 @@ exports.updateDoctorInfo = async (req, res) => {
       {
         $set: {
           fullName,
-          city,
-          region,
+          cityname,
+          regionname,
           address,
           phone,
           specilizate,

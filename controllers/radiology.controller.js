@@ -3,8 +3,8 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
-const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
+const City = require('../model/cities.model');
 const Favourite = require('../model/FavouriteRadiology.model');
 const Radiology = require('../model/radiology.model');
 const transporter = nodemailer.createTransport({
@@ -20,13 +20,14 @@ exports.createNewRadiology = async (req, res) => {
     fullName,
     email,
     password,
-    city,
-    region,
+    city,   // city ID
+    region, // region ID
     address,
     phone,
     StartJob,
     EndJob,
   } = req.body;
+
   if (
     !fullName ||
     !email ||
@@ -38,70 +39,90 @@ exports.createNewRadiology = async (req, res) => {
     !StartJob ||
     !EndJob
   ) {
-    return res
-      .status(404)
-      .json({ success: false, message: 'All fields are required' });
+    return res.status(404).json({ success: false, message: 'All fields are required' });
   }
+
   try {
+    // التحقق من عدم وجود المستخدم مسبقًا
     const existingUser = await Radiology.findOne({ email });
     if (existingUser) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'Email already exists' });
+      return res.status(409).json({ success: false, message: 'Email already exists' });
     }
- const token = await jwt.sign({  role: 'radiology' }, process.env.JWT_SECRET);
 
+    // جلب بيانات المدينة باستخدام الـ ID
+    const cityExists = await City.findById(city);
+    if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
+
+    // التحقق من أن المنطقة تنتمي إلى المدينة المحددة
+    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
+    if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+
+    // إنشاء توكن JWT للمستخدم الجديد
+    const token = await jwt.sign({ role: 'radiology' }, process.env.JWT_SECRET);
     await RefreshToken.create({ token });
-    newUser = new Radiology({
+
+    // إنشاء مستخدم جديد مع تخزين اسم المدينة والمنطقة بدلاً من الـ ID
+    const newUser = new Radiology({
       fullName,
       email,
       password,
-      city,
-      region,
+      city: cityExists.name,    // تخزين اسم المدينة
+      region: regionExists.name, // تخزين اسم المنطقة
       address,
       phone,
       StartJob,
       EndJob,
     });
-    // https://pharma-manager-copy-2.onrender.com
+
+    // حفظ المستخدم الجديد في قاعدة البيانات
     await newUser.save();
+
+    // إنشاء روابط الموافقة والرفض
     const approvalLink = `http://147.93.106.92/api/Radiology/approve/radiology/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Radiology/reject/radiology/${newUser._id}`;
+
+    // إرسال بريد إلكتروني للإدارة لمراجعة الحساب الجديد
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
       subject: 'طلب تسجيل جديد',
       html: `
-            <h3>New Registration Request</h3>
-            <p>Name: ${fullName}</p>
-            <p>Email: ${email}</p>
-            <p>Role: ${newUser.role}</p>
-            <p>City: ${city}</p>
-            <p>Region: ${region}</p>
-             <p>Phone: ${phone}</p>
-             <p>StartJob: ${StartJob}</p>
-             <p>EndJob: ${EndJob}</p>
-            <p>Click below to approve or reject:</p>
-            <a href="${approvalLink}" style="color:green">Approve</a> | <a href="${rejectLink}" style="color:red">Reject</a>
-          `,
+        <h3>New Registration Request</h3>
+        <p>Name: ${fullName}</p>
+        <p>Email: ${email}</p>
+        <p>Role: Radiology</p>
+        <p>City: ${cityExists.name}</p>
+        <p>Region: ${regionExists.name}</p>
+        <p>Phone: ${phone}</p>
+        <p>Start Job: ${StartJob}</p>
+        <p>End Job: ${EndJob}</p>
+        <p>Click below to approve or reject:</p>
+        <a href="${approvalLink}" style="color:green">Approve</a> | 
+        <a href="${rejectLink}" style="color:red">Reject</a>
+      `,
     };
+
     await transporter.sendMail(mailOptions);
 
-    res
-      .status(200)
-      .json({ success: true, message: 'Registration request sent to admin' , token:token });
+    // إرسال الاستجابة للفرونت إند
+    res.status(200).json({
+      success: true,
+      message: 'Registration request sent to admin. Please wait for approval.',
+      token: token,
+    });
+
   } catch (err) {
     console.error('Error registering user:', err);
+
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      return res.status(400).json({ success: false, message: errors.join(', ') });
     }
 
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
 
 exports.deleteRadiologyAccount = async (req, res) => {
   try {
@@ -194,7 +215,12 @@ exports.rejectRadiology = async (req, res) => {
 
 exports.getradiology = async (req, res) => {
   const { city, region } = req.params;
-  const query = { role: 'radiology', city, region, approved: true };
+  const existCity = await City.findById(city)
+      const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+      if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+      const cityname = existCity.name
+      const regionname = existRegion.name
+  const query = { role: 'radiology', city:cityname, region:regionname, approved: true };
 
   try {
     const findPharma = await Radiology.find(query);
@@ -362,6 +388,12 @@ exports.updateRadiologyInfo = async (req, res) => {
     const startjob= await extractTime(StartJob);
     const endjob= await extractTime(EndJob);
 
+    const existCity = await City.findById(city)
+        const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+        if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+        const cityname = existCity.name
+        const regionname = existRegion.name
+
     await Radiology.updateMany(
       { _id: new mongoose.Types.ObjectId(id) },
       {
@@ -369,8 +401,8 @@ exports.updateRadiologyInfo = async (req, res) => {
           fullName: fullName,
           email: email,
           password: password,
-          city: city,
-          region: region,
+          city: cityname,
+          region: regionname,
           address: address,
           phone: phone,
           StartJob: startjob,

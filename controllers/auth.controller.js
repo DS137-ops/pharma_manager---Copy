@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
+const City = require('../model/cities.model')
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
 require('dotenv').config();
@@ -37,18 +38,24 @@ const transporter = nodemailer.createTransport({
   },
 });
 //sign pharmatic
+
+
+
+
 exports.createNewPharmatic = async (req, res) => {
   const {
     fullName,
     email,
     password,
-    city,
-    region,
+    city,   // city ID
+    region, // region ID
     address,
     phone,
     StartJob,
     EndJob,
   } = req.body;
+
+  // Check if all required fields are provided
   if (
     !fullName ||
     !email ||
@@ -64,68 +71,93 @@ exports.createNewPharmatic = async (req, res) => {
       .status(404)
       .json({ success: false, message: 'All fields are required' });
   }
+
   try {
+    // Check if the email already exists in the database
     const existingUser = await Pharmatic.findOne({ email });
     if (existingUser) {
       return res
         .status(409)
         .json({ success: false, message: 'Email already exists' });
     }
-    const token = await jwt.sign({  role: 'pharmatic' }, process.env.JWT_SECRET);
 
+    // Look up the city by ID and get its name
+    const cityExists = await City.findById(city);
+    if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
+
+    // Look up the region by ID within the selected city
+    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
+    if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+
+    // Create a JWT token for the new pharmatic
+    const token = await jwt.sign({ role: 'pharmatic' }, process.env.JWT_SECRET);
     await RefreshToken.create({ token });
-    newUser = new Pharmatic({
+
+    // Create a new Pharmatic instance with the name of the city and region
+    const newUser = new Pharmatic({
       fullName,
       email,
       password,
-      city,
-      region,
+      city: cityExists.name,    // Store city name
+      region: regionExists.name, // Store region name
       address,
       phone,
       StartJob,
       EndJob,
     });
 
-    // https://pharma-manager-copy-2.onrender.com
+    // Save the new Pharmatic to the database
     await newUser.save();
+
+    // Create the approval and reject links
     const approvalLink = `http://147.93.106.92/api/Pharmatic/approve/pharmatic/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Pharmatic/reject/pharmatic/${newUser._id}`;
+
+    // Send an email to the admin for approval
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
-      subject: 'Test Email with Hotmail',
+      subject: 'New Registration Request',
       html: `
-          <h3>New Registration Request</h3>
-          <p>Name: ${fullName}</p>
-          <p>Email: ${email}</p>
-          <p>Role: ${newUser.role}</p>
-          <p>City: ${city}</p>
-          <p>Region: ${region}</p>
-           <p>Phone: ${phone}</p>
-           <p>StartJob: ${StartJob}</p>
-           <p>EndJob: ${EndJob}</p>
-          <p>Click below to approve or reject:</p>
-          <a href="${approvalLink}" style="color:green">Approve</a> | <a href="${rejectLink}" style="color:red">Reject</a>
-        `,
+        <h3>New Registration Request</h3>
+        <p>Name: ${fullName}</p>
+        <p>Email: ${email}</p>
+        <p>Role: ${newUser.role}</p>
+        <p>City: ${cityExists.name}</p>
+        <p>Region: ${regionExists.name}</p>
+        <p>Phone: ${phone}</p>
+        <p>Start Job: ${StartJob}</p>
+        <p>End Job: ${EndJob}</p>
+        <p>Click below to approve or reject:</p>
+        <a href="${approvalLink}" style="color:green">Approve</a> | 
+        <a href="${rejectLink}" style="color:red">Reject</a>
+      `,
     };
+
+    // Send the email to the admin
     await transporter.sendMail(mailOptions);
 
+    // Return the success response to the frontend
     res.status(200).json({
       success: true,
-      message: 'Registration request sent to admin please wait for approved',
-      token:token
+      message: 'Registration request sent to admin. Please wait for approval.',
+      token: token,
     });
+
   } catch (err) {
     console.error('Error registering user:', err);
+
+    // Handle validation errors and other types of errors
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      return res.status(400).json({ success: false, message: errors.join(', ') });
     }
+    
+    // General error response
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
 
 
 exports.deletePharmaticAccount = async (req, res) => {
@@ -195,7 +227,13 @@ exports.ratePharmatic = async (req, res) => {
 
 exports.getPharmas = async (req, res) => {
   const { city, region } = req.params;
-  const query = { role: 'pharmatic', city, region, approved: true };
+  const existCity = await City.findById(city)
+  const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+  if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+  const cityname = existCity.name
+  const regionname = existRegion.name
+  console.log(cityname, regionname)
+  const query = { role: 'pharmatic', city: cityname, region: regionname, approved: true };
 
   try {
     const findPharma = await Pharmatic.find(query);
@@ -247,13 +285,21 @@ exports.updatePharmaticInfo = async (req, res) => {
   const startjob= await extractTime(StartJob);
   const endjob= await extractTime(EndJob);
   
+
+  const existCity = await City.findById(city)
+      const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+      if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+      const cityname = existCity.name
+      const regionname = existRegion.name
+
+
     await Pharmatic.updateMany(
       { _id: new mongoose.Types.ObjectId(id) },
       {
         $set: {
           fullName: fullName,
-          city: city,
-          region: region,
+          city: cityname,
+          region: regionname,
           address: address,
           phone: phone,
           StartJob: startjob,
@@ -346,68 +392,131 @@ exports.rejectPharmatic = async (req, res) => {
   }
 };
 
-
 exports.createNewSeek = async (req, res) => {
-  const { fullName, phone , password , age , city , address } = req.body;
-  if(!password) return res
-  .status(409)
-  .json({ success: false, message: 'password should not empty' });
-  if(!fullName) return res
-  .status(409)
-  .json({ success: false, message: 'fullname should not empty' });
-  if(!phone) return res
-  .status(409)
-  .json({ success: false, message: 'phone should not empty' });
-  if(!age) return res
-  .status(409)
-  .json({ success: false, message: 'age should not empty' });
-  if(!city) return res
-  .status(409)
-  .json({ success: false, message: 'city should not empty' });
-  if(!address) return res
-  .status(409)
-  .json({ success: false, message: 'address should not empty' });
+  const { fullName, phone, password, age, city, region } = req.body;
+
+  // Validation checks
+  if (!password) return res.status(409).json({ success: false, message: 'Password should not be empty' });
+  if (!fullName) return res.status(409).json({ success: false, message: 'Full name should not be empty' });
+  if (!phone) return res.status(409).json({ success: false, message: 'Phone should not be empty' });
+  if (!age) return res.status(409).json({ success: false, message: 'Age should not be empty' });
+  if (!city) return res.status(409).json({ success: false, message: 'City should not be empty' });
+  if (!region) return res.status(409).json({ success: false, message: 'Region should not be empty' });
+
   try {
-   
+    // Check if the phone number already exists
     const existSeek = await Seek.findOne({ phone });
-    if(existSeek)return res.status(400).json({success:false , messsage:'phone is already exist'})
+    if (existSeek) return res.status(400).json({ success: false, message: 'Phone number is already taken' });
 
-     const token = await jwt.sign({  role: 'user' }, process.env.JWT_SECRET);
+    // Find the city by ID
+    const cityExists = await City.findById(city);
+    if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
 
-    await RefreshToken.create({ token });
+    // Find the region by ID inside the city
+    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
+    if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
 
-    const newSeek = new Seek({ fullName, phone , password , age , city , address });
+    // Create JWT token
+    const token = await jwt.sign({ role: 'user' }, process.env.JWT_SECRET);
 
+    // Create the new Seek (patient) with city and region names
+    const newSeek = new Seek({
+      fullName,
+      phone,
+      password,
+      age,
+      city: cityExists.name,    // Store city name
+      region: regionExists.name // Store region name
+    });
+
+    // Save the new Seek to the database
     await newSeek.save();
+
+    // Return the success response
     return res.status(200).json({
       success: true,
-      message: 'user register succesfully',
-      token:token
+      message: 'User registered successfully',
+      token
     });
+
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      return res.status(400).json({ success: false, message: errors.join(', ') });
     }
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+
+// exports.createNewSeek = async (req, res) => {
+//   const { fullName, phone , password , age , city , region } = req.body;
+//   if(!password) return res
+//   .status(409)
+//   .json({ success: false, message: 'password should not empty' });
+//   if(!fullName) return res
+//   .status(409)
+//   .json({ success: false, message: 'fullname should not empty' });
+//   if(!phone) return res
+//   .status(409)
+//   .json({ success: false, message: 'phone should not empty' });
+//   if(!age) return res
+//   .status(409)
+//   .json({ success: false, message: 'age should not empty' });
+//   if(!city) return res
+//   .status(409)
+//   .json({ success: false, message: 'city should not empty' });
+//   if(!region) return res
+//   .status(409)
+//   .json({ success: false, message: 'region should not empty' });
+//   try {
+   
+//     const existSeek = await Seek.findOne({ phone });
+//     if(existSeek)return res.status(400).json({success:false , messsage:'phone is already exist'})
+
+//      const token = await jwt.sign({  role: 'user' }, process.env.JWT_SECRET);
+
+//     await RefreshToken.create({ token });
+
+//     const newSeek = new Seek({ fullName, phone , password , age , city , region });
+
+//     await newSeek.save();
+//     return res.status(200).json({
+//       success: true,
+//       message: 'user register succesfully',
+//       token:token
+//     });
+//   } catch (err) {
+//     console.error('Error registering user:', err);
+//     if (err.name === 'ValidationError') {
+//       const errors = Object.values(err.errors).map((e) => e.message);
+//       return res
+//         .status(400)
+//         .json({ success: false, message: errors.join(', ') });
+//     }
+//     res.status(500).json({ success: false, message: 'Internal server error' });
+//   }
+// };
 exports.updateSickInfo = async(req,res)=>{
 
 try {
   const {
-    fullName, phone , password , age , city , address
+    fullName, phone , password , age , city , region
   } = req.body;
   const id = req.params.id;
+  
+const existCity = await City.findById(city)
+    const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    const cityname = existCity.name
+    const regionname = existRegion.name
 
   await Seek.updateMany(
     { _id: new mongoose.Types.ObjectId(id) },
     {
       $set: {
-        fullName, phone , password , age , city , address
+        fullName, phone , password , age , cityname , regionname
       },
     }
   );

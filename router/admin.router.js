@@ -6,6 +6,8 @@ const AnalystAdvert = require('../model/analystAdvert.model');
 const SupportTicket = require('../model/supportSchema.model');
 const SeekAdvert = require('../model/seekAdvert.model');
 const { createAdmin, adminLogin } = require("../controllers/adminController.controller");
+const City = require("../model/cities.model");
+const mongoose = require("mongoose")
 const { body } = require("express-validator");
 const multer = require("multer")
 const { v4: uuidv4 } = require("uuid");
@@ -249,4 +251,48 @@ router.get("/support-tickets/:ticketNumber", async (req, res) => {
     res.status(500).json({ error: "حدث خطأ أثناء جلب تفاصيل التذكرة" , err:error });
   }
 });
+
+router.post("/add-city", async(req,res)=>{
+  try {
+    const { name } = req.body;
+    const newCity = new City({ name, regions: [] });
+    await newCity.save();
+    res.status(201).json({ message: "City added successfully", city: newCity });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/cities/:cityId/add-region", async(req,res)=>{
+  try {
+    const { cityId } = req.params;
+    const { name } = req.body;
+
+    const city = await City.findById(cityId);
+    if (!city) return res.status(404).json({ error: "City not found" });
+
+    const newRegion = { _id: new mongoose.Types.ObjectId(), name };
+    city.regions.push(newRegion);
+    await city.save();
+
+    res.status(201).json({ message: "Region added successfully", region: newRegion });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.get("/cities", async(req,res)=>{
+  try {
+    const cities = await City.find();
+    
+    if (!cities || cities.length === 0) {
+        return res.status(404).json({ message: "No cities found" });
+    }
+  
+    res.status(200).json(cities);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 module.exports = router;
