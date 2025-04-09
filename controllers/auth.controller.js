@@ -418,7 +418,7 @@ exports.createNewSeek = async (req, res) => {
 
     // Create JWT token
     const token = await jwt.sign({ role: 'user' }, process.env.JWT_SECRET);
-
+    await RefreshToken.create({ token });
     // Create the new Seek (patient) with city and region names
     const newSeek = new Seek({
       fullName,
