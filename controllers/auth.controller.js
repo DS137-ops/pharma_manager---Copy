@@ -749,6 +749,41 @@ exports.resetSickPass = async (req, res) => {
   res.status(200).json({ message: "Password reset successfully" });
 }
 
+exports.addToFamousPhars = async (req, res) => {
+  const { pharmaId } = req.body;
+
+  try {
+    const pharma = await Pharmatic.findByIdAndUpdate(pharmaId, { isFamous: true }, { new: true });
+    
+    if (!pharma) {
+      return res.status(404).json({ message: 'pharma not found' });
+    }
+
+    res.status(200).json({ message: 'pharma added to famous pharmas menu', pharma });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getFamousPhars = async (req, res) => {
+  try {
+    // Find all doctors where 'isFamous' is true
+    const famousPharmas = await Pharmatic.find({ isFamous: true });
+
+    if (famousPharmas.length === 0) {
+      return res.status(404).json({ message: 'No famous pharmas found' });
+    }
+
+    res.status(200).json({ famousPharmas });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+
 exports.searchPharmaticsByName = async (req, res) => {
   try {
     const { fullName } = req.query;

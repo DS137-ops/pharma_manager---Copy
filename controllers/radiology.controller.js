@@ -147,8 +147,36 @@ exports.createNewRadiology = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+exports.addToFamousRadiologies = async (req, res) => {
+  const { radiologyId } = req.body;
 
+  try {
+    const radiology = await Radiology.findByIdAndUpdate(radiologyId, { isFamous: true }, { new: true });
+    
+    if (!radiology) {
+      return res.status(404).json({ message: 'radiology not found' });
+    }
 
+    res.status(200).json({ message: 'radiology added to famous radiologies menu', radiology });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+exports.getFamousRadiologies = async (req, res) => {
+  try {
+    const famousRadiologies = await Radiology.find({ isFamous: true });
+
+    if (famousRadiologies.length === 0) {
+      return res.status(404).json({ message: 'No famous Radiologies found' });
+    }
+
+    res.status(200).json({ famousRadiologies });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 exports.deleteRadiologyAccount = async (req, res) => {
   try {
     const { password } = req.body;

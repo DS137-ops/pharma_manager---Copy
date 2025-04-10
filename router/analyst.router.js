@@ -205,7 +205,8 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
     res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
   }
 });
-
+router.post('/add-to-famous'  , analystController.addToFamousAnalysts);
+router.get('/famous', analystController.getFamousAnalysts);
 router.post("/forgot-password-for-analyst", analystController.forgetPassForAnalyst);
 
 router.post("/verify-code-for-analyst", analystController.verifyCodeAnalyst);

@@ -168,6 +168,21 @@ exports.addToFamousDoctors = async (req, res) => {
   }
 };
 
+exports.getFamousDoctors = async (req, res) => {
+  try {
+    // Find all doctors where 'isFamous' is true
+    const famousDoctors = await Doctor.find({ isFamous: true });
+
+    if (famousDoctors.length === 0) {
+      return res.status(404).json({ message: 'No famous doctors found' });
+    }
+
+    res.status(200).json({ famousDoctors });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 // exports.createBooking = async(req,res)=>{
 //   try{

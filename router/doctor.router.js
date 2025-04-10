@@ -61,6 +61,7 @@ router.post(
 );
 router.get('/search', checkprov.checkifLoggedIn , doctorController.searchdoctorByName);
 router.post('/add-to-famous'  , doctorController.addToFamousDoctors);
+router.get('/famous', doctorController.getFamousDoctors);
 router.post("/createrangeBooking/:id" , checkprov.checkifLoggedIn , doctorController.createBooking)
 router.get("/getAvailableAppointments/:id", checkprov.checkifLoggedIn, doctorController.getAvailableAppointments);
 

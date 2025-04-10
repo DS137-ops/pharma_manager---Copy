@@ -48,6 +48,7 @@ const medicalSchemaforAnalyst = new mongoose.Schema({
     ],
   },
   approved: { type: Boolean, default: false },
+  isFamous: { type: Boolean, default: false },
   StartJob: {
     type: String,
     default: null,

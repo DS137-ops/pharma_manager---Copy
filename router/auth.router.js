@@ -288,6 +288,9 @@ router.post(
   checkprov.checkifLoggedIn,
   authController.logoutSpec
 );
+
+router.post('/add-to-famous'  , authController.addToFamousPhars);
+router.get('/famous', authController.getFamousPhars);
 router.get("/user-bookings/:patientId", checkprov.checkifLoggedIn , authController.getUserBookings);
 router.post("/forgot-password-for-pharmatic" , authController.forgetPassForPharmatic);
 

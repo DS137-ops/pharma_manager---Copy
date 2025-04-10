@@ -129,6 +129,40 @@ exports.createNewAnalyst = async (req, res) => {
   }
 };
 
+exports.addToFamousAnalysts = async (req, res) => {
+  const { analystId } = req.body;
+
+  try {
+    const analyst = await Analyst.findByIdAndUpdate(analystId, { isFamous: true }, { new: true });
+    
+    if (!analyst) {
+      return res.status(404).json({ message: 'analyst not found' });
+    }
+
+    res.status(200).json({ message: 'analyst added to famous analysts menu', analyst });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getFamousAnalysts = async (req, res) => {
+  try {
+    // Find all doctors where 'isFamous' is true
+    const famousAnalysts = await Analyst.find({ isFamous: true });
+
+    if (famousAnalysts.length === 0) {
+      return res.status(404).json({ message: 'No famous Analysts found' });
+    }
+
+    res.status(200).json({ famousAnalysts });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 
 exports.searchanalystByName = async (req, res) => {
   try {
@@ -328,53 +362,47 @@ function extractTime(timeString) {
 
 exports.updateAnalystInfo = async (req, res) => {
   try {
-    const {
-      fullName,
-      city,
-      region,
-      address,
-      phone,
-      StartJob,
-      EndJob,
-    } = req.body;
+    const { fullName, city, region, address, phone, StartJob, EndJob } = req.body;
     const id = req.params.id;
-    
-  const startjob= await extractTime(StartJob);
-  const endjob= await extractTime(EndJob);
-  
-  const existCity = await City.findById(city)
-    const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-    const cityname = existCity.name
-    const regionname = existRegion.name
 
-    await Analyst.updateMany(
-      { _id: new mongoose.Types.ObjectId(id) },
-      {
-        $set: {
-          fullName: fullName,
-          city: cityname,
-          region: regionname,
-          address: address,
-          phone: phone,
-          StartJob: startjob,
-          EndJob: endjob,
-        },
+    const updateFields = {}; // تخزين القيم المراد تحديثها فقط
+
+    if (fullName) updateFields.fullName = fullName;
+    if (address) updateFields.address = address;
+    if (phone) updateFields.phone = phone;
+    
+    if (StartJob) updateFields.StartJob = await extractTime(StartJob);
+    if (EndJob) updateFields.EndJob = await extractTime(EndJob);
+
+    if (city) {
+      const existCity = await City.findById(city);
+      if (!existCity) {
+        return res.status(400).json({ success: false, message: 'City not found' });
       }
-    );
-    res.status(200).json({ success: true, message: 'UpdatedSuccesffuly' });
-  } catch (err) {
-    console.error('Error registering user:', err);
-    if (err.name === 'ValidationError') {
-      const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      updateFields.city = existCity.name;
+
+      if (region) {
+        const existRegion = existCity.regions.find(r => r._id.toString() === region);
+        if (!existRegion) {
+          return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+        }
+        updateFields.region = existRegion.name;
+      }
     }
 
+    await Analyst.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updateFields });
+
+    res.status(200).json({ success: true, message: 'Updated Successfully' });
+  } catch (err) {
+    console.error('Error updating analyst info:', err);
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map((e) => e.message);
+      return res.status(400).json({ success: false, message: errors.join(', ') });
+    }
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
 
 exports.forgetPassForAnalyst = async (req, res) => {
   const { email } = req.body;

@@ -215,6 +215,9 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
   }
 });
 
+router.post('/add-to-famous'  , RadiologyController.addToFamousRadiologies);
+router.get('/famous', RadiologyController.getFamousRadiologies);
+
 router.post("/forgot-password-for-radiology", RadiologyController.forgetPassForRadiology);
 
 router.post("/verify-code-for-radiology", RadiologyController.verifyCodeRadiology);
