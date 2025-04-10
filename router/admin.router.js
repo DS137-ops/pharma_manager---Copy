@@ -295,4 +295,14 @@ router.get("/cities", async(req,res)=>{
 });
 
 
+router.post("/add-famous-doctor/:id" , async(req,res)=>{
+  try{
+    const newDoctor = await Doctor.findById(id)
+    if(!newDoctor)return res.status(404).json({success:false , messsage:"No doctor found"})
+      
+  }catch(err){
+    return res.status(500).json({success:false , message:`server error ${err}`})
+  }
+})
+
 module.exports = router;

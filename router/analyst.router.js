@@ -233,6 +233,10 @@ router.get("/patient-orders/:patientId", checkprov.checkifLoggedIn  , async (req
    return res.status(500).json({ error: error.message });
   }
 });
+
+router.get('/search', checkprov.checkifLoggedIn , analystController.searchanalystByName);
+
+
 router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , analystController.deleteFromFavo)
 //End Analyst
 module.exports = router;

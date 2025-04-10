@@ -15,6 +15,31 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+
+
+exports.searchradiologyByName = async (req, res) => {
+  try {
+    const { fullName } = req.query;
+
+    if (!fullName) {
+      return res.status(400).json({ status: false, message: 'Please provide a name' });
+    }
+
+    const radiology = await Radiology.find({
+      fullName: { $regex: fullName, $options: 'i' }
+    });
+
+    if (radiology.length === 0) {
+      return res.status(404).json({ status: false, message: 'No matching radiology found' });
+    }
+
+    return res.status(200).json({ status: true, radiology });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: false, message: 'Server error' });
+  }
+};
+
 exports.createNewRadiology = async (req, res) => {
   const {
     fullName,

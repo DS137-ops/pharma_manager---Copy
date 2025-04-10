@@ -3,6 +3,7 @@ const doctorController = require('../controllers/doctor.controller');
 const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
+const adminmiddleware = require('../middleware/admin.middleware');
 const Doctor = require('../model/doctor.model');
 const mongoose = require('mongoose');
 const multer = require('multer');
@@ -58,7 +59,8 @@ router.post(
   ],
   doctorController.createNewDoctor
 );
-
+router.get('/search', checkprov.checkifLoggedIn , doctorController.searchdoctorByName);
+router.post('/add-to-famous', adminmiddleware.isAdmin  , doctorController.addToFamousDoctors);
 router.post("/createrangeBooking/:id" , checkprov.checkifLoggedIn , doctorController.createBooking)
 router.get("/getAvailableAppointments/:id", checkprov.checkifLoggedIn, doctorController.getAvailableAppointments);
 

@@ -34,6 +34,30 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+
+exports.searchdoctorByName = async (req, res) => {
+  try {
+    const { fullName } = req.query;
+
+    if (!fullName) {
+      return res.status(400).json({ status: false, message: 'Please provide a name' });
+    }
+
+    const doctor = await Doctor.find({
+      fullName: { $regex: fullName, $options: 'i' }
+    });
+
+    if (doctor.length === 0) {
+      return res.status(404).json({ status: false, message: 'No matching doctor found' });
+    }
+
+    return res.status(200).json({ status: true, doctor });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: false, message: 'Server error' });
+  }
+};
+
 exports.createNewDoctor = async (req, res) => {
   const {
     fullName,
@@ -126,6 +150,25 @@ exports.createNewDoctor = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+exports.addToFamousDoctors = async (req, res) => {
+  const { doctorId } = req.body;
+
+  try {
+    const doctor = await Doctor.findByIdAndUpdate(doctorId, { isFamous: true }, { new: true });
+    
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    res.status(200).json({ message: 'Doctor added to famous doctors menu', doctor });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 // exports.createBooking = async(req,res)=>{
 //   try{
 //    const  rangeBooking = req.body.rangeBooking

@@ -90,6 +90,7 @@ const doctorSchema = new mongoose.Schema({
     },
   ],
   approved: { type: Boolean, default: false },
+  isFamous: { type: Boolean, default: false },
   doctorimage: [
     {
       imageUrl: String,

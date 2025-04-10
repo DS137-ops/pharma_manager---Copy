@@ -167,6 +167,8 @@ router.get('/Radiology-requests/:radiologyId', async (req, res) => {
       .json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
   }
 });
+router.get('/search', checkprov.checkifLoggedIn , RadiologyController.searchradiologyByName);
+
 router.post('/respond-request-from-Radiology', async (req, res) => {
   try {
     const { requestId, specId, price, accepted } = req.body;
