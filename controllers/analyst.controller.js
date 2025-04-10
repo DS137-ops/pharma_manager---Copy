@@ -168,24 +168,25 @@ exports.searchanalystByName = async (req, res) => {
   try {
     const { fullName } = req.query;
 
-    if (!fullName) {
-      return res.status(400).json({ status: false, message: 'Please provide a name' });
+    if (!fullName || fullName.trim() === '') {
+      return res.status(400).json({ status: false, message: 'Please provide a valid name' });
     }
 
-    const analysts = await Analyst.find({
-      fullName: { $regex: fullName, $options: 'i' }
-    });
+    const regex = new RegExp(fullName, 'i');
+    
+    const analysts = await Analyst.find({ fullName: regex });
 
-    if (analysts.length === 0) {
+    if (!analysts.length) {
       return res.status(404).json({ status: false, message: 'No matching analysts found' });
     }
 
     return res.status(200).json({ status: true, analysts });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ status: false, message: 'Server error' });
+    console.error('Search error:', error);
+    res.status(500).json({ status: false, message: 'Server error', error: error.message });
   }
 };
+
 
 exports.deleteAnalystAccount = async (req, res) => {
   try {

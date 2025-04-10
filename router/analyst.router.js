@@ -237,8 +237,8 @@ router.get("/patient-orders/:patientId", checkprov.checkifLoggedIn  , async (req
   }
 });
 
-router.get('/search', checkprov.checkifLoggedIn , analystController.searchanalystByName);
-
+router.get('/search',  analystController.searchanalystByName);
+//checkprov.checkifLoggedIn ,
 
 router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , analystController.deleteFromFavo)
 //End Analyst
