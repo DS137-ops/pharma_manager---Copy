@@ -198,7 +198,7 @@ router.post('/respond-request-from-Analyst', async (req, res) => {
     }
 
     // إضافة الاستجابة إلى الطلب
-    request.PrescriptionAnalystRequest.push({ specId, price, accepted });
+    request.analystsResponded.push({ specId, price, accepted });
 
     // حفظ التعديلات في قاعدة البيانات
     await request.save();
