@@ -173,7 +173,7 @@ router.post('/respond-request-from-Analyst', async (req, res) => {
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
   } catch (error) {
-    res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error });
+    res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error:error });
   }
 });
 
