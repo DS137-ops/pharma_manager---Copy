@@ -159,57 +159,24 @@ router.get('/Analyst-requests/:analystId', async (req, res) => {
       .json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
   }
 });
-// router.post('/respond-request-from-Analyst', async (req, res) => {
-//   try {
-//     const { requestId, specId, price, accepted } = req.body;
-
-//     const request = await PrescriptionAnalystRequest.findById(requestId);
-//     if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
-//     if (accepted && !price) {
-//       res.status(400).json({ message: 'price is required' });
-//     }
-//     request.PrescriptionAnalystRequest.push({ specId, price, accepted });
-//     await request.save();
-
-//     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
-//   } catch (error) {
-//     res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error:error });
-//   }
-// });
 router.post('/respond-request-from-Analyst', async (req, res) => {
   try {
     const { requestId, specId, price, accepted } = req.body;
 
-    // التحقق من وجود الطلب
     const request = await PrescriptionAnalystRequest.findById(requestId);
-    console.log(request)
-    if (!request) {
-      return res.status(404).json({ message: 'الطلب غير موجود' });
+    if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
+    if (accepted && !price) {
+      res.status(400).json({ message: 'price is required' });
     }
-
-    // التحقق من الحقول المطلوبة
-    if (accepted && (price === undefined || price === null)) {
-      return res.status(400).json({ message: 'السعر مطلوب عند القبول' });
-    }
-
-    // التأكد من أن PrescriptionAnalystRequest هو مصفوفة قبل الدفع إليها
-    if (!Array.isArray(request.PrescriptionAnalystRequest)) {
-      return res.status(500).json({ message: 'خطأ في هيكل البيانات داخل الطلب' });
-    }
-
-    // إضافة الاستجابة إلى الطلب
     request.analystsResponded.push({ specId, price, accepted });
-
-    // حفظ التعديلات في قاعدة البيانات
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
-
   } catch (error) {
-    console.error('Error responding to request:', error);
-    res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error: error.message });
+    res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error:error });
   }
 });
+
 
 
 router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
