@@ -182,6 +182,7 @@ router.post('/respond-request-from-Analyst', async (req, res) => {
 
     // التحقق من وجود الطلب
     const request = await PrescriptionAnalystRequest.findById(requestId);
+    console.log(request)
     if (!request) {
       return res.status(404).json({ message: 'الطلب غير موجود' });
     }
