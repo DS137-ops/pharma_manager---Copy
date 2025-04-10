@@ -60,7 +60,7 @@ router.post(
   doctorController.createNewDoctor
 );
 router.get('/search', checkprov.checkifLoggedIn , doctorController.searchdoctorByName);
-router.post('/add-to-famous', adminmiddleware.isAdmin  , doctorController.addToFamousDoctors);
+router.post('/add-to-famous'  , doctorController.addToFamousDoctors);
 router.post("/createrangeBooking/:id" , checkprov.checkifLoggedIn , doctorController.createBooking)
 router.get("/getAvailableAppointments/:id", checkprov.checkifLoggedIn, doctorController.getAvailableAppointments);
 
