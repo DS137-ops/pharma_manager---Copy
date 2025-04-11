@@ -493,41 +493,67 @@ exports.createNewSeek = async (req, res) => {
 //     res.status(500).json({ success: false, message: 'Internal server error' });
 //   }
 // };
-exports.updateSickInfo = async(req,res)=>{
 
-try {
-  const {
-    fullName, phone , password , age , city , region
-  } = req.body;
-  const id = req.params.id;
-  
-const existCity = await City.findById(city)
-    const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+
+
+exports.updateSickInfo = async (req, res) => {
+  try {
+    const { fullName, phone, age, city, region } = req.body;
+    const id = req.params.id;
+
+    // Check if city exists
+    const existCity = await City.findById(city);
+    if (!existCity) return res.status(400).json({ success: false, message: 'City not found' });
+
+    // Check if region exists within the city
+    const existRegion = existCity.regions.find(r => r._id.toString() === region);
     if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-    const cityname = existCity.name
-    const regionname = existRegion.name
 
-  await Seek.updateMany(
-    { _id: new mongoose.Types.ObjectId(id) },
-    {
-      $set: {
-        fullName, phone , password , age , cityname , regionname
-      },
+    const cityname = existCity.name;
+    const regionname = existRegion.name;
+
+    // Prepare update object to only update selected fields
+    const updateFields = {};
+
+    // Conditionally add fields to the update object if they are provided in the request
+    if (fullName) updateFields.fullName = fullName;
+    if (phone) updateFields.phone = phone;
+    if (age) updateFields.age = age;
+    if (city) updateFields.cityname = cityname;
+    if (region) updateFields.regionname = regionname;
+
+    // Update the Seek (patient) with the selected fields
+    const updatedSeek = await Seek.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true } // Return the updated document
+    );
+
+    // Check if the patient was found and updated
+    if (!updatedSeek) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
     }
-  );
-  res.status(200).json({ success: true, message: 'UpdatedSuccesffuly' });
-} catch (err) {
-  console.error('Error registering user:', err);
-  if (err.name === 'ValidationError') {
-    const errors = Object.values(err.errors).map((e) => e.message);
-    return res
-      .status(400)
-      .json({ success: false, message: errors.join(', ') });
-  }
 
-  res.status(500).json({ success: false, message: 'Internal server error' });
-}
-}
+    // Send a success response
+    res.status(200).json({ success: true, message: 'Updated Successfully', data: updatedSeek });
+  } catch (err) {
+    console.error('Error updating sick info:', err);
+
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map((e) => e.message);
+      return res.status(400).json({ success: false, message: errors.join(', ') });
+    }
+
+    // Handle general server errors
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
+
+
+
 
 exports.loginSeek = async (req, res) => {
   const { phone, password } = req.body;
