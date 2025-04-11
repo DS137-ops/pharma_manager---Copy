@@ -188,24 +188,25 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
 });
 
 
+
 router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
   try {
     const patientRequests = await PrescriptionRadiologyRequest.find({
       patientId: req.params.patientId,
     }).populate('radiologysResponded.radiologyId', 'fullName phone city region');
-    
+
     let responses = [];
 
     patientRequests.forEach((request) => {
       request.radiologysResponded.forEach((response) => {
-        if (response.accepted) {
+        if (response.accepted && response.radiologyId) { // ✅ Check if radiologyId exists
           responses.push({
-            radiologyName: response.radiologyId.fullName,
-            phone: response.radiologyId.phone,
-            city: response.radiologyId.city,
-            region: response.radiologyId.region,
-            price: response.price,
-            status: request.status,
+            radiologyName: response.radiologyId?.fullName || 'N/A',
+            phone: response.radiologyId?.phone || 'N/A',
+            city: response.radiologyId?.city || 'N/A',
+            region: response.radiologyId?.region || 'N/A',
+            price: response.price || 0,
+            status: request.status || 'N/A',
           });
         }
       });
@@ -217,6 +218,8 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
     res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
   }
 });
+
+
 router.put("/update-request-status/:requestId", async (req, res) => {
   try {
     const { status } = req.body;
