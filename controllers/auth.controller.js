@@ -418,7 +418,6 @@ exports.createNewSeek = async (req, res) => {
 
     // Create JWT token
     const token = await jwt.sign({ role: 'user' }, process.env.JWT_SECRET);
-    await RefreshToken.create({ token });
     // Create the new Seek (patient) with city and region names
     const newSeek = new Seek({
       fullName,
@@ -431,7 +430,7 @@ exports.createNewSeek = async (req, res) => {
 
     // Save the new Seek to the database
     await newSeek.save();
-
+    await RefreshToken.create({ token , userRef:newSeek._id });
     // Return the success response
     return res.status(200).json({
       success: true,
