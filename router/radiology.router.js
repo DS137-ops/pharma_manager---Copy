@@ -186,17 +186,18 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
     res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error });
   }
 });
+
+
 router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
   try {
     const patientRequests = await PrescriptionRadiologyRequest.find({
       patientId: req.params.patientId,
-    }).populate(
-      'PrescriptionRadiologyRequest.radiologyId',
-      'fullName phone city region'
-    );
+    }).populate('radiologysResponded.radiologyId', 'fullName phone city region');
+
     let responses = [];
+
     patientRequests.forEach((request) => {
-      request.PrescriptionRadiologyRequest.forEach((response) => {
+      request.radiologysResponded.forEach((response) => {
         if (response.accepted) {
           responses.push({
             radiologyName: response.radiologyId.fullName,
@@ -211,6 +212,7 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
 
     res.status(200).json({ responses });
   } catch (error) {
+    console.error('Error fetching responses:', error);
     res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
   }
 });

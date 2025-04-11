@@ -183,13 +183,12 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
   try {
     const patientRequests = await PrescriptionAnalystRequest.find({
       patientId: req.params.patientId,
-    }).populate(
-      'PrescriptionAnalystRequest.analystId',
-      'fullName phone city region'
-    );
+    }).populate('analystsResponded.analystId', 'fullName phone city region');
+
     let responses = [];
+
     patientRequests.forEach((request) => {
-      request.PrescriptionAnalystRequest.forEach((response) => {
+      request.analystsResponded.forEach((response) => {
         if (response.accepted) {
           responses.push({
             analystName: response.analystId.fullName,
@@ -204,9 +203,11 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
 
     res.status(200).json({ responses });
   } catch (error) {
+    console.error('Error fetching responses:', error);
     res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
   }
 });
+
 router.post('/add-to-famous'  , analystController.addToFamousAnalysts);
 router.get('/famous', analystController.getFamousAnalysts);
 router.post("/forgot-password-for-analyst", analystController.forgetPassForAnalyst);
