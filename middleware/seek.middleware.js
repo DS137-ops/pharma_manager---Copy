@@ -30,14 +30,17 @@ exports.authenticateSeek = async (req, res, next) => {
 
 exports.authMiddlewareforSeek = async (req, res, next) => {
   try {
-    // 1️⃣ Extract token from Authorization header
-    const token = req.header("Authorization")?.split(" ")[1];
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
-      return res.status(401).json({ message: "No token, authorization denied" });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Missing or invalid Authorization header." });
     }
 
-    console.log("Token received:", token); // Debugging log
+    const token = authHeader.split(" ")[1];
+
+    if (!token.trim()) {
+        return res.status(401).json({ message: "Invalid or missing token." });
+    }
 
     // 2️⃣ Verify JWT Token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
