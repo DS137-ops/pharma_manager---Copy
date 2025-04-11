@@ -41,7 +41,7 @@ exports.authMiddlewareforSeek = async (req, res, next) => {
     if (!token.trim()) {
         return res.status(401).json({ message: "Invalid or missing token." });
     }
-
+    console.log(process.env.JWT_SECRET)
     // 2️⃣ Verify JWT Token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded?.id) {
