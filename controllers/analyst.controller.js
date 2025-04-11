@@ -370,9 +370,12 @@ exports.getAnalyst = async (req, res) => {
 
 
 function extractTime(timeString) {
-  const match = timeString.match(/\((\d{2}:\d{2})\)/);
+  if (!timeString) return null;
 
-  return match ? `${match[1]}` : null;
+  // Match either (12:30) or 12:30 format
+  const match = timeString.match(/(\d{2}:\d{2})/);
+
+  return match ? match[1] : null;
 }
 
 exports.updateAnalystInfo = async (req, res) => {
@@ -407,7 +410,7 @@ exports.updateAnalystInfo = async (req, res) => {
 
     await Analyst.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updateFields });
 
-    res.status(200).json({ success: true, message: 'Updated Successfully' });
+    res.status(200).json({ success: true, message: 'Updated Successfully' , data: updateFields });
   } catch (err) {
     console.error('Error updating analyst info:', err);
     if (err.name === 'ValidationError') {
