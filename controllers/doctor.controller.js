@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const RefreshToken = require('../model/RefreshToken.model');
 const City = require('../model/cities.model');
+const FavouriteDoctor = require('../model/FavouriteDoctor.model');
 const moment = require('moment')
 function generateTimeSlots(start, end) {
   const slots = [];
@@ -567,40 +568,82 @@ exports.getFinalRateforDoctor = async (req, res) => {
 
 exports.getDoctors = async (req, res) => {
   try {
-    const city = req.params.city,
-      region = req.params.region,
-      spec = req.params.spec;
-const existCity = await City.findById(city)
-    const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-    const cityname = existCity.name
-    const regionname = existRegion.name
-    const query = { city: cityname, region: regionname, specilizate: spec };
+    const userId = req.user._id; // احصل على ID المستخدم المسجل
 
+    const { city, region, spec } = req.params;
+    
+    const existCity = await City.findById(city);
+    if (!existCity) return res.status(400).json({ success: false, message: 'City not found' });
+
+    const existRegion = existCity.regions.find(r => r._id.toString() === region);
+    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+
+    const cityname = existCity.name;
+    const regionname = existRegion.name;
+
+    const query = { city: cityname, region: regionname, specilizate: spec };
     const doctors = await Doctor.find(query);
 
     if (!doctors || doctors.length === 0) {
-      return res.status(404).json({ status: false, message: 'No result' });
+      return res.status(404).json({ status: false, message: 'No doctors found' });
     }
 
-    const currentDate = new Date();
+    // اجلب قائمة المفضلات لهذا المستخدم
+    const favouriteDoctors = await FavouriteDoctor.find({ userId });
 
-    for (const doctor of doctors) {
-      for (const booking of doctor.booking) {
-        for (const hour of booking.bookingHours) {
-          hour.patientIDs = hour.patientIDs.filter(
-            (patient) => patient.date >= currentDate
-          );
-        }
-      }
-      await doctor.save();
-    }
+    // تحويل الأطباء المفضلين إلى قائمة تحتوي فقط على الـ doctorId
+    const favouriteDoctorIds = favouriteDoctors.map(fav => fav.doctorId.toString());
 
-    res.status(200).json({ status: true, findDoctor: doctors });
+    // تحديث بيانات الأطباء مع تحديد `isFavourite`
+    const doctorsWithFavStatus = doctors.map(doctor => ({
+      ...doctor.toObject(),
+      isFavourite: favouriteDoctorIds.includes(doctor._id.toString())
+    }));
+
+    res.status(200).json({ status: true, doctors: doctorsWithFavStatus });
   } catch (error) {
-    res.status(500).json({ status: false, message: error.message });
+    console.error(error);
+    res.status(500).json({ status: false, message: 'Server error' });
   }
 };
+
+
+// exports.getDoctors = async (req, res) => {
+//   try {
+//     const city = req.params.city,
+//       region = req.params.region,
+//       spec = req.params.spec;
+// const existCity = await City.findById(city)
+//     const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+//     if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+//     const cityname = existCity.name
+//     const regionname = existRegion.name
+//     const query = { city: cityname, region: regionname, specilizate: spec };
+
+//     const doctors = await Doctor.find(query);
+
+//     if (!doctors || doctors.length === 0) {
+//       return res.status(404).json({ status: false, message: 'No result' });
+//     }
+
+//     const currentDate = new Date();
+
+//     for (const doctor of doctors) {
+//       for (const booking of doctor.booking) {
+//         for (const hour of booking.bookingHours) {
+//           hour.patientIDs = hour.patientIDs.filter(
+//             (patient) => patient.date >= currentDate
+//           );
+//         }
+//       }
+//       await doctor.save();
+//     }
+
+//     res.status(200).json({ status: true, findDoctor: doctors });
+//   } catch (error) {
+//     res.status(500).json({ status: false, message: error.message });
+//   }
+// };
 
 exports.createNewBook = async (req, res) => {
   try {
