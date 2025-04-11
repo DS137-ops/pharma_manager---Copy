@@ -59,7 +59,7 @@ const medicalSchemaforRadiology = new mongoose.Schema({
   },
   rate: [
     {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'rediology' },
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'radiology' },
       rating: { type: Number, min: 1, max: 5, required: true },
       review: { type: String, maxlength: 500 },
       date: { type: Date, default: Date.now },
