@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const City = require('../model/cities.model')
+const FavouritePharma = require('../model/FavouritePharma.model')
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
 require('dotenv').config();
@@ -225,14 +226,58 @@ exports.ratePharmatic = async (req, res) => {
   }
 };
 
+// exports.getPharmas = async (req, res) => {
+//   const { city, region } = req.params;
+//   const existCity = await City.findById(city)
+//   const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+//   if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+//   const cityname = existCity.name
+//   const regionname = existRegion.name
+//   console.log(cityname, regionname)
+//   const query = { role: 'pharmatic', city: cityname, region: regionname, approved: true };
+
+//   try {
+//     const findPharma = await Pharmatic.find(query);
+
+//     if (!findPharma || findPharma.length === 0) {
+//       return res.status(404).json({ status: false, message: 'No result' });
+//     }
+
+
+//     const pharmaciesWithRatings = findPharma.map((pharma) => {
+//       const ratings = pharma.rate?.map((r) => r.rating) || [];
+//       const total = ratings.reduce((sum, rating) => sum + rating, 0);
+//       const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+
+//       return {
+//         ...pharma.toObject(),
+//         finalRate: parseFloat(averageRating),
+//       };
+//     });
+
+//     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
+
+//     return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ status: false, message: 'Server error' });
+//   }
+// };
+
+
 exports.getPharmas = async (req, res) => {
   const { city, region } = req.params;
-  const existCity = await City.findById(city)
-  const existRegion = existCity.regions.find(r=>r._id.toString()===region)
+  const userId = req.user._id;  // Assuming req.user contains the current user
+
+  const existCity = await City.findById(city);
+  const existRegion = existCity.regions.find(r => r._id.toString() === region);
+  
   if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-  const cityname = existCity.name
-  const regionname = existRegion.name
-  console.log(cityname, regionname)
+
+  const cityname = existCity.name;
+  const regionname = existRegion.name;
+  console.log(cityname, regionname);
+
   const query = { role: 'pharmatic', city: cityname, region: regionname, approved: true };
 
   try {
@@ -241,6 +286,12 @@ exports.getPharmas = async (req, res) => {
     if (!findPharma || findPharma.length === 0) {
       return res.status(404).json({ status: false, message: 'No result' });
     }
+
+    // Fetch the user's favourite pharmacies
+    const user = await User.findById(userId);  // Assuming you have a User model
+
+    const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
+
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
@@ -249,6 +300,7 @@ exports.getPharmas = async (req, res) => {
       return {
         ...pharma.toObject(),
         finalRate: parseFloat(averageRating),
+        isfavourite: userFavourites.includes(pharma._id.toString()), // Check if the pharmacy is in user's favourites
       };
     });
 
@@ -389,11 +441,12 @@ exports.rejectPharmatic = async (req, res) => {
 };
 
 exports.createNewSeek = async (req, res) => {
-  const { fullName, phone, password, age, city, region } = req.body;
+  const { fullName , phone, password, age, city, region } = req.body;
 
   // Validation checks
   if (!password) return res.status(409).json({ success: false, message: 'Password should not be empty' });
   if (!fullName) return res.status(409).json({ success: false, message: 'Full name should not be empty' });
+  
   if (!phone) return res.status(409).json({ success: false, message: 'Phone should not be empty' });
   if (!age) return res.status(409).json({ success: false, message: 'Age should not be empty' });
   if (!city) return res.status(409).json({ success: false, message: 'City should not be empty' });
