@@ -131,6 +131,7 @@ const existCity = await City.findById(city)
         imageUrl,
         city:cityname,
         region:regionname,
+        status: "unread",
       });
 
       await newRequest.save();
@@ -178,7 +179,9 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
     if (accepted && !price) {
       res.status(400).json({ message: 'price is required' });
     }
+    console.log(1111111)
     request.radiologysResponded.push({ radiologyId:specId, price, accepted });
+    console.log(222222)
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
@@ -191,10 +194,11 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
 
 router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
   try {
+    console.log(33333333)
     const patientRequests = await PrescriptionRadiologyRequest.find({
       patientId: req.params.patientId,
     }).populate('radiologysResponded.radiologyId', 'fullName phone city region');
-
+    console.log(44444444)
     let responses = [];
 
     patientRequests.forEach((request) => {
