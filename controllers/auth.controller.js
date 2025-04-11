@@ -288,7 +288,7 @@ exports.getPharmas = async (req, res) => {
     }
 
     // Fetch the user's favourite pharmacies
-    const user = await User.findById(userId);  // Assuming you have a User model
+    const user = await Seek.findById(userId);  // Assuming you have a User model
 
     const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
 
