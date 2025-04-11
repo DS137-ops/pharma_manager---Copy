@@ -424,56 +424,48 @@ function extractTime(timeString) {
   
   return match ? `${match[1]}` : null;
 }
+
+
 exports.updateRadiologyInfo = async (req, res) => {
   try {
-    const {
-      fullName,
-      email,
-      password,
-      city,
-      region,
-      address,
-      phone,
-      StartJob,
-      EndJob,
-    } = req.body;
+    const { fullName, city, region, address, phone, StartJob, EndJob } = req.body;
     const id = req.params.id;
-    const startjob= await extractTime(StartJob);
-    const endjob= await extractTime(EndJob);
 
-    const existCity = await City.findById(city)
-        const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-        if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-        const cityname = existCity.name
-        const regionname = existRegion.name
+    const updateFields = {};
 
-    await Radiology.updateMany(
-      { _id: new mongoose.Types.ObjectId(id) },
-      {
-        $set: {
-          fullName: fullName,
-          email: email,
-          password: password,
-          city: cityname,
-          region: regionname,
-          address: address,
-          phone: phone,
-          StartJob: startjob,
-          EndJob: endjob,
-        },
+    if (fullName) updateFields.fullName = fullName;
+    if (address) updateFields.address = address;
+    if (phone) updateFields.phone = phone;
+    
+    if (StartJob) updateFields.StartJob = await extractTime(StartJob);
+    if (EndJob) updateFields.EndJob = await extractTime(EndJob);
+
+    if (city) {
+      const existCity = await City.findById(city);
+      if (!existCity) {
+        return res.status(400).json({ success: false, message: 'City not found' });
       }
-    );
-    res.status(200).json({ success: true, message: 'UpdatedSuccesffuly' });
-  } catch (err) {
-    console.error('Error registering user:', err);
-    if (err.name === 'ValidationError') {
-      const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      updateFields.city = existCity.name;
+
+      if (region) {
+        const existRegion = existCity.regions.find(r => r._id.toString() === region);
+        if (!existRegion) {
+          return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+        }
+        updateFields.region = existRegion.name;
+      }
     }
 
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    await Radiology.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updateFields });
+
+    res.status(200).json({ success: true, message: 'Updated Successfully' });
+  } catch (err) {
+    console.error('Error updating analyst info:', err);
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map((e) => e.message);
+      return res.status(400).json({ success: false, message: errors.join(', ') });
+    }
+    res.status(500).json({ success: false, message: `Internal server error ${err} `});
   }
 };
 

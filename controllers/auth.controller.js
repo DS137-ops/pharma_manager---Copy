@@ -271,55 +271,51 @@ function extractTime(timeString) {
 
 exports.updatePharmaticInfo = async (req, res) => {
   try {
-    const {
-      fullName,
-      city,
-      region,
-      address,
-      phone,
-      StartJob,
-      EndJob,
-    } = req.body;
+    const { fullName, city, region, address, phone, StartJob, EndJob } = req.body;
     const id = req.params.id;
+
+    const updateFields = {};
+
+    if (fullName) updateFields.fullName = fullName;
+    if (address) updateFields.address = address;
+    if (phone) updateFields.phone = phone;
     
-  const startjob= await extractTime(StartJob);
-  const endjob= await extractTime(EndJob);
-  
+    if (StartJob) updateFields.StartJob = await extractTime(StartJob);
+    if (EndJob) updateFields.EndJob = await extractTime(EndJob);
 
-  const existCity = await City.findById(city)
-      const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-      if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-      const cityname = existCity.name
-      const regionname = existRegion.name
-
-
-    await Pharmatic.updateMany(
-      { _id: new mongoose.Types.ObjectId(id) },
-      {
-        $set: {
-          fullName: fullName,
-          city: cityname,
-          region: regionname,
-          address: address,
-          phone: phone,
-          StartJob: startjob,
-          EndJob: endjob,
-        },
+    if (city) {
+      const existCity = await City.findById(city);
+      if (!existCity) {
+        return res.status(400).json({ success: false, message: 'City not found' });
       }
-    );
-    res.status(200).json({ success: true, message: 'UpdatedSuccesffuly' });
-  } catch (err) {
-    console.error('Error registering user:', err);
-    if (err.name === 'ValidationError') {
-      const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      updateFields.city = existCity.name;
+
+      if (region) {
+        const existRegion = existCity.regions.find(r => r._id.toString() === region);
+        if (!existRegion) {
+          return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+        }
+        updateFields.region = existRegion.name;
+      }
     }
 
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    await Pharmatic.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updateFields });
+
+    res.status(200).json({ success: true, message: 'Updated Successfully' });
+  } catch (err) {
+    console.error('Error updating analyst info:', err);
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map((e) => e.message);
+      return res.status(400).json({ success: false, message: errors.join(', ') });
+    }
+    res.status(500).json({ success: false, message: `Internal server error ${err} `});
   }
 };
+
+
+
+
+
 exports.approvePharmatic = async (req, res) => {
   try {
     const user = await Pharmatic.findById(req.params.id);

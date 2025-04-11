@@ -722,68 +722,56 @@ exports.createNewBook = async (req, res) => {
   }
 };
 
+
+
 exports.updateDoctorInfo = async (req, res) => {
   try {
-    const {
-      fullName,
-      city,
-      region,
-      address,
-      phone,
-      specilizate,
-      NumberState,
-      schedule,
-    } = req.body;
     const id = req.params.id;
-    const existCity = await City.findById(city)
-        const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-        if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-        const cityname = existCity.name
-        const regionname = existRegion.name
+    const updateFields = {}; // سيتم تخزين الحقول التي يجب تحديثها هنا
 
-    const scheduleSlots = {};
-    if (schedule && typeof schedule === 'object') {
-      Object.entries(schedule).forEach(([day, times]) => {
-        if (times.startTime && times.endTime) {
-          scheduleSlots[day] = generateTimeSlots(
-            times.startTime,
-            times.endTime
-          );
-        } else {
-          scheduleSlots[day] = [];
-        }
-      });
+    // استخراج الحقول من body فقط إذا تم إرسالها
+    const { fullName, city, region, address, specilizate, NumberState, doctorimage } = req.body;
+
+    // تحقق إذا كانت الحقول موجودة وأضفها إلى updateFields
+    if (fullName) updateFields.fullName = fullName;
+    if (address) updateFields.address = address;
+    if (specilizate) updateFields.specilizate = specilizate;
+    if (NumberState) updateFields.NumberState = NumberState;
+
+    // معالجة تحديث المدينة والمنطقة
+    if (city && region) {
+      const existCity = await City.findById(city);
+      if (!existCity) return res.status(400).json({ success: false, message: "City not found" });
+
+      const existRegion = existCity.regions.find(r => r._id.toString() === region);
+      if (!existRegion) return res.status(400).json({ success: false, message: "Region not found in the selected city" });
+
+      updateFields.city = existCity.name;   // حفظ اسم المدينة
+      updateFields.region = existRegion.name; // حفظ اسم المنطقة
     }
-    await Doctor.updateMany(
-      { _id: new mongoose.Types.ObjectId(id) },
-      {
-        $set: {
-          fullName,
-          cityname,
-          regionname,
-          address,
-          phone,
-          specilizate,
-          NumberState,
-          schedule,
-          scheduleSlots,
-        },
-      }
-    );
-    res.status(201).json({ success: true, message: 'UpdatedSuccesffuly' });
+
+    // تحديث صور الطبيب إذا تم إرسالها
+    if (doctorimage && Array.isArray(doctorimage)) {
+      updateFields.doctorimage = doctorimage;
+    }
+
+    // تحديث الحقول المحددة فقط
+    const updatedDoctor = await Doctor.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
+
+    if (!updatedDoctor) {
+      return res.status(404).json({ success: false, message: "Doctor not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Doctor information updated successfully",
+      doctor: updatedDoctor,
+    });
   } catch (err) {
-    console.error('Error registering user:', err);
-    if (err.name === 'ValidationError') {
-      const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
-    }
-
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("Error updating doctor:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
 exports.forgetPassForDoctor = async (req, res) => {
   const { email } = req.body;
   const user = await Doctor.findOne({ email });
