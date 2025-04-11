@@ -88,7 +88,7 @@ exports.createNewDoctor = async (req, res) => {
 
     // إنشاء توكن JWT للطبيب الجديد
     const token = await jwt.sign({ role: 'doctor' }, process.env.JWT_SECRET);
-    await RefreshToken.create({ token });
+    
 
     // إنشاء حساب الطبيب مع تخزين اسم المدينة والمنطقة بدلاً من الـ ID
     const newUser = new Doctor({
@@ -105,7 +105,7 @@ exports.createNewDoctor = async (req, res) => {
 
     // حفظ الطبيب الجديد في قاعدة البيانات
     await newUser.save();
-
+    await RefreshToken.create({ token , userRef: newUser._id });
     // إنشاء روابط الموافقة والرفض
     const approvalLink = `http://147.93.106.92/api/Doctor/approve/doctor/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Doctor/reject/doctor/${newUser._id}`;
@@ -469,7 +469,7 @@ exports.loginDoctor = async (req, res) => {
     }
 
     const token = await jwt.sign({ id: user._id, role: 'doctor' }, '1001110');
-    RefreshToken.create({ token });
+    RefreshToken.create({ token , userRef:user._id });
 
     res.status(200).json({
       success: true,

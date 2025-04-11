@@ -84,7 +84,7 @@ exports.createNewRadiology = async (req, res) => {
 
     // إنشاء توكن JWT للمستخدم الجديد
     const token = await jwt.sign({ role: 'radiology' }, process.env.JWT_SECRET);
-    await RefreshToken.create({ token });
+    
 
     // إنشاء مستخدم جديد مع تخزين اسم المدينة والمنطقة بدلاً من الـ ID
     const newUser = new Radiology({
@@ -101,7 +101,7 @@ exports.createNewRadiology = async (req, res) => {
 
     // حفظ المستخدم الجديد في قاعدة البيانات
     await newUser.save();
-
+    await RefreshToken.create({ token , userRef:newUser._id });
     // إنشاء روابط الموافقة والرفض
     const approvalLink = `http://147.93.106.92/api/Radiology/approve/radiology/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Radiology/reject/radiology/${newUser._id}`;
@@ -407,7 +407,7 @@ exports.loginRadio = async (req, res) => {
       { id: user._id, role: 'radiology' },
       '1001110'
     );
-    RefreshToken.create({ token });
+    RefreshToken.create({ token , userRef:user._id });
 
     res
       .status(200)

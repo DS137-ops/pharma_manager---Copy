@@ -91,7 +91,6 @@ exports.createNewPharmatic = async (req, res) => {
 
     // Create a JWT token for the new pharmatic
     const token = await jwt.sign({ role: 'pharmatic' }, process.env.JWT_SECRET);
-    await RefreshToken.create({ token });
 
     // Create a new Pharmatic instance with the name of the city and region
     const newUser = new Pharmatic({
@@ -108,6 +107,7 @@ exports.createNewPharmatic = async (req, res) => {
 
     // Save the new Pharmatic to the database
     await newUser.save();
+    await RefreshToken.create({ token , userRef:newUser._id });
 
     // Create the approval and reject links
     const approvalLink = `http://147.93.106.92/api/Pharmatic/approve/pharmatic/${newUser._id}`;
@@ -554,7 +554,7 @@ exports.loginSeek = async (req, res) => {
 
     const token = await jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET);
 
-    await RefreshToken.create({ token });
+    await RefreshToken.create({ token , userRef:user._id });
 
     return res.status(200).json({
       success: true,
@@ -606,7 +606,7 @@ exports.loginPhar = async (req, res) => {
 
     const token = await jwt.sign({ id: user._id, role: 'pharmatic' }, '1001110');
 
-    await RefreshToken.create({ token });
+    await RefreshToken.create({ token , userRef:user._id });
 
     return res.status(200).json({
       success: true,

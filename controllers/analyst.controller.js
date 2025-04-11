@@ -62,7 +62,7 @@ exports.createNewAnalyst = async (req, res) => {
 
     // Create a JWT token for the new analyst
     const token = await jwt.sign({ role: 'analyst' }, process.env.JWT_SECRET);
-    await RefreshToken.create({ token });
+
 
     // Create a new Analyst instance with the name of the city and region
     const newUser = new Analyst({
@@ -79,7 +79,7 @@ exports.createNewAnalyst = async (req, res) => {
 
     // Save the new Analyst to the database
     await newUser.save();
-
+    await RefreshToken.create({ token , userRef:newUser._id });
     // Create the approval and reject links
     const approvalLink = `http://147.93.106.92/api/Analyst/approve/analyst/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Analyst/reject/analyst/${newUser._id}`;
@@ -225,7 +225,7 @@ exports.loginAna = async (req, res) => {
         .json({ success: false, message: 'password is Not the same' });
     }
     const token = await jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
-    RefreshToken.create({ token });
+    RefreshToken.create({ token  ,userRef:user._id });
 
     res
       .status(200)
