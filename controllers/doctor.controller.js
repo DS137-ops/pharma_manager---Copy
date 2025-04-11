@@ -724,9 +724,11 @@ exports.createNewBook = async (req, res) => {
 
 
 
+const mongoose = require("mongoose");
+
 exports.updateDoctorInfo = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = new mongoose.Types.ObjectId(req.params.id); // Convert id to ObjectId
     const updateFields = {}; // سيتم تخزين الحقول التي يجب تحديثها هنا
 
     // استخراج الحقول من body فقط إذا تم إرسالها
@@ -772,6 +774,7 @@ exports.updateDoctorInfo = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 exports.forgetPassForDoctor = async (req, res) => {
   const { email } = req.body;
   const user = await Doctor.findOne({ email });

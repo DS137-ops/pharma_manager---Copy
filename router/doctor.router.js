@@ -101,7 +101,6 @@ router.post(
 router.post(
   '/updateDoctorInfo/:id',
   body('phone').notEmpty().withMessage('phone is required'),
-  checkprov.isDoctor,
   checkprov.checkifLoggedIn,
   doctorController.updateDoctorInfo
 );
