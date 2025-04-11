@@ -301,6 +301,60 @@ exports.getradiology = async (req, res) => {
   }
 };
 
+
+
+exports.getradiology = async (req, res) => {
+  const { city, region } = req.params;
+  const userId = req.user._id;
+
+  const existCity = await City.findById(city);
+  const existRegion = existCity.regions.find(r => r._id.toString() === region);
+  
+  if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+
+  const cityname = existCity.name;
+  const regionname = existRegion.name;
+  console.log(cityname, regionname);
+
+  const query = { role: 'radiology', city: cityname, region: regionname, approved: true };
+
+  try {
+    const findRadiology = await Radiology.find(query);
+
+    if (!findRadiology || findRadiology.length === 0) {
+      return res.status(404).json({ status: false, message: 'No result' });
+    }
+    const user = await Seek.findById(userId);
+
+    const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
+
+    const radiologiesWithRatings = findRadiology.map((radiology) => {
+      const ratings = radiology.rate?.map((r) => r.rating) || [];
+      const total = ratings.reduce((sum, rating) => sum + rating, 0);
+      const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+
+      return {
+        ...analyst.toObject(),
+        finalRate: parseFloat(averageRating),
+        isfavourite: userFavourites.includes(radiology._id.toString()),
+      };
+    });
+
+    radiologiesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
+
+    return res.status(200).json({ status: true, findRadiology: radiologiesWithRatings });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: false, message: 'Server error' });
+  }
+};
+
+
+
+
+
+
+
 exports.rateRadiology = async (req, res) => {
   try {
     const { radiologyId } = req.params;

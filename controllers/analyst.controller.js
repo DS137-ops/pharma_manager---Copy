@@ -6,6 +6,7 @@ const RefreshToken = require('../model/RefreshToken.model');
 const City = require('../model/cities.model');
 const Favourite = require('../model/FavouriteAnalyst.model');
 const Analyst = require('../model/analyst.model');
+const Seek = require('../model/seek.model');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -320,40 +321,53 @@ exports.rejectAnalyst = async (req, res) => {
   }
 };
 
+
 exports.getAnalyst = async (req, res) => {
   const { city, region } = req.params;
-  const existCity = await City.findById(city)
-    const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-    const cityname = existCity.name
-    const regionname = existRegion.name
-  const query = { role: 'analyst', city:cityname , region:regionname , approved: true };
+  const userId = req.user._id;
+
+  const existCity = await City.findById(city);
+  const existRegion = existCity.regions.find(r => r._id.toString() === region);
+  
+  if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+
+  const cityname = existCity.name;
+  const regionname = existRegion.name;
+  console.log(cityname, regionname);
+
+  const query = { role: 'analyst', city: cityname, region: regionname, approved: true };
 
   try {
-    const findPharma = await Analyst.find(query);
+    const findAnalyst = await Analyst.find(query);
 
-    if (!findPharma || findPharma.length === 0) {
+    if (!findAnalyst || findAnalyst.length === 0) {
       return res.status(404).json({ status: false, message: 'No result' });
     }
-    const pharmaciesWithRatings = findPharma.map((pharma) => {
-      const ratings = pharma.rate?.map((r) => r.rating) || [];
+    const user = await Seek.findById(userId);
+
+    const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
+
+    const analystsWithRatings = findAnalyst.map((analyst) => {
+      const ratings = analyst.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
       const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
 
       return {
-        ...pharma.toObject(),
+        ...analyst.toObject(),
         finalRate: parseFloat(averageRating),
+        isfavourite: userFavourites.includes(analyst._id.toString()),
       };
     });
 
-    pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
+    analystsWithRatings.sort((a, b) => b.finalRate - a.finalRate);
 
-    return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
+    return res.status(200).json({ status: true, findAnalyst: analystsWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
+
 
 function extractTime(timeString) {
   const match = timeString.match(/\((\d{2}:\d{2})\)/);
