@@ -149,7 +149,6 @@ router.get(
 router.post(
   '/send-request/:patientId/:city/:region',
   upload.single('image'),
-  ckeckSeek.authMiddlewareforSeek,
   async (req, res) => {
     try {
       const { patientId, city, region } = req.params;
