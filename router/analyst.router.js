@@ -168,7 +168,7 @@ router.post('/respond-request-from-Analyst', async (req, res) => {
     if (accepted && !price) {
       res.status(400).json({ message: 'price is required' });
     }
-    request.analystsResponded.push({ specId, price, accepted });
+    request.analystsResponded.push({ analystId:specId, price, accepted });
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });

@@ -178,7 +178,7 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
     if (accepted && !price) {
       res.status(400).json({ message: 'price is required' });
     }
-    request.radiologysResponded.push({ specId, price, accepted });
+    request.radiologysResponded.push({ radiologyId:specId, price, accepted });
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
