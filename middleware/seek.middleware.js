@@ -28,23 +28,32 @@ exports.authenticateSeek = async (req, res, next) => {
 };
 
 
+const jwt = require("jsonwebtoken");
+const Seek = require("./models/Seek"); // Adjust based on your model location
+
 exports.authMiddlewareforSeek = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
+    // Check for authorization header
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "Missing or invalid Authorization header." });
+      return res.status(401).json({ message: "Missing or invalid Authorization header." });
     }
 
     const token = authHeader.split(" ")[1];
 
+    // Check for empty or invalid token
     if (!token.trim()) {
-        return res.status(401).json({ message: "Invalid or missing token." });
+      return res.status(401).json({ message: "Invalid or missing token." });
     }
-    console.log(process.env.JWT_SECRET)
+
+    console.log("Received token:", token); // Log the token to check its structure
+
     // 2️⃣ Verify JWT Token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded?.id) {
+
+    // Ensure decoded token structure is valid
+    if (!decoded || !decoded.id) {
       return res.status(401).json({ message: "Invalid token structure" });
     }
 
@@ -58,7 +67,7 @@ exports.authMiddlewareforSeek = async (req, res, next) => {
     next(); // Proceed to next middleware
 
   } catch (error) {
-    console.error("JWT Verification Error:", error.message);
+    console.error("JWT Verification Error:", error.message); // Log the error
     return res.status(401).json({ message: "Invalid token", error: error.message });
   }
 };
