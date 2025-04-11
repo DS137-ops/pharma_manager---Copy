@@ -193,7 +193,7 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
     const patientRequests = await PrescriptionRadiologyRequest.find({
       patientId: req.params.patientId,
     }).populate('radiologysResponded.radiologyId', 'fullName phone city region');
-
+    
     let responses = [];
 
     patientRequests.forEach((request) => {
@@ -205,6 +205,7 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
             city: response.radiologyId.city,
             region: response.radiologyId.region,
             price: response.price,
+            status: request.status,
           });
         }
       });
@@ -214,6 +215,25 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
   } catch (error) {
     console.error('Error fetching responses:', error);
     res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
+  }
+});
+router.put("/update-request-status/:requestId", async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!["read", "unread"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const request = await PrescriptionRadiologyRequest.findById(req.params.requestId);
+    if (!request) return res.status(404).json({ message: "الطلب غير موجود" });
+
+    request.status = status;
+    await request.save();
+
+    res.status(200).json({ message: `تم تحديث حالة الطلب إلى ${status}` });
+  } catch (error) {
+    res.status(500).json({ message: "خطأ أثناء تحديث الحالة", error });
   }
 });
 

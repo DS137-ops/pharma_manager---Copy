@@ -9,6 +9,11 @@ const requestAnalystSchema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
+  status: {
+      type: String,
+      enum: ["unread", "read"],
+      default: "unread",
+    },
   analystsResponded: [
     {
       analystId: { type: mongoose.Schema.Types.ObjectId, ref: 'analyst' },

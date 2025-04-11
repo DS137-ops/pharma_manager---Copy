@@ -9,6 +9,11 @@ const requestRadiologySchema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
+  status: {
+    type: String,
+    enum: ["unread", "read"],
+    default: "unread",
+  },
   radiologysResponded: [
     {
       radiologyId: { type: mongoose.Schema.Types.ObjectId, ref: 'radiology' },

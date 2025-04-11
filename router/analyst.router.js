@@ -207,7 +207,25 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
     res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
   }
 });
+router.put("/update-request-status/:requestId", async (req, res) => {
+  try {
+    const { status } = req.body;
 
+    if (!["read", "unread"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const request = await PrescriptionAnalystRequest.findById(req.params.requestId);
+    if (!request) return res.status(404).json({ message: "الطلب غير موجود" });
+
+    request.status = status;
+    await request.save();
+
+    res.status(200).json({ message: `تم تحديث حالة الطلب إلى ${status}` });
+  } catch (error) {
+    res.status(500).json({ message: "خطأ أثناء تحديث الحالة", error });
+  }
+});
 router.post('/add-to-famous'  , analystController.addToFamousAnalysts);
 router.get('/famous', analystController.getFamousAnalysts);
 router.post("/forgot-password-for-analyst", analystController.forgetPassForAnalyst);
