@@ -28,8 +28,7 @@ exports.authenticateSeek = async (req, res, next) => {
 };
 
 
-const jwt = require("jsonwebtoken");
-const Seek = require("./models/Seek"); // Adjust based on your model location
+
 
 exports.authMiddlewareforSeek = async (req, res, next) => {
   try {
