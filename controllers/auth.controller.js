@@ -500,52 +500,51 @@ exports.updateSickInfo = async (req, res) => {
   try {
     const { fullName, phone, age, city, region } = req.body;
     const id = req.params.id;
+    
+    let cityname, regionname;
 
-    // Check if city exists
-    const existCity = await City.findById(city);
-    if (!existCity) return res.status(400).json({ success: false, message: 'City not found' });
+    // Only validate city and region if both are provided
+    if (city) {
+      const existCity = await City.findById(city);
+      if (!existCity) {
+        return res.status(400).json({ success: false, message: 'City not found' });
+      }
 
-    // Check if region exists within the city
-    const existRegion = existCity.regions.find(r => r._id.toString() === region);
-    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+      cityname = existCity.name;
 
-    const cityname = existCity.name;
-    const regionname = existRegion.name;
-
-    // Prepare update object to only update selected fields
-    const updateFields = {};
-
-    // Conditionally add fields to the update object if they are provided in the request
-    if (fullName) updateFields.fullName = fullName;
-    if (phone) updateFields.phone = phone;
-    if (age) updateFields.age = age;
-    if (city) updateFields.cityname = cityname;
-    if (region) updateFields.regionname = regionname;
-
-    // Update the Seek (patient) with the selected fields
-    const updatedSeek = await Seek.findByIdAndUpdate(
-      id,
-      { $set: updateFields },
-      { new: true } // Return the updated document
-    );
-
-    // Check if the patient was found and updated
-    if (!updatedSeek) {
-      return res.status(404).json({ success: false, message: 'Patient not found' });
+      // If region is provided, validate it
+      if (region) {
+        const existRegion = existCity.regions.find(r => r._id.toString() === region);
+        if (!existRegion) {
+          return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+        }
+        regionname = existRegion.name;
+      }
     }
 
-    // Send a success response
-    res.status(200).json({ success: true, message: 'Updated Successfully', data: updatedSeek });
-  } catch (err) {
-    console.error('Error updating sick info:', err);
+    const updateData = {
+      fullName,
+      phone,
+      age,
+    };
 
-    // Handle validation errors
+    // Only update city and region if they were provided
+    if (cityname) updateData.cityname = cityname;
+    if (regionname) updateData.regionname = regionname;
+
+    await Seek.updateMany(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { $set: updateData }
+    );
+
+    res.status(200).json({ success: true, message: 'Updated successfully' });
+  } catch (err) {
+    console.error('Error updating user:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
       return res.status(400).json({ success: false, message: errors.join(', ') });
     }
 
-    // Handle general server errors
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
