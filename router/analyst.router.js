@@ -92,7 +92,6 @@ router.get(
 router.post(
   '/rateAnalyst/:AnalystId',
   checkprov.checkifLoggedIn,
-  ckeckSeek.authenticateSeek,
   analystController.rateAnalyst
 );
 router.post(
