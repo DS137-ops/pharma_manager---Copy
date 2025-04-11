@@ -332,8 +332,8 @@ exports.updatePharmaticInfo = async (req, res) => {
     if (address) updateFields.address = address;
     if (phone) updateFields.phone = phone;
     
-    if (StartJob) updateFields.StartJob = await extractTime(StartJob);
-    if (EndJob) updateFields.EndJob = await extractTime(EndJob);
+    if (StartJob) updateFields.StartJob = StartJob;
+    if (EndJob) updateFields.EndJob = EndJob;
 
     if (city) {
       const existCity = await City.findById(city);
