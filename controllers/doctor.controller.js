@@ -230,6 +230,7 @@ const dayMapping = {
   "السبت": 6
 };
 
+
 function convertTimeTo24Hour(timeString) {
   const match = timeString.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
 

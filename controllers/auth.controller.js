@@ -952,6 +952,17 @@ exports.deleteFromFavo = async (req,res)=>{
     return res.status(500).json({message:`Server error ${err}`})
   }
 }
+
+const dayMapping2 = {
+  0:"الأحد",
+ 1:"الإثنين",
+  2:"الثلاثاء",
+  3:"الأربعاء",
+  4:"الخميس",
+  5:"الجمعة",
+  6:"السبت"
+};
+
 exports.getUserBookings = async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -971,6 +982,7 @@ exports.getUserBookings = async (req, res) => {
         day.bookingHours.forEach((hour, idHour) => {
           hour.patientIDs.forEach((patient) => {
             if (patient.id.toString() === patientId) {
+              let dayname = dayMapping2[idDay]
               patientBookings.push({
                 doctorId: doctor._id,
                 doctorName: doctor.fullName,
