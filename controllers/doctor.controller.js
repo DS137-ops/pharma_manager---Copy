@@ -231,20 +231,24 @@ const dayMapping = {
 };
 
 function convertTimeTo24Hour(timeString) {
-  const match = timeString.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
-  if (!match) return null; // Invalid format
+  const match = timeString.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
+
+  if (!match) return null; // Handle invalid formats
 
   let [_, hours, minutes, period] = match;
   hours = parseInt(hours, 10);
+  minutes = parseInt(minutes, 10) / 60; // Convert minutes to fraction (e.g., 30 min = 0.5)
 
-  if (period.toUpperCase() === "PM" && hours !== 12) {
+  if (period === "PM" && hours !== 12) {
     hours += 12;
-  } else if (period.toUpperCase() === "AM" && hours === 12) {
+  }
+  if (period === "AM" && hours === 12) {
     hours = 0;
   }
 
-  return `${hours.toString().padStart(2, "0")}:${minutes}`;
+  return hours + minutes; // Return as a number
 }
+
 
 function convertIdHourToTime(idHour, startHour) {
   let totalMinutes = startHour * 60 + idHour * 30;
