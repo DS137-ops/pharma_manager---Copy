@@ -765,6 +765,43 @@ exports.createNewBook = async (req, res) => {
 };
 
 
+exports.deleteBookByPatient = async (req, res) => {
+  try {
+    const { doctorId, patientId, idDay, idHour } = req.body;
+
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ status: false, message: 'Doctor not found' });
+    }
+
+    if (
+      idDay >= doctor.booking.length || idDay < 0 ||
+      !doctor.booking[idDay] ||
+      !doctor.booking[idDay].bookingHours ||
+      idHour >= doctor.booking[idDay].bookingHours.length || idHour < 0 ||
+      !doctor.booking[idDay].bookingHours[idHour]
+    ) {
+      return res.status(400).json({ status: false, message: 'Invalid day or hour slot' });
+    }
+
+    const slot = doctor.booking[idDay].bookingHours[idHour];
+    const index = slot.patientIDs.findIndex(p => p.id.toString() === patientId);
+
+    if (index === -1) {
+      return res.status(404).json({ status: false, message: 'Booking not found for this patient' });
+    }
+
+    slot.patientIDs.splice(index, 1); // Remove the booking
+    await doctor.save();
+
+    return res.status(200).json({ status: true, message: 'Booking deleted successfully' });
+  } catch (error) {
+    console.error('Error in deleteBookByPatient:', error);
+    return res.status(500).json({ status: false, message: 'Server error' });
+  }
+};
+
+
 
 exports.updateDoctorInfo = async (req, res) => {
   try {

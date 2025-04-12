@@ -95,9 +95,10 @@ router.get(
 router.post(
   '/createNewBook',
   checkprov.checkifLoggedIn,
-
   doctorController.createNewBook
 );
+router.delete('/deleteBook', checkprov.checkifLoggedIn, doctorController.deleteBookByPatient);
+
 router.post(
   '/updateDoctorInfo/:id',
   body('phone').notEmpty().withMessage('phone is required'),
