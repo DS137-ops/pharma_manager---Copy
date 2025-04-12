@@ -822,7 +822,7 @@ exports.toggleDoctorFavourite = async (req, res) => {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    const existingFavourite = await Favourite.findOne({ userId, doctorId });
+    const existingFavourite = await FavouriteDoctor.findOne({ userId, doctorId });
 
     if (existingFavourite) {
       existingFavourite.isFavourite = !existingFavourite.isFavourite;
@@ -833,7 +833,7 @@ exports.toggleDoctorFavourite = async (req, res) => {
         isFavourite: existingFavourite.isFavourite
       });
     } else {
-      const newFavourite = new Favourite({ userId, radiologyId, isFavourite: true });
+      const newFavourite = new FavouriteDoctor({ userId, doctorId, isFavourite: true });
       await newFavourite.save();
 
       return res.status(200).json({
