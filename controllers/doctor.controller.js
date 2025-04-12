@@ -230,37 +230,22 @@ const dayMapping = {
   "السبت": 6
 };
 
-function convertTimeTo24Hour(timeStr) {
-  if (typeof timeStr !== "string") {
-    console.error(`Invalid time format received:`, timeStr);
-    return null; 
+function convertTimeTo24Hour(timeString) {
+  const match = timeString.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
+  if (!match) return null; // Invalid format
+
+  let [_, hours, minutes, period] = match;
+  hours = parseInt(hours, 10);
+
+  if (period.toUpperCase() === "PM" && hours !== 12) {
+    hours += 12;
+  } else if (period.toUpperCase() === "AM" && hours === 12) {
+    hours = 0;
   }
 
-  if (/^\d{1,2}$/.test(timeStr)) {
-    let hour = parseInt(timeStr, 10);
-    if (hour >= 0 && hour < 24) return hour;
-    return null;
-  }
-
-  const match = timeStr.match(/^(\d{1,2})(AM|PM)$/);
-  if (!match) {
-    console.error(`Invalid time string: ${timeStr}`);
-    return null;
-  }
-
-  let [_, hour, period] = match;
-  hour = parseInt(hour, 10);
-
-  if (hour < 1 || hour > 12) {
-    console.error(`Invalid 12-hour format: ${timeStr}`);
-    return null;
-  }
-
-  if (period === "PM" && hour !== 12) hour += 12;
-  if (period === "AM" && hour === 12) hour = 0;
-
-  return hour;
+  return `${hours.toString().padStart(2, "0")}:${minutes}`;
 }
+
 function convertIdHourToTime(idHour, startHour) {
   let totalMinutes = startHour * 60 + idHour * 30;
   let hours = Math.floor(totalMinutes / 60);
