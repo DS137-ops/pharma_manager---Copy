@@ -78,7 +78,6 @@ router.post(
 router.post(
   '/rateDoctor/:DoctorId',
   checkprov.checkifLoggedIn,
-  ckeckSeek.authenticateSeek,
   doctorController.rateDoctor
 );
 router.get(
