@@ -987,7 +987,7 @@ exports.getUserBookings = async (req, res) => {
                 doctorId: doctor._id,
                 doctorName: doctor.fullName,
                 specialization: doctor.specilizate,
-                idDay,
+                dayname,
                 idHour,
                 appointmentDate: patient.date,
               });
