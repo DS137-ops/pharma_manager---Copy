@@ -302,6 +302,58 @@ exports.getAvailableAppointments = async (req, res) => {
   }
 };
 
+exports.updateBookingRange = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const rangeBooking = req.body.rangeBooking;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid Doctor ID format" });
+    }
+
+    if (!Array.isArray(rangeBooking) || rangeBooking.length === 0) {
+      return res.status(400).json({ error: "rangeBooking must be a valid array with elements." });
+    }
+
+    const doctor = await Doctor.findById(id);
+    if (!doctor) {
+      return res.status(404).json({ error: "Doctor not found" });
+    }
+
+    const formattedRangeBooking = rangeBooking.map(({ day, start, end }) => ({
+      day: dayMapping[day] ?? null,
+      start: convertTimeTo24Hour(start),
+      end: convertTimeTo24Hour(end)
+    }));
+
+    if (formattedRangeBooking.some(rb => rb.day === null || rb.start === null || rb.end === null)) {
+      return res.status(400).json({ error: "Invalid day or time format." });
+    }
+
+    let booking = Array(7).fill(null).map(() => ({ bookingHours: [] }));
+
+    formattedRangeBooking.forEach((bookingDay) => {
+      const countHalfHours = (bookingDay.end - bookingDay.start) * 2;
+      let bookingHours = Array.from({ length: countHalfHours }, (_, i) => ({
+        idHour: i,
+        patientIDs: []
+      }));
+
+      booking[bookingDay.day] = { bookingHours };
+    });
+
+    doctor.rangeBooking = formattedRangeBooking;
+    doctor.booking = booking;
+    await doctor.save();
+
+    return res.status(200).json({ message: "Booking updated successfully", doctor });
+
+  } catch (err) {
+    console.error("Error updating booking range:", err);
+    return res.status(500).json({ message: `Error: ${err}` });
+  }
+};
+
 
 
 exports.createBooking = async (req, res) => {

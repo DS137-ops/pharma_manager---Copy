@@ -63,6 +63,7 @@ router.get('/search', checkprov.checkifLoggedIn , doctorController.searchdoctorB
 router.post('/add-to-famous'  , doctorController.addToFamousDoctors);
 router.get('/famous', doctorController.getFamousDoctors);
 router.post("/createrangeBooking/:id" , checkprov.checkifLoggedIn , doctorController.createBooking)
+router.put("/updateRangeBooking/:id", checkprov.checkifLoggedIn, doctorController.updateBookingRange);
 router.get("/getAvailableAppointments/:id", checkprov.checkifLoggedIn, doctorController.getAvailableAppointments);
 
 router.delete("/delete-doctor-account", checkprov.authMiddlewareforDoctor, doctorController.deleteDoctorAccount );
