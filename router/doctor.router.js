@@ -87,14 +87,14 @@ router.get(
 router.get(
   '/getDoctorsinCity/:city?/:region?/:spec?',
   checkprov.checkifLoggedIn,
-  ckeckSeek.authenticateSeek,
+
   doctorController.getDoctors
 );
 
 router.post(
   '/createNewBook',
   checkprov.checkifLoggedIn,
-  ckeckSeek.authenticateSeek,
+
   doctorController.createNewBook
 );
 router.post(
