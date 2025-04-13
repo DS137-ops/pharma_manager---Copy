@@ -267,40 +267,6 @@ exports.rejectRadiology = async (req, res) => {
   }
 };
 
-exports.getradiology = async (req, res) => {
-  const { city, region } = req.params;
-  const existCity = await City.findById(city)
-      const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-      if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-      const cityname = existCity.name
-      const regionname = existRegion.name
-  const query = { role: 'radiology', city:cityname, region:regionname, approved: true };
-
-  try {
-    const findPharma = await Radiology.find(query);
-
-    if (!findPharma || findPharma.length === 0) {
-      return res.status(404).json({ status: false, message: 'No result' });
-    }
-    const pharmaciesWithRatings = findPharma.map((pharma) => {
-      const ratings = pharma.rate?.map((r) => r.rating) || [];
-      const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
-
-      return {
-        ...pharma.toObject(),
-        finalRate: parseFloat(averageRating),
-      };
-    });
-
-    pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
-
-    return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ status: false, message: `Server error ${error}` });
-  }
-};
 
 
 
