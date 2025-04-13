@@ -181,7 +181,7 @@ router.post('/add-advert-for-seek',Advert_for_seek.single('image'), async (req, 
   if(!req.file){
     return res.status(404).json({message:'no file uploaded'})
   }
-  const {imageUrl} = req.file.path;
+  const imageUrl = req.file.path;
 
     if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
