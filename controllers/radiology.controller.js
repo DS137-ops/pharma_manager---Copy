@@ -6,6 +6,7 @@ var nodemailer = require('nodemailer');
 const RefreshToken = require('../model/RefreshToken.model');
 const City = require('../model/cities.model');
 const Favourite = require('../model/FavouriteRadiology.model');
+const Seek = require('../model/seek.model');
 const Radiology = require('../model/radiology.model');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
