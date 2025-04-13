@@ -301,7 +301,7 @@ exports.getradiology = async (req, res) => {
       const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
 
       return {
-        ...analyst.toObject(),
+        ...radiology.toObject(),
         finalRate: parseFloat(averageRating),
         isfavourite: userFavourites.includes(radiology._id.toString()),
       };
