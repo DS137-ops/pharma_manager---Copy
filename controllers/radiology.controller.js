@@ -297,7 +297,7 @@ exports.getradiology = async (req, res) => {
     return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ status: false, message: 'Server error' });
+    res.status(500).json({ status: false, message: `Server error ${error}` });
   }
 };
 
