@@ -28,6 +28,16 @@ const storage = new CloudinaryStorage({
 });
 const Advert_for_pharmacy = multer({ storage: storage });
 
+
+const storage2 = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `seekAdvert`,
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+const Advert_for_seek = multer({ storage: storage2 });
+
 const router = express.Router();
   const validateAdmin = [
    body("username").isString().notEmpty().withMessage("Username is required"),
@@ -167,21 +177,25 @@ router.get('/adverts-for-analyst', async (req, res) => {
   }
 });
 
-router.post('/add-advert-for-seek', async (req, res) => {
-  try {
-    const { imageUrl } = req.body;
+router.post('/add-advert-for-seek',Advert_for_seek.single('image'), async (req, res) => {
+  if(!req.file){
+    return res.status(404).json({message:'no file uploaded'})
+  }
+  const {imageUrl} = req.file.path;
 
     if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
     }
+  try {
+    
+    const newAdvert = new SeekAdvert({
+      imageUrl
+    });
 
-    const newAdvert = new SeekAdvert({ imageUrl });
     await newAdvert.save();
-
     res.status(200).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
 
   } catch (error) {
-    console.error('Error adding advert:', error);
     res.status(500).json({ error: error.message });
   }
 });
