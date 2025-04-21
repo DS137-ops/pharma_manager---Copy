@@ -107,8 +107,8 @@ exports.createNewDoctor = async (req, res) => {
     await newUser.save();
     await RefreshToken.create({ token , userRef: newUser._id });
     // إنشاء روابط الموافقة والرفض
-    const approvalLink = `http://147.93.106.92/api/Doctor/approve/doctor/${newUser._id}`;
-    const rejectLink = `http://147.93.106.92/api/Doctor/reject/doctor/${newUser._id}`;
+    const approvalLink = `http://147.93.106.92:8080/api/Doctor/approve/doctor/${newUser._id}`;
+    const rejectLink = `http://147.93.106.92:8080/api/Doctor/reject/doctor/${newUser._id}`;
 
     // إرسال بريد إلكتروني للإدارة لمراجعة الحساب الجديد
     const mailOptions = {

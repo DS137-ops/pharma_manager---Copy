@@ -105,18 +105,37 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
     const cityname = existCity.name;
     const regionname = existRegion.name;
 
-    const query = { city: cityname, region: regionname };
+    const topDoctors = await Doctor.aggregate([
+      {
+        $match: {
+          city: cityname,
+          region: regionname
+        }
+      },
+      {
+        $addFields: {
+          averageRating: { $avg: "$rate.rating" }
+        }
+      },
+      {
+        $match: {
+          averageRating: { $ne: null }
+        }
+      },
+      {
+        $sort: { averageRating: -1 }
+      },
+      {
+        $limit: 10
+      }
+    ]);
 
-    const doctors = await Doctor.find(query)
-      .sort({ rating: -1 }) // Sort by rating (highest first)
-      .limit(10); // Limit to 10 doctors
-
-    return res.status(200).json({ success: true, doctors });
-
+    return res.status(200).json({ success: true, doctors: topDoctors });
   } catch (err) {
     return res.status(500).json({ success: false, err: err.message });
   }
 });
+
 
 router.post(
   '/createNewBook',
