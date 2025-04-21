@@ -560,55 +560,26 @@ exports.toggleAnalystFavourite = async (req, res) => {
   }
 };
 
+
+
 exports.getFavourites = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const favourites = await Favourite.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(userId),
-          isFavourite: true
-        }
-      },
-      {
-        $lookup: {
-          from: 'analysts',
-          localField: 'analystId',
-          foreignField: '_id',
-          as: 'analystDetails'
-        }
-      },
-      {
-        $unwind: '$analystDetails'
-      }
-    ]);
+    const favourites = await Favourite.find({ userId, isFavourite: true })
+      .populate('analystId')
+      .exec();
 
-    res.status(200).json({ favourites });
+    if (favourites.length === 0) {
+      return res.status(404).json({ message: 'No favourite doctors found' });
+    }
+
+    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
-
-// exports.getFavourites = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-
-//     const favourites = await Favourite.find({ userId, isFavourite: true })
-//       .populate('analystId')
-//       .exec();
-
-//     if (favourites.length === 0) {
-//       return res.status(404).json({ message: 'No favourite doctors found' });
-//     }
-
-//     res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// };
 
 exports.deleteFromFavo = async (req, res) => {
   try {
