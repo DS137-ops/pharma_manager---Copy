@@ -563,26 +563,31 @@ exports.toggleAnalystFavourite = async (req, res) => {
 exports.getFavourites = async (req, res) => {
   try {
     const { userId } = req.params;
+
     const favourites = await Favourite.aggregate([
       {
         $match: {
           userId: new mongoose.Types.ObjectId(userId),
-          isFavourite: true,
-        },
+          isFavourite: true
+        }
       },
       {
         $lookup: {
           from: 'analysts',
           localField: 'analystId',
           foreignField: '_id',
-          as: 'analystDetails',
-        },
+          as: 'analystDetails'
+        }
       },
+      {
+        $unwind: '$analystDetails'
+      }
     ]);
-    res.status(200).json({ favourites: favourites });
+
+    res.status(200).json({ favourites });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: `Server error `, error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
