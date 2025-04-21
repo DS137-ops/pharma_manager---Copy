@@ -512,6 +512,13 @@ exports.getFavourites = async(req,res)=>{
     const favourites = await Favourite.aggregate([
       {
         $match:{userId:userId,isFavourite:true}
+      },
+      {
+        $lookup:{
+          from:'analysts',
+          localField:'_id',
+          foreignField:'analystId'
+        }
       }
     ])
     res.status(200).json({favourites:favourites})
