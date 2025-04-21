@@ -62,14 +62,34 @@ router.post(
   ],
   doctorController.createNewDoctor
 );
-router.get('/search', checkprov.checkifLoggedIn , doctorController.searchdoctorByName);
-router.post('/add-to-famous'  , doctorController.addToFamousDoctors);
+router.get(
+  '/search',
+  checkprov.checkifLoggedIn,
+  doctorController.searchdoctorByName
+);
+router.post('/add-to-famous', doctorController.addToFamousDoctors);
 router.get('/famous', doctorController.getFamousDoctors);
-router.post("/createrangeBooking/:id" , checkprov.checkifLoggedIn , doctorController.createBooking)
-router.put("/updateRangeBooking/:id", checkprov.checkifLoggedIn, doctorController.updateBookingRange);
-router.get("/getAvailableAppointments/:id", checkprov.checkifLoggedIn, doctorController.getAvailableAppointments);
+router.post(
+  '/createrangeBooking/:id',
+  checkprov.checkifLoggedIn,
+  doctorController.createBooking
+);
+router.put(
+  '/updateRangeBooking/:id',
+  checkprov.checkifLoggedIn,
+  doctorController.updateBookingRange
+);
+router.get(
+  '/getAvailableAppointments/:id',
+  checkprov.checkifLoggedIn,
+  doctorController.getAvailableAppointments
+);
 
-router.delete("/delete-doctor-account", checkprov.authMiddlewareforDoctor, doctorController.deleteDoctorAccount );
+router.delete(
+  '/delete-doctor-account',
+  checkprov.authMiddlewareforDoctor,
+  doctorController.deleteDoctorAccount
+);
 
 router.get('/approve/doctor/:id', doctorController.approveDoctor);
 router.get('/reject/doctor/:id', doctorController.rejectDoctor);
@@ -96,8 +116,8 @@ router.get(
 
 router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req, res) => {
   try {
-    const userId = req.user._id;
     const { city, region } = req.params;
+    const userId = req.user._id; // تأكد أن checkifLoggedIn يضيف user إلى req
 
     const existCity = await City.findById(city);
     if (!existCity) return res.status(400).json({ success: false, message: 'City not found' });
@@ -107,15 +127,8 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
 
     const cityname = existCity.name;
     const regionname = existRegion.name;
- const favouriteDoctors = await FavouriteDoctor.find({ userId });
 
-  
-    const favouriteDoctorIds = favouriteDoctors.map(fav => fav.doctorId.toString());
-    const doctorsWithFavStatus = doctors.map(doctor => ({
-      ...doctor.toObject(),
-      isFavourite: favouriteDoctorIds.includes(doctor._id.toString())
-    }));
-    console.log(doctorsWithFavStatus)
+    // Step 1: Get top 10 doctors with rating
     const topDoctors = await Doctor.aggregate([
       {
         $match: {
@@ -149,20 +162,31 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
       }
     ]);
 
-    return res.status(200).json({ success: true, doctors: topDoctors });
+    const favouriteDoctors = await FavouriteDoctor.find({ userId });
+    const favouriteDoctorIds = favouriteDoctors.map(fav => fav.doctorId.toString());
+
+
+    const doctorsWithFavStatus = topDoctors.map(doctor => ({
+      ...doctor,
+      isFavourite: favouriteDoctorIds.includes(doctor._id.toString())
+    }));
+
+    return res.status(200).json({ success: true, doctors: doctorsWithFavStatus });
   } catch (err) {
     return res.status(500).json({ success: false, err: err.message });
   }
 });
-
-
 
 router.post(
   '/createNewBook',
   checkprov.checkifLoggedIn,
   doctorController.createNewBook
 );
-router.delete('/deleteBook', checkprov.checkifLoggedIn, doctorController.deleteBookByPatient);
+router.delete(
+  '/deleteBook',
+  checkprov.checkifLoggedIn,
+  doctorController.deleteBookByPatient
+);
 
 router.post(
   '/updateDoctorInfo/:id',
@@ -237,7 +261,7 @@ router.post(
         imageUrl: imageUrl,
       });
       await doctor.save();
-      return res.status(200).json({message:'image add to gallery'})
+      return res.status(200).json({ message: 'image add to gallery' });
     } catch (err) {
       res.status(500).json({ err: err });
     }
@@ -248,7 +272,9 @@ router.delete('/remove-from-gallery/:doctorId/:imageId', async (req, res) => {
   const { doctorId, imageId } = req.params;
 
   if (!doctorId || !imageId) {
-    return res.status(400).json({ message: 'Doctor ID and Image ID are required' });
+    return res
+      .status(400)
+      .json({ message: 'Doctor ID and Image ID are required' });
   }
 
   try {
@@ -257,7 +283,9 @@ router.delete('/remove-from-gallery/:doctorId/:imageId', async (req, res) => {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    const updatedGallery = doctor.Gallery.filter(image => image._id.toString() !== imageId);
+    const updatedGallery = doctor.Gallery.filter(
+      (image) => image._id.toString() !== imageId
+    );
 
     if (doctor.Gallery.length === updatedGallery.length) {
       return res.status(404).json({ message: 'Image not found in gallery' });
@@ -272,27 +300,40 @@ router.delete('/remove-from-gallery/:doctorId/:imageId', async (req, res) => {
   }
 });
 
-router.post("/forgot-password-for-doctor", doctorController.forgetPassForDoctor);
+router.post(
+  '/forgot-password-for-doctor',
+  doctorController.forgetPassForDoctor
+);
 
-router.post("/verify-code-for-doctor", doctorController.verifyCodeDoctor);
+router.post('/verify-code-for-doctor', doctorController.verifyCodeDoctor);
 
-router.post("/reset-password-for-doctor", doctorController.resetDoctorPass);
+router.post('/reset-password-for-doctor', doctorController.resetDoctorPass);
 
-router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
-  const { id } = req.params
-   if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-    const user = await Doctor.findById(id)
-    if(!user){
-       return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json({success:true , data:user})
-})
+router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid user ID' });
+  }
+  const user = await Doctor.findById(id);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  res.status(200).json({ success: true, data: user });
+});
 
-router.post('/add-doctor-to-favourite', 
-  checkprov.checkifLoggedIn ,
-  doctorController.toggleDoctorFavourite);
-router.get('/my-favourites/:userId',checkprov.checkifLoggedIn, doctorController.getFavourites);
-router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , doctorController.deleteFromFavo)
+router.post(
+  '/add-doctor-to-favourite',
+  checkprov.checkifLoggedIn,
+  doctorController.toggleDoctorFavourite
+);
+router.get(
+  '/my-favourites/:userId',
+  checkprov.checkifLoggedIn,
+  doctorController.getFavourites
+);
+router.delete(
+  '/from-favourite/:cardId',
+  checkprov.checkifLoggedIn,
+  doctorController.deleteFromFavo
+);
 module.exports = router;

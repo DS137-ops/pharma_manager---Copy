@@ -6,7 +6,7 @@ var nodemailer = require('nodemailer');
 const RefreshToken = require('../model/RefreshToken.model');
 const City = require('../model/cities.model');
 const FavouriteDoctor = require('../model/FavouriteDoctor.model');
-const moment = require('moment')
+const moment = require('moment');
 function generateTimeSlots(start, end) {
   const slots = [];
   let [sh, sm] = start.split(':').map(Number);
@@ -35,21 +35,24 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-
 exports.searchdoctorByName = async (req, res) => {
   try {
     const { fullName } = req.query;
 
     if (!fullName) {
-      return res.status(400).json({ status: false, message: 'Please provide a name' });
+      return res
+        .status(400)
+        .json({ status: false, message: 'Please provide a name' });
     }
 
     const doctor = await Doctor.find({
-      fullName: { $regex: fullName, $options: 'i' }
+      fullName: { $regex: fullName, $options: 'i' },
     });
 
     if (doctor.length === 0) {
-      return res.status(404).json({ status: false, message: 'No matching doctor found' });
+      return res
+        .status(404)
+        .json({ status: false, message: 'No matching doctor found' });
     }
 
     return res.status(200).json({ status: true, doctor });
@@ -64,7 +67,7 @@ exports.createNewDoctor = async (req, res) => {
     fullName,
     email,
     password,
-    city,   // city ID
+    city, // city ID
     region, // region ID
     address,
     phone,
@@ -72,30 +75,52 @@ exports.createNewDoctor = async (req, res) => {
     NumberState,
   } = req.body;
 
-  if (!fullName || !email || !password || !city || !region || !address || !phone || !specilizate || !NumberState) {
-    return res.status(400).json({ success: false, message: 'All fields are required' });
+  if (
+    !fullName ||
+    !email ||
+    !password ||
+    !city ||
+    !region ||
+    !address ||
+    !phone ||
+    !specilizate ||
+    !NumberState
+  ) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'All fields are required' });
   }
 
   try {
     const existingUser = await Doctor.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ success: false, message: 'Email already exists' });
+      return res
+        .status(409)
+        .json({ success: false, message: 'Email already exists' });
     }
     const cityExists = await City.findById(city);
-    if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
-    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
-    if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    if (!cityExists)
+      return res
+        .status(400)
+        .json({ success: false, message: 'City not found' });
+    const regionExists = cityExists.regions.find(
+      (r) => r._id.toString() === region
+    );
+    if (!regionExists)
+      return res.status(400).json({
+        success: false,
+        message: 'Region not found in the selected city',
+      });
 
     // إنشاء توكن JWT للطبيب الجديد
     const token = await jwt.sign({ role: 'doctor' }, process.env.JWT_SECRET);
-    
 
     // إنشاء حساب الطبيب مع تخزين اسم المدينة والمنطقة بدلاً من الـ ID
     const newUser = new Doctor({
       fullName,
       email,
       password,
-      city: cityExists.name,    // تخزين اسم المدينة
+      city: cityExists.name, // تخزين اسم المدينة
       region: regionExists.name, // تخزين اسم المنطقة
       address,
       phone,
@@ -105,7 +130,7 @@ exports.createNewDoctor = async (req, res) => {
 
     // حفظ الطبيب الجديد في قاعدة البيانات
     await newUser.save();
-    await RefreshToken.create({ token , userRef: newUser._id });
+    await RefreshToken.create({ token, userRef: newUser._id });
     // إنشاء روابط الموافقة والرفض
     const approvalLink = `http://147.93.106.92:8080/api/Doctor/approve/doctor/${newUser._id}`;
     const rejectLink = `http://147.93.106.92:8080/api/Doctor/reject/doctor/${newUser._id}`;
@@ -139,13 +164,14 @@ exports.createNewDoctor = async (req, res) => {
       message: 'Registration request sent to admin. Please wait for approval.',
       token: token,
     });
-
   } catch (err) {
     console.error('Error registering doctor:', err);
 
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: errors.join(', ') });
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
     }
 
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -156,13 +182,19 @@ exports.addToFamousDoctors = async (req, res) => {
   const { doctorId } = req.body;
 
   try {
-    const doctor = await Doctor.findByIdAndUpdate(doctorId, { isFamous: true }, { new: true });
-    
+    const doctor = await Doctor.findByIdAndUpdate(
+      doctorId,
+      { isFamous: true },
+      { new: true }
+    );
+
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    res.status(200).json({ message: 'Doctor added to famous doctors menu', doctor });
+    res
+      .status(200)
+      .json({ message: 'Doctor added to famous doctors menu', doctor });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -221,15 +253,14 @@ exports.getFamousDoctors = async (req, res) => {
 //   }
 // }
 const dayMapping = {
-  "الأحد": 0,
-  "الإثنين": 1,
-  "الثلاثاء": 2,
-  "الأربعاء": 3,
-  "الخميس": 4,
-  "الجمعة": 5,
-  "السبت": 6
+  الأحد: 0,
+  الإثنين: 1,
+  الثلاثاء: 2,
+  الأربعاء: 3,
+  الخميس: 4,
+  الجمعة: 5,
+  السبت: 6,
 };
-
 
 function convertTimeTo24Hour(timeString) {
   const match = timeString.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
@@ -240,63 +271,67 @@ function convertTimeTo24Hour(timeString) {
   hours = parseInt(hours, 10);
   minutes = parseInt(minutes, 10) / 60; // Convert minutes to fraction (e.g., 30 min = 0.5)
 
-  if (period === "PM" && hours !== 12) {
+  if (period === 'PM' && hours !== 12) {
     hours += 12;
   }
-  if (period === "AM" && hours === 12) {
+  if (period === 'AM' && hours === 12) {
     hours = 0;
   }
 
   return hours + minutes; // Return as a number
 }
 
-
 function convertIdHourToTime(idHour, startHour) {
   let totalMinutes = startHour * 60 + idHour * 30;
   let hours = Math.floor(totalMinutes / 60);
   let minutes = totalMinutes % 60;
-  let period = hours >= 12 ? "PM" : "AM";
+  let period = hours >= 12 ? 'PM' : 'AM';
   if (hours > 12) hours -= 12;
   if (hours === 0) hours = 12;
 
-  return `${hours}:${minutes === 0 ? "00" : minutes}${period}`;
+  return `${hours}:${minutes === 0 ? '00' : minutes}${period}`;
 }
-
 
 exports.getAvailableAppointments = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Doctor ID format" });
+      return res.status(400).json({ message: 'Invalid Doctor ID format' });
     }
 
-    const doctor = await Doctor.findById(id).select("rangeBooking booking");
+    const doctor = await Doctor.findById(id).select('rangeBooking booking');
 
     if (!doctor) {
-      return res.status(404).json({ error: "Doctor not found" });
+      return res.status(404).json({ error: 'Doctor not found' });
     }
 
     let availableAppointments = [];
 
     doctor.booking.forEach((dayBooking, index) => {
       if (dayBooking && dayBooking.bookingHours) {
-        let availableHours = dayBooking.bookingHours.filter((hour) => hour.patientIDs.length < 2);
-        
+        let availableHours = dayBooking.bookingHours.filter(
+          (hour) => hour.patientIDs.length < 2
+        );
+
         if (availableHours.length > 0) {
           availableAppointments.push({
             day: doctor.rangeBooking[index]?.day,
-            availableHours: availableHours.map(hour => ({
+            availableHours: availableHours.map((hour) => ({
               idHour: hour.idHour,
-              startTime: convertIdHourToTime(hour.idHour, doctor.rangeBooking[index]?.start)
-            }))
+              startTime: convertIdHourToTime(
+                hour.idHour,
+                doctor.rangeBooking[index]?.start
+              ),
+            })),
           });
         }
       }
     });
 
-    return res.status(200).json({ message: "Available appointments", data: availableAppointments });
-
+    return res
+      .status(200)
+      .json({ message: 'Available appointments', data: availableAppointments });
   } catch (err) {
     return res.status(500).json({ message: `Error: ${err.message}` });
   }
@@ -308,35 +343,43 @@ exports.updateBookingRange = async (req, res) => {
     const rangeBooking = req.body.rangeBooking;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid Doctor ID format" });
+      return res.status(400).json({ error: 'Invalid Doctor ID format' });
     }
 
     if (!Array.isArray(rangeBooking) || rangeBooking.length === 0) {
-      return res.status(400).json({ error: "rangeBooking must be a valid array with elements." });
+      return res
+        .status(400)
+        .json({ error: 'rangeBooking must be a valid array with elements.' });
     }
 
     const doctor = await Doctor.findById(id);
     if (!doctor) {
-      return res.status(404).json({ error: "Doctor not found" });
+      return res.status(404).json({ error: 'Doctor not found' });
     }
 
     const formattedRangeBooking = rangeBooking.map(({ day, start, end }) => ({
       day: dayMapping[day] ?? null,
       start: convertTimeTo24Hour(start),
-      end: convertTimeTo24Hour(end)
+      end: convertTimeTo24Hour(end),
     }));
 
-    if (formattedRangeBooking.some(rb => rb.day === null || rb.start === null || rb.end === null)) {
-      return res.status(400).json({ error: "Invalid day or time format." });
+    if (
+      formattedRangeBooking.some(
+        (rb) => rb.day === null || rb.start === null || rb.end === null
+      )
+    ) {
+      return res.status(400).json({ error: 'Invalid day or time format.' });
     }
 
-    let booking = Array(7).fill(null).map(() => ({ bookingHours: [] }));
+    let booking = Array(7)
+      .fill(null)
+      .map(() => ({ bookingHours: [] }));
 
     formattedRangeBooking.forEach((bookingDay) => {
       const countHalfHours = (bookingDay.end - bookingDay.start) * 2;
       let bookingHours = Array.from({ length: countHalfHours }, (_, i) => ({
         idHour: i,
-        patientIDs: []
+        patientIDs: [],
       }));
 
       booking[bookingDay.day] = { bookingHours };
@@ -346,15 +389,14 @@ exports.updateBookingRange = async (req, res) => {
     doctor.booking = booking;
     await doctor.save();
 
-    return res.status(200).json({ message: "Booking updated successfully", doctor });
-
+    return res
+      .status(200)
+      .json({ message: 'Booking updated successfully', doctor });
   } catch (err) {
-    console.error("Error updating booking range:", err);
+    console.error('Error updating booking range:', err);
     return res.status(500).json({ message: `Error: ${err}` });
   }
 };
-
-
 
 exports.createBooking = async (req, res) => {
   try {
@@ -362,34 +404,42 @@ exports.createBooking = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Doctor ID format" });
+      return res.status(400).json({ message: 'Invalid Doctor ID format' });
     }
 
     if (!Array.isArray(rangeBooking) || rangeBooking.length === 0) {
-      return res.status(400).json({ error: "rangeBooking must be a valid array with elements." });
+      return res
+        .status(400)
+        .json({ error: 'rangeBooking must be a valid array with elements.' });
     }
 
     const doctor = await Doctor.findById(id);
     if (!doctor) {
-      return res.status(404).json({ error: "Doctor is not found" });
+      return res.status(404).json({ error: 'Doctor is not found' });
     }
     const formattedRangeBooking = rangeBooking.map(({ day, start, end }) => ({
       day: dayMapping[day] ?? null,
       start: convertTimeTo24Hour(start),
-      end: convertTimeTo24Hour(end)
+      end: convertTimeTo24Hour(end),
     }));
 
-    if (formattedRangeBooking.some(rb => rb.day === null || rb.start === null || rb.end === null)) {
-      return res.status(400).json({ error: "Invalid day or time format." });
+    if (
+      formattedRangeBooking.some(
+        (rb) => rb.day === null || rb.start === null || rb.end === null
+      )
+    ) {
+      return res.status(400).json({ error: 'Invalid day or time format.' });
     }
 
-    let booking = Array(7).fill(null).map(() => ({ bookingHours: [] }));
+    let booking = Array(7)
+      .fill(null)
+      .map(() => ({ bookingHours: [] }));
 
     formattedRangeBooking.forEach((bookingDay) => {
       const countHalfHours = (bookingDay.end - bookingDay.start) * 2;
       let bookingHours = Array.from({ length: countHalfHours }, (_, i) => ({
         idHour: i,
-        patientIDs: []
+        patientIDs: [],
       }));
 
       booking[bookingDay.day] = { bookingHours };
@@ -399,7 +449,9 @@ exports.createBooking = async (req, res) => {
     doctor.booking = booking;
     await doctor.save();
 
-    return res.status(200).json({ message: "Booking created successfully", doctor });
+    return res
+      .status(200)
+      .json({ message: 'Booking created successfully', doctor });
   } catch (err) {
     return res.status(500).json({ message: `Error: ${err}` });
   }
@@ -410,15 +462,16 @@ exports.deleteDoctorAccount = async (req, res) => {
     const user = req.user;
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
+    if (!isMatch)
+      return res.status(400).json({ message: 'Incorrect password' });
 
     await Doctor.findByIdAndDelete(user._id);
 
-    res.status(200).json({ message: "Account deleted successfully" , data:[] });
+    res.status(200).json({ message: 'Account deleted successfully', data: [] });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
-}
+};
 exports.approveDoctor = async (req, res) => {
   try {
     const user = await Doctor.findById(req.params.id);
@@ -494,7 +547,7 @@ exports.loginDoctor = async (req, res) => {
   if (!email) {
     return res.status(403).json({ message: 'email is required' });
   }
-  if(!password)
+  if (!password)
     return res.status(400).json({ message: 'password is required' });
   try {
     const user = await Doctor.findOne({ email });
@@ -511,7 +564,7 @@ exports.loginDoctor = async (req, res) => {
     }
 
     const token = await jwt.sign({ id: user._id, role: 'doctor' }, '1001110');
-    RefreshToken.create({ token , userRef:user._id });
+    RefreshToken.create({ token, userRef: user._id });
 
     res.status(200).json({
       success: true,
@@ -613,12 +666,21 @@ exports.getDoctors = async (req, res) => {
     const userId = req.user._id;
 
     const { city, region, spec } = req.params;
-    
-    const existCity = await City.findById(city);
-    if (!existCity) return res.status(400).json({ success: false, message: 'City not found' });
 
-    const existRegion = existCity.regions.find(r => r._id.toString() === region);
-    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    const existCity = await City.findById(city);
+    if (!existCity)
+      return res
+        .status(400)
+        .json({ success: false, message: 'City not found' });
+
+    const existRegion = existCity.regions.find(
+      (r) => r._id.toString() === region
+    );
+    if (!existRegion)
+      return res.status(400).json({
+        success: false,
+        message: 'Region not found in the selected city',
+      });
 
     const cityname = existCity.name;
     const regionname = existRegion.name;
@@ -627,19 +689,23 @@ exports.getDoctors = async (req, res) => {
     const doctors = await Doctor.find(query);
 
     if (!doctors || doctors.length === 0) {
-      return res.status(404).json({ status: false, message: 'No doctors found' });
+      return res
+        .status(404)
+        .json({ status: false, message: 'No doctors found' });
     }
 
     // اجلب قائمة المفضلات لهذا المستخدم
     const favouriteDoctors = await FavouriteDoctor.find({ userId });
 
     // تحويل الأطباء المفضلين إلى قائمة تحتوي فقط على الـ doctorId
-    const favouriteDoctorIds = favouriteDoctors.map(fav => fav.doctorId.toString());
+    const favouriteDoctorIds = favouriteDoctors.map((fav) =>
+      fav.doctorId.toString()
+    );
 
     // تحديث بيانات الأطباء مع تحديد `isFavourite`
-    const doctorsWithFavStatus = doctors.map(doctor => ({
+    const doctorsWithFavStatus = doctors.map((doctor) => ({
       ...doctor.toObject(),
-      isFavourite: favouriteDoctorIds.includes(doctor._id.toString())
+      isFavourite: favouriteDoctorIds.includes(doctor._id.toString()),
     }));
 
     res.status(200).json({ status: true, doctors: doctorsWithFavStatus });
@@ -661,26 +727,31 @@ exports.createNewBook = async (req, res) => {
     }
 
     const dayIndex = doctor.booking.length;
-    if (idDay >= doctor.booking.length || idDay < 0 || !doctor.booking[idDay]) { 
+    if (idDay >= doctor.booking.length || idDay < 0 || !doctor.booking[idDay]) {
       return res.status(404).json({ status: false, message: 'Day not found' });
     }
-    
 
     const hourIndex = doctor.booking[idDay].length;
-    if (!doctor.booking[idDay].bookingHours || idHour >= doctor.booking[idDay].bookingHours.length || idHour < 0) { 
+    if (
+      !doctor.booking[idDay].bookingHours ||
+      idHour >= doctor.booking[idDay].bookingHours.length ||
+      idHour < 0
+    ) {
       return res.status(404).json({ status: false, message: 'Hour not found' });
     }
     if (!doctor.booking[idDay].bookingHours[idHour]) {
-      return res.status(404).json({ status: false, message: 'Hour slot not found' });
+      return res
+        .status(404)
+        .json({ status: false, message: 'Hour slot not found' });
     }
     if (!doctor.booking[idDay].bookingHours[idHour].patientIDs) {
       doctor.booking[idDay].bookingHours[idHour].patientIDs = []; // Initialize if empty
     }
-    
+
     if (doctor.booking[idDay].bookingHours[idHour].patientIDs.length >= 2) {
       return res.status(400).json({ message: 'No appointment available' });
     }
-    
+
     const existingPatient = doctor.booking[idDay].bookingHours[
       idHour
     ].patientIDs.some((p) => p.id.toString() === patientId);
@@ -726,44 +797,53 @@ exports.createNewBook = async (req, res) => {
   }
 };
 
-
 exports.deleteBookByPatient = async (req, res) => {
   try {
     const { doctorId, patientId, idDay, idHour } = req.body;
 
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
-      return res.status(404).json({ status: false, message: 'Doctor not found' });
+      return res
+        .status(404)
+        .json({ status: false, message: 'Doctor not found' });
     }
 
     if (
-      idDay >= doctor.booking.length || idDay < 0 ||
+      idDay >= doctor.booking.length ||
+      idDay < 0 ||
       !doctor.booking[idDay] ||
       !doctor.booking[idDay].bookingHours ||
-      idHour >= doctor.booking[idDay].bookingHours.length || idHour < 0 ||
+      idHour >= doctor.booking[idDay].bookingHours.length ||
+      idHour < 0 ||
       !doctor.booking[idDay].bookingHours[idHour]
     ) {
-      return res.status(400).json({ status: false, message: 'Invalid day or hour slot' });
+      return res
+        .status(400)
+        .json({ status: false, message: 'Invalid day or hour slot' });
     }
 
     const slot = doctor.booking[idDay].bookingHours[idHour];
-    const index = slot.patientIDs.findIndex(p => p.id.toString() === patientId);
+    const index = slot.patientIDs.findIndex(
+      (p) => p.id.toString() === patientId
+    );
 
     if (index === -1) {
-      return res.status(404).json({ status: false, message: 'Booking not found for this patient' });
+      return res
+        .status(404)
+        .json({ status: false, message: 'Booking not found for this patient' });
     }
 
     slot.patientIDs.splice(index, 1); // Remove the booking
     await doctor.save();
 
-    return res.status(200).json({ status: true, message: 'Booking deleted successfully' });
+    return res
+      .status(200)
+      .json({ status: true, message: 'Booking deleted successfully' });
   } catch (error) {
     console.error('Error in deleteBookByPatient:', error);
     return res.status(500).json({ status: false, message: 'Server error' });
   }
 };
-
-
 
 exports.updateDoctorInfo = async (req, res) => {
   try {
@@ -771,7 +851,15 @@ exports.updateDoctorInfo = async (req, res) => {
     const updateFields = {}; // سيتم تخزين الحقول التي يجب تحديثها هنا
 
     // استخراج الحقول من body فقط إذا تم إرسالها
-    const { fullName, city, region, address, specilizate, NumberState, doctorimage } = req.body;
+    const {
+      fullName,
+      city,
+      region,
+      address,
+      specilizate,
+      NumberState,
+      doctorimage,
+    } = req.body;
 
     // تحقق إذا كانت الحقول موجودة وأضفها إلى updateFields
     if (fullName) updateFields.fullName = fullName;
@@ -782,12 +870,21 @@ exports.updateDoctorInfo = async (req, res) => {
     // معالجة تحديث المدينة والمنطقة
     if (city && region) {
       const existCity = await City.findById(city);
-      if (!existCity) return res.status(400).json({ success: false, message: "City not found" });
+      if (!existCity)
+        return res
+          .status(400)
+          .json({ success: false, message: 'City not found' });
 
-      const existRegion = existCity.regions.find(r => r._id.toString() === region);
-      if (!existRegion) return res.status(400).json({ success: false, message: "Region not found in the selected city" });
+      const existRegion = existCity.regions.find(
+        (r) => r._id.toString() === region
+      );
+      if (!existRegion)
+        return res.status(400).json({
+          success: false,
+          message: 'Region not found in the selected city',
+        });
 
-      updateFields.city = existCity.name;   // حفظ اسم المدينة
+      updateFields.city = existCity.name; // حفظ اسم المدينة
       updateFields.region = existRegion.name; // حفظ اسم المنطقة
     }
 
@@ -797,27 +894,33 @@ exports.updateDoctorInfo = async (req, res) => {
     }
 
     // تحديث الحقول المحددة فقط
-    const updatedDoctor = await Doctor.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
+    const updatedDoctor = await Doctor.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true }
+    );
 
     if (!updatedDoctor) {
-      return res.status(404).json({ success: false, message: "Doctor not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: 'Doctor not found' });
     }
 
     res.status(200).json({
       success: true,
-      message: "Doctor information updated successfully",
+      message: 'Doctor information updated successfully',
       doctor: updatedDoctor,
     });
   } catch (err) {
-    console.error("Error updating doctor:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error('Error updating doctor:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 exports.forgetPassForDoctor = async (req, res) => {
   const { email } = req.body;
   const user = await Doctor.findOne({ email });
 
-  if (!user) return res.status(400).json({ message: "User not found" });
+  if (!user) return res.status(400).json({ message: 'User not found' });
 
   const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
   user.resetCode = resetCode;
@@ -825,33 +928,32 @@ exports.forgetPassForDoctor = async (req, res) => {
   await user.save();
 
   await transporter.sendMail({
-      from: 'nabd142025@gmail.com',
-      to: email,
-      subject: "Password Reset Code",
-      html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
+    from: 'nabd142025@gmail.com',
+    to: email,
+    subject: 'Password Reset Code',
+    html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
   });
 
-  res.json({ message: "Reset code sent to your email" });
-}
+  res.json({ message: 'Reset code sent to your email' });
+};
 
 exports.verifyCodeDoctor = async (req, res) => {
   const { email, code } = req.body;
   const user = await Doctor.findOne({ email });
 
   if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: "Invalid or expired code" });
+    return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
-  res.json({ message: "Code verified successfully" });
-}
-
+  res.json({ message: 'Code verified successfully' });
+};
 
 exports.resetDoctorPass = async (req, res) => {
   const { email, code, newPassword } = req.body;
   const user = await Doctor.findOne({ email });
 
   if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: "Invalid or expired code" });
+    return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -860,10 +962,8 @@ exports.resetDoctorPass = async (req, res) => {
   user.resetCodeExpires = null;
   await user.save();
 
-  res.json({ message: "Password reset successfully" });
-}
-
-
+  res.json({ message: 'Password reset successfully' });
+};
 
 exports.toggleDoctorFavourite = async (req, res) => {
   try {
@@ -874,23 +974,32 @@ exports.toggleDoctorFavourite = async (req, res) => {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    const existingFavourite = await FavouriteDoctor.findOne({ userId, doctorId });
+    const existingFavourite = await FavouriteDoctor.findOne({
+      userId,
+      doctorId,
+    });
 
     if (existingFavourite) {
       existingFavourite.isFavourite = !existingFavourite.isFavourite;
       await existingFavourite.save();
-      
+
       return res.status(200).json({
-        message: existingFavourite.isFavourite ? 'doctor added to favourites' : 'doctor removed from favourites',
-        isFavourite: existingFavourite.isFavourite
+        message: existingFavourite.isFavourite
+          ? 'doctor added to favourites'
+          : 'doctor removed from favourites',
+        isFavourite: existingFavourite.isFavourite,
       });
     } else {
-      const newFavourite = new FavouriteDoctor({ userId, doctorId, isFavourite: true });
+      const newFavourite = new FavouriteDoctor({
+        userId,
+        doctorId,
+        isFavourite: true,
+      });
       await newFavourite.save();
 
       return res.status(200).json({
         message: 'doctor added to favourites',
-        isFavourite: true
+        isFavourite: true,
       });
     }
   } catch (error) {
@@ -911,27 +1020,30 @@ exports.getFavourites = async (req, res) => {
       return res.status(404).json({ message: 'No favourite doctors found' });
     }
 
-    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
+    res.status(200).json({
+      message: 'Favourite doctors retrieved successfully',
+      favourites,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
-exports.deleteFromFavo = async (req,res)=>{
-  try{
-    const {cardId} = req.params
+exports.deleteFromFavo = async (req, res) => {
+  try {
+    const { cardId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(cardId)) {
-          return res.status(400).json({ message: 'Invalid User ID format' });
+      return res.status(400).json({ message: 'Invalid User ID format' });
     }
-    const user = await Favourite.findByIdAndDelete(cardId)
-    if(!user){
-      return res.status(404).json({message:'User not found'})
+    const user = await Favourite.findByIdAndDelete(cardId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    return res.status(200).json({message:'Delete succesfully'})
-  }catch(err){
-    return res.status(500).json({message:`Server error ${err}`})
+    return res.status(200).json({ message: 'Delete succesfully' });
+  } catch (err) {
+    return res.status(500).json({ message: `Server error ${err}` });
   }
-}
+};
 
 // exports.getDoctorInfo = async(req,res)=>{
 //   try{
