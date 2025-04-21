@@ -111,7 +111,11 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
 
   
     const favouriteDoctorIds = favouriteDoctors.map(fav => fav.doctorId.toString());
-    console.log(favouriteDoctorIds)
+    const doctorsWithFavStatus = doctors.map(doctor => ({
+      ...doctor.toObject(),
+      isFavourite: favouriteDoctorIds.includes(doctor._id.toString())
+    }));
+    console.log(doctorsWithFavStatus)
     const topDoctors = await Doctor.aggregate([
       {
         $match: {
