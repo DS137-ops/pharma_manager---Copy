@@ -521,24 +521,24 @@ exports.getFavourites = async(req,res)=>{
 }
 
 
-exports.getFavourites = async (req, res) => {
-  try {
-    const { userId } = req.params;
+// exports.getFavourites = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
 
-    const favourites = await Favourite.find({ userId, isFavourite: true })
-      .populate('analystId')
-      .exec();
+//     const favourites = await Favourite.find({ userId, isFavourite: true })
+//       .populate('analystId')
+//       .exec();
 
-    if (favourites.length === 0) {
-      return res.status(404).json({ message: 'No favourite doctors found' });
-    }
+//     if (favourites.length === 0) {
+//       return res.status(404).json({ message: 'No favourite doctors found' });
+//     }
 
-    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+//     res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
 
 exports.deleteFromFavo = async (req,res)=>{
   try{
