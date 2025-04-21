@@ -19,7 +19,7 @@ exports.createNewAnalyst = async (req, res) => {
     fullName,
     email,
     password,
-    city,   // city ID
+    city, // city ID
     region, // region ID
     address,
     phone,
@@ -55,22 +55,32 @@ exports.createNewAnalyst = async (req, res) => {
 
     // Look up the city by ID and get its name
     const cityExists = await City.findById(city);
-    if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
+    if (!cityExists)
+      return res
+        .status(400)
+        .json({ success: false, message: 'City not found' });
 
     // Look up the region by ID within the selected city
-    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
-    if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    const regionExists = cityExists.regions.find(
+      (r) => r._id.toString() === region
+    );
+    if (!regionExists)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'Region not found in the selected city',
+        });
 
     // Create a JWT token for the new analyst
     const token = await jwt.sign({ role: 'analyst' }, process.env.JWT_SECRET);
-
 
     // Create a new Analyst instance with the name of the city and region
     const newUser = new Analyst({
       fullName,
       email,
       password,
-      city: cityExists.name,    // Store city name
+      city: cityExists.name, // Store city name
       region: regionExists.name, // Store region name
       address,
       phone,
@@ -80,7 +90,7 @@ exports.createNewAnalyst = async (req, res) => {
 
     // Save the new Analyst to the database
     await newUser.save();
-    await RefreshToken.create({ token , userRef:newUser._id });
+    await RefreshToken.create({ token, userRef: newUser._id });
     // Create the approval and reject links
     const approvalLink = `http://147.93.106.92/api/Analyst/approve/analyst/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Analyst/reject/analyst/${newUser._id}`;
@@ -115,16 +125,17 @@ exports.createNewAnalyst = async (req, res) => {
       message: 'Registration request sent to admin. Please wait for approval.',
       token: token,
     });
-
   } catch (err) {
     console.error('Error registering user:', err);
 
     // Handle validation errors and other types of errors
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: errors.join(', ') });
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
     }
-    
+
     // General error response
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
@@ -134,13 +145,19 @@ exports.addToFamousAnalysts = async (req, res) => {
   const { analystId } = req.body;
 
   try {
-    const analyst = await Analyst.findByIdAndUpdate(analystId, { isFamous: true }, { new: true });
-    
+    const analyst = await Analyst.findByIdAndUpdate(
+      analystId,
+      { isFamous: true },
+      { new: true }
+    );
+
     if (!analyst) {
       return res.status(404).json({ message: 'analyst not found' });
     }
 
-    res.status(200).json({ message: 'analyst added to famous analysts menu', analyst });
+    res
+      .status(200)
+      .json({ message: 'analyst added to famous analysts menu', analyst });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -163,31 +180,34 @@ exports.getFamousAnalysts = async (req, res) => {
   }
 };
 
-
-
 exports.searchanalystByName = async (req, res) => {
   try {
     const { fullName } = req.query;
 
     if (!fullName || fullName.trim() === '') {
-      return res.status(400).json({ status: false, message: 'Please provide a valid name' });
+      return res
+        .status(400)
+        .json({ status: false, message: 'Please provide a valid name' });
     }
 
     const regex = new RegExp(fullName, 'i');
-    
+
     const analysts = await Analyst.find({ fullName: regex });
 
     if (!analysts.length) {
-      return res.status(404).json({ status: false, message: 'No matching analysts found' });
+      return res
+        .status(404)
+        .json({ status: false, message: 'No matching analysts found' });
     }
 
     return res.status(200).json({ status: true, analysts });
   } catch (error) {
     console.error('Search error:', error);
-    res.status(500).json({ status: false, message: 'Server error', error: error.message });
+    res
+      .status(500)
+      .json({ status: false, message: 'Server error', error: error.message });
   }
 };
-
 
 exports.deleteAnalystAccount = async (req, res) => {
   try {
@@ -195,15 +215,16 @@ exports.deleteAnalystAccount = async (req, res) => {
     const user = req.user;
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
+    if (!isMatch)
+      return res.status(400).json({ message: 'Incorrect password' });
 
     await Analyst.findByIdAndDelete(user._id);
 
-    res.status(200).json({ message: "Account deleted successfully" , data:[] });
+    res.status(200).json({ message: 'Account deleted successfully', data: [] });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
-}
+};
 exports.loginAna = async (req, res) => {
   const { email, password } = req.body;
   if (!email) {
@@ -226,7 +247,7 @@ exports.loginAna = async (req, res) => {
         .json({ success: false, message: 'password is Not the same' });
     }
     const token = await jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
-    RefreshToken.create({ token  ,userRef:user._id });
+    RefreshToken.create({ token, userRef: user._id });
 
     res
       .status(200)
@@ -240,7 +261,7 @@ exports.loginAna = async (req, res) => {
 };
 exports.rateAnalyst = async (req, res) => {
   try {
-    const  analystId  = req.params.AnalystId;
+    const analystId = req.params.AnalystId;
     const { userId, rating, review } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(analystId)) {
@@ -321,21 +342,33 @@ exports.rejectAnalyst = async (req, res) => {
   }
 };
 
-
 exports.getAnalyst = async (req, res) => {
   const { city, region } = req.params;
   const userId = req.user._id;
 
   const existCity = await City.findById(city);
-  const existRegion = existCity.regions.find(r => r._id.toString() === region);
-  
-  if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+  const existRegion = existCity.regions.find(
+    (r) => r._id.toString() === region
+  );
+
+  if (!existRegion)
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: 'Region not found in the selected city',
+      });
 
   const cityname = existCity.name;
   const regionname = existRegion.name;
   console.log(cityname, regionname);
 
-  const query = { role: 'analyst', city: cityname, region: regionname, approved: true };
+  const query = {
+    role: 'analyst',
+    city: cityname,
+    region: regionname,
+    approved: true,
+  };
 
   try {
     const findAnalyst = await Analyst.find(query);
@@ -350,7 +383,8 @@ exports.getAnalyst = async (req, res) => {
     const analystsWithRatings = findAnalyst.map((analyst) => {
       const ratings = analyst.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+      const averageRating =
+        ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
 
       return {
         ...analyst.toObject(),
@@ -361,13 +395,14 @@ exports.getAnalyst = async (req, res) => {
 
     analystsWithRatings.sort((a, b) => b.finalRate - a.finalRate);
 
-    return res.status(200).json({ status: true, findAnalyst: analystsWithRatings });
+    return res
+      .status(200)
+      .json({ status: true, findAnalyst: analystsWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
-
 
 function extractTime(timeString) {
   if (!timeString) return null;
@@ -380,7 +415,8 @@ function extractTime(timeString) {
 
 exports.updateAnalystInfo = async (req, res) => {
   try {
-    const { fullName, city, region, address, phone, StartJob, EndJob } = req.body;
+    const { fullName, city, region, address, phone, StartJob, EndJob } =
+      req.body;
     const id = req.params.id;
 
     const updateFields = {}; // تخزين القيم المراد تحديثها فقط
@@ -388,45 +424,66 @@ exports.updateAnalystInfo = async (req, res) => {
     if (fullName) updateFields.fullName = fullName;
     if (address) updateFields.address = address;
     if (phone) updateFields.phone = phone;
-    
+
     if (StartJob) updateFields.StartJob = StartJob;
     if (EndJob) updateFields.EndJob = EndJob;
 
     if (city) {
       const existCity = await City.findById(city);
       if (!existCity) {
-        return res.status(400).json({ success: false, message: 'City not found' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'City not found' });
       }
       updateFields.city = existCity.name;
 
       if (region) {
-        const existRegion = existCity.regions.find(r => r._id.toString() === region);
+        const existRegion = existCity.regions.find(
+          (r) => r._id.toString() === region
+        );
         if (!existRegion) {
-          return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message: 'Region not found in the selected city',
+            });
         }
         updateFields.region = existRegion.name;
       }
     }
 
-    await Analyst.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updateFields });
+    await Analyst.updateOne(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { $set: updateFields }
+    );
 
-    res.status(200).json({ success: true, message: 'Updated Successfully' , data: updateFields });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: 'Updated Successfully',
+        data: updateFields,
+      });
   } catch (err) {
     console.error('Error updating analyst info:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: errors.join(', ') });
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
     }
-    res.status(500).json({ success: false, message: `Internal server error ${err} `});
+    res
+      .status(500)
+      .json({ success: false, message: `Internal server error ${err} ` });
   }
 };
-
 
 exports.forgetPassForAnalyst = async (req, res) => {
   const { email } = req.body;
   const user = await Analyst.findOne({ email });
 
-  if (!user) return res.status(400).json({ message: "User not found" });
+  if (!user) return res.status(400).json({ message: 'User not found' });
 
   const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
   user.resetCode = resetCode;
@@ -434,33 +491,32 @@ exports.forgetPassForAnalyst = async (req, res) => {
   await user.save();
 
   await transporter.sendMail({
-      from: 'nabd142025@gmail.com',
-      to: email,
-      subject: "Password Reset Code",
-      html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
+    from: 'nabd142025@gmail.com',
+    to: email,
+    subject: 'Password Reset Code',
+    html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
   });
 
-  res.json({ message: "Reset code sent to your email" });
-}
+  res.json({ message: 'Reset code sent to your email' });
+};
 
 exports.verifyCodeAnalyst = async (req, res) => {
   const { email, code } = req.body;
   const user = await Analyst.findOne({ email });
 
   if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: "Invalid or expired code" });
+    return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
-  res.json({ message: "Code verified successfully" });
-}
-
+  res.json({ message: 'Code verified successfully' });
+};
 
 exports.resetAnalystPass = async (req, res) => {
   const { email, code, newPassword } = req.body;
   const user = await Analyst.findOne({ email });
 
   if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: "Invalid or expired code" });
+    return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -469,8 +525,8 @@ exports.resetAnalystPass = async (req, res) => {
   user.resetCodeExpires = null;
   await user.save();
 
-  res.json({ message: "Password reset successfully" });
-}
+  res.json({ message: 'Password reset successfully' });
+};
 
 exports.toggleAnalystFavourite = async (req, res) => {
   try {
@@ -486,18 +542,24 @@ exports.toggleAnalystFavourite = async (req, res) => {
     if (existingFavourite) {
       existingFavourite.isFavourite = !existingFavourite.isFavourite;
       await existingFavourite.save();
-      
+
       return res.status(200).json({
-        message: existingFavourite.isFavourite ? 'Analyst added to favourites' : 'Analyst removed from favourites',
-        isFavourite: existingFavourite.isFavourite
+        message: existingFavourite.isFavourite
+          ? 'Analyst added to favourites'
+          : 'Analyst removed from favourites',
+        isFavourite: existingFavourite.isFavourite,
       });
     } else {
-      const newFavourite = new Favourite({ userId, analystId, isFavourite: true });
+      const newFavourite = new Favourite({
+        userId,
+        analystId,
+        isFavourite: true,
+      });
       await newFavourite.save();
 
       return res.status(200).json({
         message: 'Analyst added to favourites',
-        isFavourite: true
+        isFavourite: true,
       });
     }
   } catch (error) {
@@ -506,28 +568,27 @@ exports.toggleAnalystFavourite = async (req, res) => {
   }
 };
 
-exports.getFavourites = async(req,res)=>{
-  try{
+exports.getFavourites = async (req, res) => {
+  try {
     const { userId } = req.params;
     const favourites = await Favourite.aggregate([
       {
-        $match:{userId:userId,isFavourite:true}
+        $match: { userId: userId, isFavourite: true },
       },
       {
-        $lookup:{
-          from:'analysts',
-          localField:'analystId',
-          foreignField:'_id',
-           as: 'analystDetails'
-        }
-      }
-    ])
-    res.status(200).json({favourites:favourites})
-  }catch(error){
-    res.status(500).json({ message: `Server error ${error:error}` });
+        $lookup: {
+          from: 'analysts',
+          localField: 'analystId',
+          foreignField: '_id',
+          as: 'analystDetails',
+        },
+      },
+    ]);
+    res.status(200).json({ favourites: favourites });
+  } catch (error) {
+    res.status(500).json({ message: `Server error `, error: error });
   }
-}
-
+};
 
 // exports.getFavourites = async (req, res) => {
 //   try {
@@ -548,21 +609,21 @@ exports.getFavourites = async(req,res)=>{
 //   }
 // };
 
-exports.deleteFromFavo = async (req,res)=>{
-  try{
-    const {cardId} = req.params
+exports.deleteFromFavo = async (req, res) => {
+  try {
+    const { cardId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(cardId)) {
-          return res.status(400).json({ message: 'Invalid User ID format' });
+      return res.status(400).json({ message: 'Invalid User ID format' });
     }
-    const user = await Favourite.findByIdAndDelete(cardId)
-    if(!user){
-      return res.status(404).json({message:'User not found'})
+    const user = await Favourite.findByIdAndDelete(cardId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    return res.status(200).json({message:'Delete succesfully'})
-  }catch(err){
-    return res.status(500).json({message:`Server error ${err}`})
+    return res.status(200).json({ message: 'Delete succesfully' });
+  } catch (err) {
+    return res.status(500).json({ message: `Server error ${err}` });
   }
-}
+};
 
 // exports.getAnalystInfo = async(req,res)=>{
 //   try{
