@@ -4,6 +4,7 @@ const analystController = require('../controllers/analyst.controller');
 const RadiologyController = require('../controllers/radiology.controller');
 const doctorController = require('../controllers/doctor.controller');
 const { body } = require('express-validator');
+const FavouritePharmas = require('../model/FavouritePharma.model');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Pharmatic = require('../model/auth.model');
@@ -49,26 +50,43 @@ router.post(
   checkprov.checkifLoggedIn,
   authController.logoutSeek
 );
-router.post("/update-profile/:id" ,checkprov.checkifLoggedIn , authController.updateSickInfo)
-router.delete("/delete-sick-account", checkprov.checkifLoggedIn , ckeckSeek.authMiddlewareforSeek, authController.deleteSeekAccount );
-router.get("/get-sick-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
-  const { id } = req.params
-   if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid user ID" });
+router.post(
+  '/update-profile/:id',
+  checkprov.checkifLoggedIn,
+  authController.updateSickInfo
+);
+router.delete(
+  '/delete-sick-account',
+  checkprov.checkifLoggedIn,
+  ckeckSeek.authMiddlewareforSeek,
+  authController.deleteSeekAccount
+);
+router.get(
+  '/get-sick-profile/:id',
+  checkprov.checkifLoggedIn,
+  async (req, res) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
     }
-    const user = await Seek.findById(id)
-    if(!user){
-       return res.status(404).json({ message: "User not found" });
+    const user = await Seek.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    res.status(200).json({success:true , data:user})
-})
-router.post("/forgot-password-for-sick" , authController.forgetPassForSick);
+    res.status(200).json({ success: true, data: user });
+  }
+);
+router.post('/forgot-password-for-sick', authController.forgetPassForSick);
 
-router.post("/verify-code-for-sick", authController.verifyCodeSick);
+router.post('/verify-code-for-sick', authController.verifyCodeSick);
 
-router.post("/reset-password-for-sick", authController.resetSickPass);
+router.post('/reset-password-for-sick', authController.resetSickPass);
 
-router.get('/search', checkprov.checkifLoggedIn , authController.searchPharmaticsByName);
+router.get(
+  '/search',
+  checkprov.checkifLoggedIn,
+  authController.searchPharmaticsByName
+);
 // router.get('/pharmatic-information/:id' , checkprov.checkifLoggedIn , authController.getPharmaInfo)
 // router.get('/analyst-information/:id' , checkprov.checkifLoggedIn , analystController.getAnalystInfo)
 // router.get('/radiology-information/:id' , checkprov.checkifLoggedIn , RadiologyController.getRadiologyInfo)
@@ -100,7 +118,11 @@ router.post(
 
   authController.createNewPharmatic
 );
-router.delete("/delete-pharmatic-account", checkprov.authMiddlewareforPharmatic, authController.deletePharmaticAccount );
+router.delete(
+  '/delete-pharmatic-account',
+  checkprov.authMiddlewareforPharmatic,
+  authController.deletePharmaticAccount
+);
 
 router.post('/isApprovedPharmatic', async (req, res) => {
   const email = req.body.email;
@@ -152,11 +174,19 @@ router.post(
   async (req, res) => {
     try {
       const { patientId, city, region } = req.params;
-      const existCity = await City.findById(city)
-          const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-          if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-          const cityname = existCity.name
-          const regionname = existRegion.name
+      const existCity = await City.findById(city);
+      const existRegion = existCity.regions.find(
+        (r) => r._id.toString() === region
+      );
+      if (!existRegion)
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: 'Region not found in the selected city',
+          });
+      const cityname = existCity.name;
+      const regionname = existRegion.name;
 
       const imageUrl = req.file.path;
       if (!mongoose.Types.ObjectId.isValid(patientId)) {
@@ -168,9 +198,9 @@ router.post(
       const newRequest = new PrescriptionRequest({
         patientId,
         imageUrl,
-        city:cityname,
-        region:regionname,
-        status: "unread",
+        city: cityname,
+        region: regionname,
+        status: 'unread',
       });
 
       await newRequest.save();
@@ -198,7 +228,7 @@ router.get('/Pharmatic-requests/:pharmacistId', async (req, res) => {
     }).populate('patientId');
     await PrescriptionRequest.updateMany(
       { city: pharmacist.city, region: pharmacist.region },
-      { $set: { status: "read" } }
+      { $set: { status: 'read' } }
     );
     const formattedRequests = requests.map((req) => ({
       ...req.toObject(),
@@ -224,7 +254,11 @@ router.post('/respond-request-from-Pharmatic', async (req, res) => {
     res.status(400).json({ message: 'price is required' });
   }
   try {
-    request.pharmacistsResponded.push({ pharmacistId:specId, price, accepted  });
+    request.pharmacistsResponded.push({
+      pharmacistId: specId,
+      price,
+      accepted,
+    });
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
@@ -234,7 +268,7 @@ router.post('/respond-request-from-Pharmatic', async (req, res) => {
 });
 router.get('/patient-responses/:patientId', async (req, res) => {
   try {
-    console.log(req.params.patientId)
+    console.log(req.params.patientId);
     const patientRequests = await PrescriptionRequest.find({
       patientId: req.params.patientId,
     }).populate(
@@ -259,26 +293,28 @@ router.get('/patient-responses/:patientId', async (req, res) => {
 
     res.status(200).json({ responses });
   } catch (error) {
-    res.status(500).json({ message: ` ${error}خطأ أثناء جلب الردود`, error:error });
+    res
+      .status(500)
+      .json({ message: ` ${error}خطأ أثناء جلب الردود`, error: error });
   }
 });
-router.put("/update-request-status/:requestId", async (req, res) => {
+router.put('/update-request-status/:requestId', async (req, res) => {
   try {
     const { status } = req.body;
 
-    if (!["read", "unread"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
+    if (!['read', 'unread'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
     }
 
     const request = await PrescriptionRequest.findById(req.params.requestId);
-    if (!request) return res.status(404).json({ message: "الطلب غير موجود" });
+    if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
 
     request.status = status;
     await request.save();
 
     res.status(200).json({ message: `تم تحديث حالة الطلب إلى ${status}` });
   } catch (error) {
-    res.status(500).json({ message: "خطأ أثناء تحديث الحالة", error });
+    res.status(500).json({ message: 'خطأ أثناء تحديث الحالة', error });
   }
 });
 
@@ -288,43 +324,146 @@ router.post(
   authController.logoutSpec
 );
 
-router.post('/add-to-famous'  , authController.addToFamousPhars);
+router.post('/add-to-famous', authController.addToFamousPhars);
 router.get('/famous', authController.getFamousPhars);
-router.get("/user-bookings/:patientId", checkprov.checkifLoggedIn , authController.getUserBookings);
-router.post("/forgot-password-for-pharmatic" , authController.forgetPassForPharmatic);
+router.get(
+  '/user-bookings/:patientId',
+  checkprov.checkifLoggedIn,
+  authController.getUserBookings
+);
+router.post(
+  '/forgot-password-for-pharmatic',
+  authController.forgetPassForPharmatic
+);
 
-router.post("/verify-code-for-pharmatic", authController.verifyCodePharmatic);
+router.post('/verify-code-for-pharmatic', authController.verifyCodePharmatic);
 
-router.post("/reset-password-for-pharmatic", authController.resetPharmaPass);
+router.post('/reset-password-for-pharmatic', authController.resetPharmaPass);
 
-
-router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
-  const { id } = req.params
-   if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-    const user = await Pharmatic.findById(id)
-    if(!user){
-       return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json({success:true , data:user})
-})
-
-router.post('/add-pharma-to-favourite', 
-  checkprov.checkifLoggedIn ,
-  authController.togglePharmaFavourite);
-router.get('/my-favourites/:userId',checkprov.checkifLoggedIn, authController.getFavourites);
-router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , authController.deleteFromFavo)
-router.get("/patient-orders/:patientId", checkprov.checkifLoggedIn  , async (req, res) => {
-  try {
-    const { patientId } = req.params;
-    const requests = await PrescriptionRequest.find({ patientId }, "-pharmacistsResponded")
-      if(!requests)return res.status(404).json({message:"No orders "});
-    return res.status(200).json({message:requests});
-  } catch (error) {
-   return res.status(500).json({ error: error.message });
+router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid user ID' });
   }
+  const user = await Pharmatic.findById(id);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  res.status(200).json({ success: true, data: user });
 });
+
+router.post(
+  '/add-pharma-to-favourite',
+  checkprov.checkifLoggedIn,
+  authController.togglePharmaFavourite
+);
+router.get(
+  '/my-favourites/:userId',
+  checkprov.checkifLoggedIn,
+  authController.getFavourites
+);
+router.delete(
+  '/from-favourite/:cardId',
+  checkprov.checkifLoggedIn,
+  authController.deleteFromFavo
+);
+router.get(
+  '/patient-orders/:patientId',
+  checkprov.checkifLoggedIn,
+  async (req, res) => {
+    try {
+      const { patientId } = req.params;
+      const requests = await PrescriptionRequest.find(
+        { patientId },
+        '-pharmacistsResponded'
+      );
+      if (!requests) return res.status(404).json({ message: 'No orders ' });
+      return res.status(200).json({ message: requests });
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+router.get(
+  '/getTopPharmas/:city/:region',
+  checkprov.checkifLoggedIn,
+  async (req, res) => {
+    try {
+      const { city, region } = req.params;
+      const userId = req.user._id;
+      const existCity = await City.findById(city);
+      if (!existCity)
+        return res
+          .status(400)
+          .json({ success: false, message: 'City not found' });
+
+      const existRegion = existCity.regions.find(
+        (r) => r._id.toString() === region
+      );
+      if (!existRegion)
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: 'Region not found in the selected city',
+          });
+
+      const cityname = existCity.name;
+      const regionname = existRegion.name;
+
+      const topPharmas = await Pharmatic.aggregate([
+        {
+          $match: {
+            city: cityname,
+            region: regionname,
+          },
+        },
+        {
+          $addFields: {
+            averageRating: { $avg: '$rate.rating' },
+          },
+        },
+        {
+          $match: {
+            averageRating: { $ne: null },
+          },
+        },
+        {
+          $sort: { averageRating: -1 },
+        },
+        {
+          $limit: 10,
+        },
+        {
+          $project: {
+            fullName: 1,
+            StartJob: 1,
+            EndJob: 1,
+            finalRate: '$averageRating',
+          },
+        },
+      ]);
+
+      const favouritePharmas = await FavouritePharmas.find({ userId });
+      const favouritePharmaIds = favouritePharmas.map((fav) =>
+        fav.pharmaId.toString()
+      );
+
+      const pharmasWithFavStatus = topPharmas.map((pharma) => ({
+        ...pharma,
+        isFavourite: favouritePharmaIds.includes(pharma._id.toString()),
+      }));
+
+      return res
+        .status(200)
+        .json({ success: true, pharmas: pharmasWithFavStatus });
+    } catch (err) {
+      return res.status(500).json({ success: false, err: err.message });
+    }
+  }
+);
+
 // router.delete("/delete-notification/:id", checkprov.checkifLoggedIn, async (req, res) => {
 //   try {
 //     const notificationId = req.params.id;

@@ -117,8 +117,7 @@ router.get(
 router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req, res) => {
   try {
     const { city, region } = req.params;
-    const userId = req.user._id; // تأكد أن checkifLoggedIn يضيف user إلى req
-
+    const userId = req.user._id; 
     const existCity = await City.findById(city);
     if (!existCity) return res.status(400).json({ success: false, message: 'City not found' });
 
@@ -128,7 +127,6 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
     const cityname = existCity.name;
     const regionname = existRegion.name;
 
-    // Step 1: Get top 10 doctors with rating
     const topDoctors = await Doctor.aggregate([
       {
         $match: {

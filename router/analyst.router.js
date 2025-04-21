@@ -5,6 +5,7 @@ const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Analyst = require('../model/analyst.model');
 const City = require('../model/cities.model');
+const FavouriteRadiologies = require('../model/FavouriteRadiology.model');
 
 const PrescriptionAnalystRequest = require('../model/PrescriptionAnalystRequest.model');
 const mongoose = require('mongoose');
@@ -49,12 +50,22 @@ router.post(
   analystController.createNewAnalyst
 );
 
-router.delete("/delete-analyst-account", checkprov.authMiddlewareforAnalyst, analystController.deleteAnalystAccount );
+router.delete(
+  '/delete-analyst-account',
+  checkprov.authMiddlewareforAnalyst,
+  analystController.deleteAnalystAccount
+);
 
-router.post('/add-analyst-to-favourite', 
+router.post(
+  '/add-analyst-to-favourite',
   checkprov.checkifLoggedIn,
-  analystController.toggleAnalystFavourite);
-router.get('/my-analyst-favourites/:userId',checkprov.checkifLoggedIn, analystController.getFavourites);
+  analystController.toggleAnalystFavourite
+);
+router.get(
+  '/my-analyst-favourites/:userId',
+  checkprov.checkifLoggedIn,
+  analystController.getFavourites
+);
 
 router.post(
   '/signinAnalyst',
@@ -88,7 +99,82 @@ router.get(
   checkprov.checkifLoggedIn,
   analystController.getAnalyst
 );
+router.get(
+  '/getTopAnalyst/:city/:region',
+  checkprov.checkifLoggedIn,
+  async (req, res) => {
+    try {
+      const { city, region } = req.params;
+      const userId = req.user._id;
+      const existCity = await City.findById(city);
+      if (!existCity)
+        return res
+          .status(400)
+          .json({ success: false, message: 'City not found' });
 
+      const existRegion = existCity.regions.find(
+        (r) => r._id.toString() === region
+      );
+      if (!existRegion)
+        return res.status(400).json({
+          success: false,
+          message: 'Region not found in the selected city',
+        });
+
+      const cityname = existCity.name;
+      const regionname = existRegion.name;
+
+      const topAnalyst = await Analyst.aggregate([
+        {
+          $match: {
+            city: cityname,
+            region: regionname,
+          },
+        },
+        {
+          $addFields: {
+            averageRating: { $avg: '$rate.rating' },
+          },
+        },
+        {
+          $match: {
+            averageRating: { $ne: null },
+          },
+        },
+        {
+          $sort: { averageRating: -1 },
+        },
+        {
+          $limit: 10,
+        },
+        {
+          $project: {
+            fullName: 1,
+            StartJob: 1,
+            EndJob: 1,
+            finalRate: '$averageRating',
+          },
+        },
+      ]);
+
+      const favouriteAnalyst = await FavouriteRadiologies.find({ userId });
+      const favouriteAnalystIds = favouriteAnalyst.map((fav) =>
+        fav.analystId.toString()
+      );
+
+      const analystWithFavStatus = topAnalyst.map((analyst) => ({
+        ...analyst,
+        isFavourite: favouriteAnalystIds.includes(analyst._id.toString()),
+      }));
+
+      return res
+        .status(200)
+        .json({ success: true, analysts: analystWithFavStatus });
+    } catch (err) {
+      return res.status(500).json({ success: false, err: err.message });
+    }
+  }
+);
 router.post(
   '/rateAnalyst/:AnalystId',
   checkprov.checkifLoggedIn,
@@ -105,11 +191,19 @@ router.post(
   async (req, res) => {
     try {
       const { patientId, city, region } = req.params;
- const existCity = await City.findById(city)
-          const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-          if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-          const cityname = existCity.name
-          const regionname = existRegion.name
+      const existCity = await City.findById(city);
+      const existRegion = existCity.regions.find(
+        (r) => r._id.toString() === region
+      );
+      if (!existRegion)
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: 'Region not found in the selected city',
+          });
+      const cityname = existCity.name;
+      const regionname = existRegion.name;
       const imageUrl = req.file.path;
       if (!mongoose.Types.ObjectId.isValid(patientId)) {
         return res.status(400).json({ message: 'Invalid Seek ID' });
@@ -120,8 +214,8 @@ router.post(
       const newRequest = new PrescriptionAnalystRequest({
         patientId,
         imageUrl,
-        city:cityname,
-        region:regionname,
+        city: cityname,
+        region: regionname,
       });
 
       await newRequest.save();
@@ -167,16 +261,14 @@ router.post('/respond-request-from-Analyst', async (req, res) => {
     if (accepted && !price) {
       res.status(400).json({ message: 'price is required' });
     }
-    request.analystsResponded.push({ analystId:specId, price, accepted });
+    request.analystsResponded.push({ analystId: specId, price, accepted });
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
   } catch (error) {
-    res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error:error });
+    res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error: error });
   }
 });
-
-
 
 router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
   try {
@@ -206,58 +298,74 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
     res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
   }
 });
-router.put("/update-request-status/:requestId", async (req, res) => {
+router.put('/update-request-status/:requestId', async (req, res) => {
   try {
     const { status } = req.body;
 
-    if (!["read", "unread"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
+    if (!['read', 'unread'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
     }
 
-    const request = await PrescriptionAnalystRequest.findById(req.params.requestId);
-    if (!request) return res.status(404).json({ message: "الطلب غير موجود" });
+    const request = await PrescriptionAnalystRequest.findById(
+      req.params.requestId
+    );
+    if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
 
     request.status = status;
     await request.save();
 
     res.status(200).json({ message: `تم تحديث حالة الطلب إلى ${status}` });
   } catch (error) {
-    res.status(500).json({ message: "خطأ أثناء تحديث الحالة", error });
+    res.status(500).json({ message: 'خطأ أثناء تحديث الحالة', error });
   }
 });
-router.post('/add-to-famous'  , analystController.addToFamousAnalysts);
+router.post('/add-to-famous', analystController.addToFamousAnalysts);
 router.get('/famous', analystController.getFamousAnalysts);
-router.post("/forgot-password-for-analyst", analystController.forgetPassForAnalyst);
+router.post(
+  '/forgot-password-for-analyst',
+  analystController.forgetPassForAnalyst
+);
 
-router.post("/verify-code-for-analyst", analystController.verifyCodeAnalyst);
+router.post('/verify-code-for-analyst', analystController.verifyCodeAnalyst);
 
-router.post("/reset-password-for-analyst", analystController.resetAnalystPass);
+router.post('/reset-password-for-analyst', analystController.resetAnalystPass);
 
-router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
-  const { id } = req.params
-   if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-    const user = await Analyst.findById(id)
-    if(!user){
-       return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json({success:true , data:user})
-})
-router.get("/patient-orders/:patientId", checkprov.checkifLoggedIn  , async (req, res) => {
-  try {
-    const { patientId } = req.params;
-    const requests = await PrescriptionAnalystRequest.find({ patientId }, "-pharmacistsResponded")
-      if(!requests)return res.status(404).json({message:"No orders"});
-    return res.status(200).json({message:requests});
-  } catch (error) {
-   return res.status(500).json({ error: error.message });
+router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid user ID' });
   }
+  const user = await Analyst.findById(id);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  res.status(200).json({ success: true, data: user });
 });
+router.get(
+  '/patient-orders/:patientId',
+  checkprov.checkifLoggedIn,
+  async (req, res) => {
+    try {
+      const { patientId } = req.params;
+      const requests = await PrescriptionAnalystRequest.find(
+        { patientId },
+        '-pharmacistsResponded'
+      );
+      if (!requests) return res.status(404).json({ message: 'No orders' });
+      return res.status(200).json({ message: requests });
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
 
-router.get('/search',  analystController.searchanalystByName);
+router.get('/search', analystController.searchanalystByName);
 //checkprov.checkifLoggedIn ,
 
-router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , analystController.deleteFromFavo)
+router.delete(
+  '/from-favourite/:cardId',
+  checkprov.checkifLoggedIn,
+  analystController.deleteFromFavo
+);
 //End Analyst
 module.exports = router;

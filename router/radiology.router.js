@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const RadiologyController = require('../controllers/radiology.controller');
 const { body } = require('express-validator');
+const FavouriteRadiologies = require('../model/FavouriteRadiology.model');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Radiology = require('../model/radiology.model');
@@ -48,7 +49,11 @@ router.post(
   RadiologyController.createNewRadiology
 );
 
-router.delete("/delete-radiology-account", checkprov.authMiddlewareforRadiology, RadiologyController.deleteRadiologyAccount );
+router.delete(
+  '/delete-radiology-account',
+  checkprov.authMiddlewareforRadiology,
+  RadiologyController.deleteRadiologyAccount
+);
 
 router.post('/isApprovedRadiology', async (req, res) => {
   const email = req.body.email;
@@ -92,33 +97,133 @@ router.post(
   checkprov.checkifLoggedIn,
   RadiologyController.updateRadiologyInfo
 );
-
-router.post('/add-radiology-to-favourite', 
+router.get(
+  '/getTopRadiology/:city/:region',
   checkprov.checkifLoggedIn,
-  RadiologyController.toggleRadiologyFavourite);
-router.get('/my-radiology-favourites/:userId',checkprov.checkifLoggedIn, RadiologyController.getFavourites);
-router.delete('/from-favourite/:cardId' , checkprov.checkifLoggedIn , RadiologyController.deleteFromFavo)
-router.get("/patient-orders/:patientId", checkprov.checkifLoggedIn  , async (req, res) => {
-  try {
-    const { patientId } = req.params;
-    const requests = await PrescriptionRadiologyRequest.find({ patientId }, "-pharmacistsResponded")
-      if(!requests)return res.status(404).json({message:"No orders"});
-    return res.status(200).json({message:requests});
-  } catch (error) {
-   return res.status(500).json({ error: error.message });
+  async (req, res) => {
+    try {
+      const { city, region } = req.params;
+      const userId = req.user._id;
+      const existCity = await City.findById(city);
+      if (!existCity)
+        return res
+          .status(400)
+          .json({ success: false, message: 'City not found' });
+
+      const existRegion = existCity.regions.find(
+        (r) => r._id.toString() === region
+      );
+      if (!existRegion)
+        return res.status(400).json({
+          success: false,
+          message: 'Region not found in the selected city',
+        });
+
+      const cityname = existCity.name;
+      const regionname = existRegion.name;
+
+      const topRadiology = await Radiology.aggregate([
+        {
+          $match: {
+            city: cityname,
+            region: regionname,
+          },
+        },
+        {
+          $addFields: {
+            averageRating: { $avg: '$rate.rating' },
+          },
+        },
+        {
+          $match: {
+            averageRating: { $ne: null },
+          },
+        },
+        {
+          $sort: { averageRating: -1 },
+        },
+        {
+          $limit: 10,
+        },
+        {
+          $project: {
+            fullName: 1,
+            StartJob: 1,
+            EndJob: 1,
+            finalRate: '$averageRating',
+          },
+        },
+      ]);
+
+      const favouriteRadiolgy = await FavouriteRadiologies.find({ userId });
+      const favouriteRadiologyIds = favouriteRadiolgy.map((fav) =>
+        fav.radiologyId.toString()
+      );
+
+      const radiolgyWithFavStatus = topRadiology.map((radiology) => ({
+        ...radiology,
+        isFavourite: favouriteRadiologyIds.includes(radiology._id.toString()),
+      }));
+
+      return res
+        .status(200)
+        .json({ success: true, radiolgies: radiolgyWithFavStatus });
+    } catch (err) {
+      return res.status(500).json({ success: false, err: err.message });
+    }
   }
-});
+);
+router.post(
+  '/add-radiology-to-favourite',
+  checkprov.checkifLoggedIn,
+  RadiologyController.toggleRadiologyFavourite
+);
+router.get(
+  '/my-radiology-favourites/:userId',
+  checkprov.checkifLoggedIn,
+  RadiologyController.getFavourites
+);
+router.delete(
+  '/from-favourite/:cardId',
+  checkprov.checkifLoggedIn,
+  RadiologyController.deleteFromFavo
+);
+router.get(
+  '/patient-orders/:patientId',
+  checkprov.checkifLoggedIn,
+  async (req, res) => {
+    try {
+      const { patientId } = req.params;
+      const requests = await PrescriptionRadiologyRequest.find(
+        { patientId },
+        '-pharmacistsResponded'
+      );
+      if (!requests) return res.status(404).json({ message: 'No orders' });
+      return res.status(200).json({ message: requests });
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
 router.post(
   '/send-request-for-radiology/:patientId/:city/:region',
   uploadForRadiology.single('image'),
   async (req, res) => {
     try {
       const { patientId, city, region } = req.params;
-const existCity = await City.findById(city)
-          const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-          if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-          const cityname = existCity.name
-          const regionname = existRegion.name
+      const existCity = await City.findById(city);
+      const existRegion = existCity.regions.find(
+        (r) => r._id.toString() === region
+      );
+      if (!existRegion)
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: 'Region not found in the selected city',
+          });
+      const cityname = existCity.name;
+      const regionname = existRegion.name;
       const imageUrl = req.file.path;
       if (!mongoose.Types.ObjectId.isValid(patientId)) {
         return res.status(400).json({ message: 'Invalid Seek ID' });
@@ -129,9 +234,9 @@ const existCity = await City.findById(city)
       const newRequest = new PrescriptionRadiologyRequest({
         patientId,
         imageUrl,
-        city:cityname,
-        region:regionname,
-        status: "unread",
+        city: cityname,
+        region: regionname,
+        status: 'unread',
       });
 
       await newRequest.save();
@@ -168,7 +273,11 @@ router.get('/Radiology-requests/:radiologyId', async (req, res) => {
       .json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
   }
 });
-router.get('/search', checkprov.checkifLoggedIn , RadiologyController.searchradiologyByName);
+router.get(
+  '/search',
+  checkprov.checkifLoggedIn,
+  RadiologyController.searchradiologyByName
+);
 
 router.post('/respond-request-from-Radiology', async (req, res) => {
   try {
@@ -179,9 +288,9 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
     if (accepted && !price) {
       res.status(400).json({ message: 'price is required' });
     }
-    console.log(1111111)
-    request.radiologysResponded.push({ radiologyId:specId, price, accepted });
-    console.log(222222)
+    console.log(1111111);
+    request.radiologysResponded.push({ radiologyId: specId, price, accepted });
+    console.log(222222);
     await request.save();
 
     res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
@@ -190,20 +299,22 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
   }
 });
 
-
-
 router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
   try {
-    console.log(33333333)
+    console.log(33333333);
     const patientRequests = await PrescriptionRadiologyRequest.find({
       patientId: req.params.patientId,
-    }).populate('radiologysResponded.radiologyId', 'fullName phone city region');
-    console.log(44444444)
+    }).populate(
+      'radiologysResponded.radiologyId',
+      'fullName phone city region'
+    );
+    console.log(44444444);
     let responses = [];
 
     patientRequests.forEach((request) => {
       request.radiologysResponded.forEach((response) => {
-        if (response.accepted && response.radiologyId) { // ✅ Check if radiologyId exists
+        if (response.accepted && response.radiologyId) {
+          // ✅ Check if radiologyId exists
           responses.push({
             radiologyName: response.radiologyId?.fullName || 'N/A',
             phone: response.radiologyId?.phone || 'N/A',
@@ -223,46 +334,56 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
   }
 });
 
-
-router.put("/update-request-status/:requestId", async (req, res) => {
+router.put('/update-request-status/:requestId', async (req, res) => {
   try {
     const { status } = req.body;
 
-    if (!["read", "unread"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
+    if (!['read', 'unread'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
     }
 
-    const request = await PrescriptionRadiologyRequest.findById(req.params.requestId);
-    if (!request) return res.status(404).json({ message: "الطلب غير موجود" });
+    const request = await PrescriptionRadiologyRequest.findById(
+      req.params.requestId
+    );
+    if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
 
     request.status = status;
     await request.save();
 
     res.status(200).json({ message: `تم تحديث حالة الطلب إلى ${status}` });
   } catch (error) {
-    res.status(500).json({ message: "خطأ أثناء تحديث الحالة", error });
+    res.status(500).json({ message: 'خطأ أثناء تحديث الحالة', error });
   }
 });
 
-router.post('/add-to-famous'  , RadiologyController.addToFamousRadiologies);
+router.post('/add-to-famous', RadiologyController.addToFamousRadiologies);
 router.get('/famous', RadiologyController.getFamousRadiologies);
 
-router.post("/forgot-password-for-radiology", RadiologyController.forgetPassForRadiology);
+router.post(
+  '/forgot-password-for-radiology',
+  RadiologyController.forgetPassForRadiology
+);
 
-router.post("/verify-code-for-radiology", RadiologyController.verifyCodeRadiology);
+router.post(
+  '/verify-code-for-radiology',
+  RadiologyController.verifyCodeRadiology
+);
 
-router.post("/reset-password-for-radiology", RadiologyController.resetRadiologyPass);
+router.post(
+  '/reset-password-for-radiology',
+  RadiologyController.resetRadiologyPass
+);
 
-router.get("/get-profile/:id" , checkprov.checkifLoggedIn , async(req,res)=>{
-  const { id } = req.params
-   if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-    const user = await Radiology.findById(id)
-    if(!user){
-       return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json({success:true , data:user})
-})
+router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid user ID' });
+  }
+  const user = await Radiology.findById(id);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  res.status(200).json({ success: true, data: user });
+});
 
 module.exports = router;
