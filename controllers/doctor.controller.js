@@ -610,7 +610,7 @@ exports.getFinalRateforDoctor = async (req, res) => {
 
 exports.getDoctors = async (req, res) => {
   try {
-    const userId = req.user._id; // احصل على ID المستخدم المسجل
+    const userId = req.user._id;
 
     const { city, region, spec } = req.params;
     
@@ -648,44 +648,6 @@ exports.getDoctors = async (req, res) => {
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
-
-
-// exports.getDoctors = async (req, res) => {
-//   try {
-//     const city = req.params.city,
-//       region = req.params.region,
-//       spec = req.params.spec;
-// const existCity = await City.findById(city)
-//     const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-//     if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-//     const cityname = existCity.name
-//     const regionname = existRegion.name
-//     const query = { city: cityname, region: regionname, specilizate: spec };
-
-//     const doctors = await Doctor.find(query);
-
-//     if (!doctors || doctors.length === 0) {
-//       return res.status(404).json({ status: false, message: 'No result' });
-//     }
-
-//     const currentDate = new Date();
-
-//     for (const doctor of doctors) {
-//       for (const booking of doctor.booking) {
-//         for (const hour of booking.bookingHours) {
-//           hour.patientIDs = hour.patientIDs.filter(
-//             (patient) => patient.date >= currentDate
-//           );
-//         }
-//       }
-//       await doctor.save();
-//     }
-
-//     res.status(200).json({ status: true, findDoctor: doctors });
-//   } catch (error) {
-//     res.status(500).json({ status: false, message: error.message });
-//   }
-// };
 
 exports.createNewBook = async (req, res) => {
   try {

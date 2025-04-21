@@ -242,6 +242,7 @@ router.post("/contact-us", async (req, res) => {
     res.status(500).json({ error: "حدث خطأ أثناء إرسال الرسالة", err:error });
   }
 });
+
 router.get("/support-tickets", async (req, res) => {
   try {
     const tickets = await SupportTicket.find().sort({ createdAt: -1 }); // ترتيب من الأحدث إلى الأقدم

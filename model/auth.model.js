@@ -8,11 +8,12 @@ const medicalSchema = new mongoose.Schema({
   fullName: {
     type: String,
     required: [true, 'Full name is required'],
-    minlength: [3, 'Full name must be at least 3 characters'],
+    minlength: [2, 'Full name must be at least 3 characters'],
   },
   email: {
     type: String,
     unique: true,
+    required:[true , 'please enter an email'],
     match: [/.+@.+\..+/, 'Please provide a valid email address'],
   },
   password: {
@@ -29,15 +30,15 @@ const medicalSchema = new mongoose.Schema({
   },
   city: {
     type: String,
-    required: true,
+    required: [true , 'please enter a city'  ],
   },
   region: {
     type: String,
-    required: true,
+    required: [true , 'please enter a region'  ],
   },
   address: {
     type: String,
-    required: [true, 'address is required'],
+    required: [true, 'please enter an address'],
   },
   phone: {
     type: String,

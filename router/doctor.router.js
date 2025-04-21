@@ -6,6 +6,7 @@ const ckeckSeek = require('../middleware/seek.middleware');
 const adminmiddleware = require('../middleware/admin.middleware');
 const Doctor = require('../model/doctor.model');
 const mongoose = require('mongoose');
+const City = require('../model/cities.model');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
@@ -88,9 +89,34 @@ router.get(
 router.get(
   '/getDoctorsinCity/:city?/:region?/:spec?',
   checkprov.checkifLoggedIn,
-
   doctorController.getDoctors
 );
+
+router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req, res) => {
+  try {
+    const { city, region } = req.params;
+
+    const existCity = await City.findById(city);
+    if (!existCity) return res.status(400).json({ success: false, message: 'City not found' });
+
+    const existRegion = existCity.regions.find(r => r._id.toString() === region);
+    if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+
+    const cityname = existCity.name;
+    const regionname = existRegion.name;
+
+    const query = { city: cityname, region: regionname };
+
+    const doctors = await Doctor.find(query)
+      .sort({ rating: -1 }) // Sort by rating (highest first)
+      .limit(10); // Limit to 10 doctors
+
+    return res.status(200).json({ success: true, doctors });
+
+  } catch (err) {
+    return res.status(500).json({ success: false, err: err.message });
+  }
+});
 
 router.post(
   '/createNewBook',
