@@ -506,6 +506,20 @@ exports.toggleAnalystFavourite = async (req, res) => {
   }
 };
 
+exports.getFavourites = async(req,res)=>{
+  try{
+    const { userId } = req.params;
+    const favourites = await Favourite.aggregate([
+      {
+        $match:{userId:userId,isFavourite:true}
+      }
+    ])
+    res.status(200).json({favourites:favourites})
+  }catch(error){
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
 
 exports.getFavourites = async (req, res) => {
   try {
