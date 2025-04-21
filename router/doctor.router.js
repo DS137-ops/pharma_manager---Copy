@@ -4,6 +4,8 @@ const { body } = require('express-validator');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const adminmiddleware = require('../middleware/admin.middleware');
+const FavouriteDoctor = require('../model/FavouriteDoctor.model');
+
 const Doctor = require('../model/doctor.model');
 const mongoose = require('mongoose');
 const City = require('../model/cities.model');
@@ -104,7 +106,11 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
 
     const cityname = existCity.name;
     const regionname = existRegion.name;
+ const favouriteDoctors = await FavouriteDoctor.find({ userId });
 
+  
+    const favouriteDoctorIds = favouriteDoctors.map(fav => fav.doctorId.toString());
+    console.log(favouriteDoctorIds)
     const topDoctors = await Doctor.aggregate([
       {
         $match: {
@@ -127,6 +133,14 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
       },
       {
         $limit: 10
+      },
+      {
+        $project: {
+          fullName: 1,
+          specializate: 1,
+          doctorImage: 1,
+          finalRate: "$averageRating"
+        }
       }
     ]);
 
@@ -135,6 +149,7 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
     return res.status(500).json({ success: false, err: err.message });
   }
 });
+
 
 
 router.post(
