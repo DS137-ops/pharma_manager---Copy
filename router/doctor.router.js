@@ -96,6 +96,7 @@ router.get(
 
 router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req, res) => {
   try {
+    const userId = req.user._id;
     const { city, region } = req.params;
 
     const existCity = await City.findById(city);
