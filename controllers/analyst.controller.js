@@ -65,12 +65,10 @@ exports.createNewAnalyst = async (req, res) => {
       (r) => r._id.toString() === region
     );
     if (!regionExists)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Region not found in the selected city',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Region not found in the selected city',
+      });
 
     // Create a JWT token for the new analyst
     const token = await jwt.sign({ role: 'analyst' }, process.env.JWT_SECRET);
@@ -352,12 +350,10 @@ exports.getAnalyst = async (req, res) => {
   );
 
   if (!existRegion)
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: 'Region not found in the selected city',
-      });
+    return res.status(400).json({
+      success: false,
+      message: 'Region not found in the selected city',
+    });
 
   const cityname = existCity.name;
   const regionname = existRegion.name;
@@ -442,12 +438,10 @@ exports.updateAnalystInfo = async (req, res) => {
           (r) => r._id.toString() === region
         );
         if (!existRegion) {
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message: 'Region not found in the selected city',
-            });
+          return res.status(400).json({
+            success: false,
+            message: 'Region not found in the selected city',
+          });
         }
         updateFields.region = existRegion.name;
       }
@@ -458,13 +452,11 @@ exports.updateAnalystInfo = async (req, res) => {
       { $set: updateFields }
     );
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: 'Updated Successfully',
-        data: updateFields,
-      });
+    res.status(200).json({
+      success: true,
+      message: 'Updated Successfully',
+      data: updateFields,
+    });
   } catch (err) {
     console.error('Error updating analyst info:', err);
     if (err.name === 'ValidationError') {
@@ -573,7 +565,10 @@ exports.getFavourites = async (req, res) => {
     const { userId } = req.params;
     const favourites = await Favourite.aggregate([
       {
-        $match: { userId: userId, isFavourite: true },
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          isFavourite: true,
+        },
       },
       {
         $lookup: {
@@ -586,8 +581,8 @@ exports.getFavourites = async (req, res) => {
     ]);
     res.status(200).json({ favourites: favourites });
   } catch (error) {
-    console.log(error)
-    res.status(500).json({ message: `Server error `, error: error });
+    console.log(error);
+    res.status(500).json({ message: `Server error `, error: error.message });
   }
 };
 
