@@ -516,8 +516,9 @@ exports.getFavourites = async(req,res)=>{
       {
         $lookup:{
           from:'analysts',
-          localField:'_id',
-          foreignField:'analystId'
+          localField:'analystId',
+          foreignField:'_id',
+           as: 'analystDetails'
         }
       }
     ])
