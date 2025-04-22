@@ -167,7 +167,7 @@ router.get(
 
       return res
         .status(200)
-        .json({ success: true, radiolgies: radiolgyWithFavStatus });
+        .json({ success: true, data: radiolgyWithFavStatus });
     } catch (err) {
       return res.status(500).json({ success: false, err: err.message });
     }
@@ -216,12 +216,10 @@ router.post(
         (r) => r._id.toString() === region
       );
       if (!existRegion)
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: 'Region not found in the selected city',
-          });
+        return res.status(400).json({
+          success: false,
+          message: 'Region not found in the selected city',
+        });
       const cityname = existCity.name;
       const regionname = existRegion.name;
       const imageUrl = req.file.path;

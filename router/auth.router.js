@@ -455,7 +455,7 @@ router.get(
 
       return res
         .status(200)
-        .json({ success: true, pharmas: pharmasWithFavStatus });
+        .json({ success: true, data: pharmasWithFavStatus });
     } catch (err) {
       return res.status(500).json({ success: false, err: err.message });
     }

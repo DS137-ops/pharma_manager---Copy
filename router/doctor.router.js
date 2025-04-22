@@ -169,7 +169,7 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
       isFavourite: favouriteDoctorIds.includes(doctor._id.toString())
     }));
 
-    return res.status(200).json({ success: true, doctors: doctorsWithFavStatus });
+    return res.status(200).json({ success: true, data: doctorsWithFavStatus });
   } catch (err) {
     return res.status(500).json({ success: false, err: err.message });
   }
