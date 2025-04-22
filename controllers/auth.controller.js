@@ -306,7 +306,6 @@ exports.getPharmas = async (req, res) => {
 
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
     const data = pharmaciesWithRatings.toObject()
-    delete data.password
     return res.status(200).json({ status: true, data: data });
   } catch (error) {
     console.error(error);
