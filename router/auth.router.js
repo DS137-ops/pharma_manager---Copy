@@ -69,7 +69,9 @@ router.get(
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
-    const user = await Seek.findById(id);
+    const user = await Seek.findById(id).select(
+      '-password -resetCode -resetCodeExpires -notifications'
+    );
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -179,12 +181,10 @@ router.post(
         (r) => r._id.toString() === region
       );
       if (!existRegion)
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: 'Region not found in the selected city',
-          });
+        return res.status(400).json({
+          success: false,
+          message: 'Region not found in the selected city',
+        });
       const cityname = existCity.name;
       const regionname = existRegion.name;
 
@@ -402,12 +402,10 @@ router.get(
         (r) => r._id.toString() === region
       );
       if (!existRegion)
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: 'Region not found in the selected city',
-          });
+        return res.status(400).json({
+          success: false,
+          message: 'Region not found in the selected city',
+        });
 
       const cityname = existCity.name;
       const regionname = existRegion.name;

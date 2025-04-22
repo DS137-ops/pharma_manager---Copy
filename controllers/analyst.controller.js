@@ -367,7 +367,7 @@ exports.getAnalyst = async (req, res) => {
   };
 
   try {
-    const findAnalyst = await Analyst.find(query);
+    const findAnalyst = await Analyst.find(query).select('-password');
 
     if (!findAnalyst || findAnalyst.length === 0) {
       return res.status(404).json({ status: false, message: 'No result' });
@@ -567,7 +567,10 @@ exports.getFavourites = async (req, res) => {
     const { userId } = req.params;
 
     const favourites = await Favourite.find({ userId, isFavourite: true })
-      .populate('analystId')
+      .populate({
+        path:'analystId',
+        select:'-password'
+      })
       .exec();
 
     if (favourites.length === 0) {
