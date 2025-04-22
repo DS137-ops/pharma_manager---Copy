@@ -6,8 +6,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
-const City = require('../model/cities.model')
-const FavouritePharma = require('../model/FavouritePharma.model')
+const City = require('../model/cities.model');
+const FavouritePharma = require('../model/FavouritePharma.model');
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
 require('dotenv').config();
@@ -40,15 +40,12 @@ const transporter = nodemailer.createTransport({
 });
 //sign pharmatic
 
-
-
-
 exports.createNewPharmatic = async (req, res) => {
   const {
     fullName,
     email,
     password,
-    city,   // city ID
+    city, // city ID
     region, // region ID
     address,
     phone,
@@ -84,11 +81,22 @@ exports.createNewPharmatic = async (req, res) => {
 
     // Look up the city by ID and get its name
     const cityExists = await City.findById(city);
-    if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
+    if (!cityExists)
+      return res
+        .status(400)
+        .json({ success: false, message: 'City not found' });
 
     // Look up the region by ID within the selected city
-    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
-    if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    const regionExists = cityExists.regions.find(
+      (r) => r._id.toString() === region
+    );
+    if (!regionExists)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'Region not found in the selected city',
+        });
 
     // Create a JWT token for the new pharmatic
     const token = await jwt.sign({ role: 'pharmatic' }, process.env.JWT_SECRET);
@@ -98,7 +106,7 @@ exports.createNewPharmatic = async (req, res) => {
       fullName,
       email,
       password,
-      city: cityExists.name,    // Store city name
+      city: cityExists.name, // Store city name
       region: regionExists.name, // Store region name
       address,
       phone,
@@ -108,7 +116,7 @@ exports.createNewPharmatic = async (req, res) => {
 
     // Save the new Pharmatic to the database
     await newUser.save();
-    await RefreshToken.create({ token , userRef:newUser._id });
+    await RefreshToken.create({ token, userRef: newUser._id });
 
     // Create the approval and reject links
     const approvalLink = `http://147.93.106.92/api/Pharmatic/approve/pharmatic/${newUser._id}`;
@@ -144,22 +152,21 @@ exports.createNewPharmatic = async (req, res) => {
       message: 'Registration request sent to admin. Please wait for approval.',
       token: token,
     });
-
   } catch (err) {
     console.error('Error registering user:', err);
 
     // Handle validation errors and other types of errors
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: errors.join(', ') });
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
     }
-    
+
     // General error response
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
-
 
 exports.deletePharmaticAccount = async (req, res) => {
   try {
@@ -167,15 +174,16 @@ exports.deletePharmaticAccount = async (req, res) => {
     const user = req.user;
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
+    if (!isMatch)
+      return res.status(400).json({ message: 'Incorrect password' });
 
     await Pharmatic.findByIdAndDelete(user._id);
 
-    res.status(200).json({ message: "Account deleted successfully" , data:[] });
+    res.status(200).json({ message: 'Account deleted successfully', data: [] });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
-}
+};
 exports.ratePharmatic = async (req, res) => {
   try {
     const pharmaticId = req.params.pharmaticId;
@@ -243,7 +251,6 @@ exports.ratePharmatic = async (req, res) => {
 //       return res.status(404).json({ status: false, message: 'No result' });
 //     }
 
-
 //     const pharmaciesWithRatings = findPharma.map((pharma) => {
 //       const ratings = pharma.rate?.map((r) => r.rating) || [];
 //       const total = ratings.reduce((sum, rating) => sum + rating, 0);
@@ -264,38 +271,51 @@ exports.ratePharmatic = async (req, res) => {
 //   }
 // };
 
-
 exports.getPharmas = async (req, res) => {
   const { city, region } = req.params;
   const userId = req.user._id;
 
   const existCity = await City.findById(city);
-  const existRegion = existCity.regions.find(r => r._id.toString() === region);
-  
-  if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+  const existRegion = existCity.regions.find(
+    (r) => r._id.toString() === region
+  );
+
+  if (!existRegion)
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: 'Region not found in the selected city',
+      });
 
   const cityname = existCity.name;
   const regionname = existRegion.name;
   console.log(cityname, regionname);
 
-  const query = { role: 'pharmatic', city: cityname, region: regionname, approved: true };
+  const query = {
+    role: 'pharmatic',
+    city: cityname,
+    region: regionname,
+    approved: true,
+  };
 
   try {
-    const findPharma = await Pharmatic.find(query).select('');
+    const findPharma = await Pharmatic.find(query).select('-password');
 
     if (!findPharma || findPharma.length === 0) {
       return res.status(404).json({ status: false, message: 'No result' });
     }
 
     // Fetch the user's favourite pharmacies
-    const user = await Seek.findById(userId);  // Assuming you have a User model
+    const user = await Seek.findById(userId); // Assuming you have a User model
 
     const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
 
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+      const averageRating =
+        ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
 
       return {
         ...pharma.toObject(),
@@ -305,15 +325,12 @@ exports.getPharmas = async (req, res) => {
     });
 
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
-    const data = pharmaciesWithRatings.toObject()
     return res.status(200).json({ status: true, data: data });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
-
-
 
 function extractTime(timeString) {
   const match = timeString.match(/\((\d{2}:\d{2})\)/);
@@ -323,7 +340,8 @@ function extractTime(timeString) {
 
 exports.updatePharmaticInfo = async (req, res) => {
   try {
-    const { fullName, city, region, address, phone, StartJob, EndJob } = req.body;
+    const { fullName, city, region, address, phone, StartJob, EndJob } =
+      req.body;
     const id = req.params.id;
 
     const updateFields = {};
@@ -331,42 +349,54 @@ exports.updatePharmaticInfo = async (req, res) => {
     if (fullName) updateFields.fullName = fullName;
     if (address) updateFields.address = address;
     if (phone) updateFields.phone = phone;
-    
+
     if (StartJob) updateFields.StartJob = StartJob;
     if (EndJob) updateFields.EndJob = EndJob;
 
     if (city) {
       const existCity = await City.findById(city);
       if (!existCity) {
-        return res.status(400).json({ success: false, message: 'City not found' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'City not found' });
       }
       updateFields.city = existCity.name;
 
       if (region) {
-        const existRegion = existCity.regions.find(r => r._id.toString() === region);
+        const existRegion = existCity.regions.find(
+          (r) => r._id.toString() === region
+        );
         if (!existRegion) {
-          return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message: 'Region not found in the selected city',
+            });
         }
         updateFields.region = existRegion.name;
       }
     }
 
-    await Pharmatic.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updateFields });
+    await Pharmatic.updateOne(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { $set: updateFields }
+    );
 
     res.status(200).json({ success: true, message: 'Updated Successfully' });
   } catch (err) {
     console.error('Error updating analyst info:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: errors.join(', ') });
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
     }
-    res.status(500).json({ success: false, message: `Internal server error ${err} `});
+    res
+      .status(500)
+      .json({ success: false, message: `Internal server error ${err} ` });
   }
 };
-
-
-
-
 
 exports.approvePharmatic = async (req, res) => {
   try {
@@ -410,7 +440,7 @@ exports.rejectPharmatic = async (req, res) => {
     if (!user)
       return res
         .status(404)
-        .json({ success: false, message: 'User not found'});
+        .json({ success: false, message: 'User not found' });
     const mailOptions = {
       from: 'nabd142025@gmail.com',
       to: user.email,
@@ -441,29 +471,61 @@ exports.rejectPharmatic = async (req, res) => {
 };
 
 exports.createNewSeek = async (req, res) => {
-  const { fullName , phone, password, age, city, region } = req.body;
+  const { fullName, phone, password, age, city, region } = req.body;
 
   // Validation checks
-  if (!password) return res.status(409).json({ success: false, message: 'Password should not be empty' });
-  if (!fullName) return res.status(409).json({ success: false, message: 'Full name should not be empty' });
-  
-  if (!phone) return res.status(409).json({ success: false, message: 'Phone should not be empty' });
-  if (!age) return res.status(409).json({ success: false, message: 'Age should not be empty' });
-  if (!city) return res.status(409).json({ success: false, message: 'City should not be empty' });
-  if (!region) return res.status(409).json({ success: false, message: 'Region should not be empty' });
+  if (!password)
+    return res
+      .status(409)
+      .json({ success: false, message: 'Password should not be empty' });
+  if (!fullName)
+    return res
+      .status(409)
+      .json({ success: false, message: 'Full name should not be empty' });
+
+  if (!phone)
+    return res
+      .status(409)
+      .json({ success: false, message: 'Phone should not be empty' });
+  if (!age)
+    return res
+      .status(409)
+      .json({ success: false, message: 'Age should not be empty' });
+  if (!city)
+    return res
+      .status(409)
+      .json({ success: false, message: 'City should not be empty' });
+  if (!region)
+    return res
+      .status(409)
+      .json({ success: false, message: 'Region should not be empty' });
 
   try {
     // Check if the phone number already exists
     const existSeek = await Seek.findOne({ phone });
-    if (existSeek) return res.status(400).json({ success: false, message: 'Phone number is already taken' });
+    if (existSeek)
+      return res
+        .status(400)
+        .json({ success: false, message: 'Phone number is already taken' });
 
     // Find the city by ID
     const cityExists = await City.findById(city);
-    if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
+    if (!cityExists)
+      return res
+        .status(400)
+        .json({ success: false, message: 'City not found' });
 
     // Find the region by ID inside the city
-    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
-    if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    const regionExists = cityExists.regions.find(
+      (r) => r._id.toString() === region
+    );
+    if (!regionExists)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'Region not found in the selected city',
+        });
 
     // Create JWT token
     const token = await jwt.sign({ role: 'user' }, process.env.JWT_SECRET);
@@ -473,30 +535,30 @@ exports.createNewSeek = async (req, res) => {
       phone,
       password,
       age,
-      city: cityExists.name,    // Store city name
-      region: regionExists.name // Store region name
+      city: cityExists.name, // Store city name
+      region: regionExists.name, // Store region name
     });
 
     // Save the new Seek to the database
     await newSeek.save();
-    await RefreshToken.create({ token , userRef:newSeek._id });
+    await RefreshToken.create({ token, userRef: newSeek._id });
     // Return the success response
     return res.status(200).json({
       success: true,
       message: 'User registered successfully',
-      token
+      token,
     });
-
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: errors.join(', ') });
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
     }
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
 
 // exports.createNewSeek = async (req, res) => {
 //   const { fullName, phone , password , age , city , region } = req.body;
@@ -519,7 +581,7 @@ exports.createNewSeek = async (req, res) => {
 //   .status(409)
 //   .json({ success: false, message: 'region should not empty' });
 //   try {
-   
+
 //     const existSeek = await Seek.findOne({ phone });
 //     if(existSeek)return res.status(400).json({success:false , messsage:'phone is already exist'})
 
@@ -547,29 +609,36 @@ exports.createNewSeek = async (req, res) => {
 //   }
 // };
 
-
-
 exports.updateSickInfo = async (req, res) => {
   try {
     const { fullName, phone, age, city, region } = req.body;
     const id = req.params.id;
-    
+
     let cityname, regionname;
 
     // Only validate city and region if both are provided
     if (city) {
       const existCity = await City.findById(city);
       if (!existCity) {
-        return res.status(400).json({ success: false, message: 'City not found' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'City not found' });
       }
 
       cityname = existCity.name;
 
       // If region is provided, validate it
       if (region) {
-        const existRegion = existCity.regions.find(r => r._id.toString() === region);
+        const existRegion = existCity.regions.find(
+          (r) => r._id.toString() === region
+        );
         if (!existRegion) {
-          return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message: 'Region not found in the selected city',
+            });
         }
         regionname = existRegion.name;
       }
@@ -595,17 +664,14 @@ exports.updateSickInfo = async (req, res) => {
     console.error('Error updating user:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: errors.join(', ') });
+      return res
+        .status(400)
+        .json({ success: false, message: errors.join(', ') });
     }
 
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
-
-
-
-
 
 exports.loginSeek = async (req, res) => {
   const { phone, password } = req.body;
@@ -613,22 +679,29 @@ exports.loginSeek = async (req, res) => {
   if (!phone) {
     return res.status(403).json({ message: 'phone is required' });
   }
-  if(!password)
+  if (!password)
     return res.status(400).json({ message: 'password is required' });
   try {
-    const user = await Seek.findOne({ phone })
+    const user = await Seek.findOne({ phone });
     if (!user) {
-      return res.status(404).json({ success: false, message: 'phone is Not Correct' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'phone is Not Correct' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'password is Not the same' });
+      return res
+        .status(401)
+        .json({ success: false, message: 'password is Not the same' });
     }
 
-    const token = await jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET);
+    const token = await jwt.sign(
+      { id: user._id, role: 'user' },
+      process.env.JWT_SECRET
+    );
 
-    await RefreshToken.create({ token , userRef:user._id });
+    await RefreshToken.create({ token, userRef: user._id });
     const data = user.toObject();
     delete data.password;
     delete data.resetCode;
@@ -640,10 +713,14 @@ exports.loginSeek = async (req, res) => {
       token,
       data,
     });
-
   } catch (err) {
     console.error('Error logging in:', err);
-    return res.status(500).json({ success: false, message: `Internal server error: ${err.message}` });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: `Internal server error: ${err.message}`,
+      });
   }
 };
 
@@ -653,15 +730,16 @@ exports.deleteSeekAccount = async (req, res) => {
     const user = req.user;
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
+    if (!isMatch)
+      return res.status(400).json({ message: 'Incorrect password' });
 
     await Seek.findByIdAndDelete(user._id);
 
-    res.status(200).json({ message: "Account deleted successfully" , data:[] });
+    res.status(200).json({ message: 'Account deleted successfully', data: [] });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: 'Server error', error });
   }
-}
+};
 
 exports.loginPhar = async (req, res) => {
   const { email, password } = req.body;
@@ -669,22 +747,29 @@ exports.loginPhar = async (req, res) => {
   if (!email) {
     return res.status(403).json({ message: 'email is required' });
   }
-  if(!password)
+  if (!password)
     return res.status(400).json({ message: 'password is required' });
   try {
     const user = await Pharmatic.findOne({ email });
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Email is Not Correct' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'Email is Not Correct' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'password is Not the same' });
+      return res
+        .status(401)
+        .json({ success: false, message: 'password is Not the same' });
     }
 
-    const token = await jwt.sign({ id: user._id, role: 'pharmatic' }, '1001110');
+    const token = await jwt.sign(
+      { id: user._id, role: 'pharmatic' },
+      '1001110'
+    );
 
-    await RefreshToken.create({ token , userRef:user._id });
+    await RefreshToken.create({ token, userRef: user._id });
 
     return res.status(200).json({
       success: true,
@@ -692,13 +777,16 @@ exports.loginPhar = async (req, res) => {
       token,
       user,
     });
-
   } catch (err) {
     console.error('Error logging in:', err);
-    return res.status(500).json({ success: false, message: `Internal server error: ${err.message}` });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: `Internal server error: ${err.message}`,
+      });
   }
 };
-
 
 exports.logoutSpec = async (req, res, next) => {
   const token =
@@ -728,7 +816,7 @@ exports.forgetPassForPharmatic = async (req, res) => {
   const { email } = req.body;
   const user = await Pharmatic.findOne({ email });
 
-  if (!user) return res.status(400).json({ message: "User not found" });
+  if (!user) return res.status(400).json({ message: 'User not found' });
 
   const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
   user.resetCode = resetCode;
@@ -736,33 +824,32 @@ exports.forgetPassForPharmatic = async (req, res) => {
   await user.save();
 
   await transporter.sendMail({
-      from: 'nabd142025@gmail.com',
-      to: email,
-      subject: "Password Reset Code",
-      html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
+    from: 'nabd142025@gmail.com',
+    to: email,
+    subject: 'Password Reset Code',
+    html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
   });
 
-  res.status(200).json({ message: "Reset code sent to your email" });
-}
+  res.status(200).json({ message: 'Reset code sent to your email' });
+};
 
 exports.verifyCodePharmatic = async (req, res) => {
   const { email, code } = req.body;
   const user = await Pharmatic.findOne({ email });
 
   if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: "Invalid or expired code" });
+    return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
-  res.status(200).json({ message: "Code verified successfully" });
-}
-
+  res.status(200).json({ message: 'Code verified successfully' });
+};
 
 exports.resetPharmaPass = async (req, res) => {
   const { email, code, newPassword } = req.body;
   const user = await Pharmatic.findOne({ email });
 
   if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: "Invalid or expired code" });
+    return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -771,16 +858,14 @@ exports.resetPharmaPass = async (req, res) => {
   user.resetCodeExpires = null;
   await user.save();
 
-  res.status(200).json({ message: "Password reset successfully" });
-}
-
-
+  res.status(200).json({ message: 'Password reset successfully' });
+};
 
 exports.forgetPassForSick = async (req, res) => {
   const { email } = req.body;
   const user = await Seek.findOne({ email });
 
-  if (!user) return res.status(400).json({ message: "User not found" });
+  if (!user) return res.status(400).json({ message: 'User not found' });
 
   const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
   user.resetCode = resetCode;
@@ -788,33 +873,32 @@ exports.forgetPassForSick = async (req, res) => {
   await user.save();
 
   await transporter.sendMail({
-      from: 'nabd142025@gmail.com',
-      to: email,
-      subject: "Password Reset Code",
-      html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
+    from: 'nabd142025@gmail.com',
+    to: email,
+    subject: 'Password Reset Code',
+    html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
   });
 
-  res.status(200).json({ message: "Reset code sent to your email" });
-}
+  res.status(200).json({ message: 'Reset code sent to your email' });
+};
 
 exports.verifyCodeSick = async (req, res) => {
   const { email, code } = req.body;
   const user = await Seek.findOne({ email });
 
   if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: "Invalid or expired code" });
+    return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
-  res.status(200).json({ message: "Code verified successfully" });
-}
-
+  res.status(200).json({ message: 'Code verified successfully' });
+};
 
 exports.resetSickPass = async (req, res) => {
   const { email, code, newPassword } = req.body;
   const user = await Seek.findOne({ email });
 
   if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: "Invalid or expired code" });
+    return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -823,20 +907,26 @@ exports.resetSickPass = async (req, res) => {
   user.resetCodeExpires = null;
   await user.save();
 
-  res.status(200).json({ message: "Password reset successfully" });
-}
+  res.status(200).json({ message: 'Password reset successfully' });
+};
 
 exports.addToFamousPhars = async (req, res) => {
   const { pharmaId } = req.body;
 
   try {
-    const pharma = await Pharmatic.findByIdAndUpdate(pharmaId, { isFamous: true }, { new: true });
-    
+    const pharma = await Pharmatic.findByIdAndUpdate(
+      pharmaId,
+      { isFamous: true },
+      { new: true }
+    );
+
     if (!pharma) {
       return res.status(404).json({ message: 'pharma not found' });
     }
 
-    res.status(200).json({ message: 'pharma added to famous pharmas menu', pharma });
+    res
+      .status(200)
+      .json({ message: 'pharma added to famous pharmas menu', pharma });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -859,22 +949,24 @@ exports.getFamousPhars = async (req, res) => {
   }
 };
 
-
-
 exports.searchPharmaticsByName = async (req, res) => {
   try {
     const { fullName } = req.query;
 
     if (!fullName) {
-      return res.status(400).json({ status: false, message: 'Please provide a name' });
+      return res
+        .status(400)
+        .json({ status: false, message: 'Please provide a name' });
     }
 
     const pharmatics = await Pharmatic.find({
-      fullName: { $regex: fullName, $options: 'i' }
+      fullName: { $regex: fullName, $options: 'i' },
     });
 
     if (pharmatics.length === 0) {
-      return res.status(404).json({ status: false, message: 'No matching pharmatics found' });
+      return res
+        .status(404)
+        .json({ status: false, message: 'No matching pharmatics found' });
     }
 
     return res.status(200).json({ status: true, pharmatics });
@@ -885,8 +977,6 @@ exports.searchPharmaticsByName = async (req, res) => {
 };
 
 // controllers/favouritesController.js
-
-
 
 exports.togglePharmaFavourite = async (req, res) => {
   try {
@@ -902,18 +992,24 @@ exports.togglePharmaFavourite = async (req, res) => {
     if (existingFavourite) {
       existingFavourite.isFavourite = !existingFavourite.isFavourite;
       await existingFavourite.save();
-      
+
       return res.status(200).json({
-        message: existingFavourite.isFavourite ? 'Pharma added to favourites' : 'Pharma removed from favourites',
-        isFavourite: existingFavourite.isFavourite
+        message: existingFavourite.isFavourite
+          ? 'Pharma added to favourites'
+          : 'Pharma removed from favourites',
+        isFavourite: existingFavourite.isFavourite,
       });
     } else {
-      const newFavourite = new Favourite({ userId, pharmaId, isFavourite: true });
+      const newFavourite = new Favourite({
+        userId,
+        pharmaId,
+        isFavourite: true,
+      });
       await newFavourite.save();
 
       return res.status(200).json({
         message: 'Pharma added to favourites',
-        isFavourite: true
+        isFavourite: true,
       });
     }
   } catch (error) {
@@ -934,37 +1030,42 @@ exports.getFavourites = async (req, res) => {
       return res.status(404).json({ message: 'No favourite doctors found' });
     }
 
-    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
+    res
+      .status(200)
+      .json({
+        message: 'Favourite doctors retrieved successfully',
+        favourites,
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-exports.deleteFromFavo = async (req,res)=>{
-  try{
-    const {cardId} = req.params
+exports.deleteFromFavo = async (req, res) => {
+  try {
+    const { cardId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(cardId)) {
-          return res.status(400).json({ message: 'Invalid User ID format' });
+      return res.status(400).json({ message: 'Invalid User ID format' });
     }
-    const user = await Favourite.findByIdAndDelete(cardId)
-    if(!user){
-      return res.status(404).json({message:'User not found'})
+    const user = await Favourite.findByIdAndDelete(cardId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    return res.status(200).json({message:'Delete succesfully'})
-  }catch(err){
-    return res.status(500).json({message:`Server error ${err}`})
+    return res.status(200).json({ message: 'Delete succesfully' });
+  } catch (err) {
+    return res.status(500).json({ message: `Server error ${err}` });
   }
-}
+};
 
 const dayMapping2 = {
-  0:"الأحد",
- 1:"الإثنين",
-  2:"الثلاثاء",
-  3:"الأربعاء",
-  4:"الخميس",
-  5:"الجمعة",
-  6:"السبت"
+  0: 'الأحد',
+  1: 'الإثنين',
+  2: 'الثلاثاء',
+  3: 'الأربعاء',
+  4: 'الخميس',
+  5: 'الجمعة',
+  6: 'السبت',
 };
 
 exports.getUserBookings = async (req, res) => {
@@ -972,11 +1073,13 @@ exports.getUserBookings = async (req, res) => {
     const { patientId } = req.params;
 
     const doctors = await Doctor.find({
-      "booking.bookingHours.patientIDs.id": patientId,
-    }).select("fullName specilizate booking");
+      'booking.bookingHours.patientIDs.id': patientId,
+    }).select('fullName specilizate booking');
 
     if (!doctors || doctors.length === 0) {
-      return res.status(404).json({ status: false, message: "No bookings found for this patient" });
+      return res
+        .status(404)
+        .json({ status: false, message: 'No bookings found for this patient' });
     }
 
     let patientBookings = [];
@@ -986,7 +1089,7 @@ exports.getUserBookings = async (req, res) => {
         day.bookingHours.forEach((hour, idHour) => {
           hour.patientIDs.forEach((patient) => {
             if (patient.id.toString() === patientId) {
-              let dayname = dayMapping2[idDay]
+              let dayname = dayMapping2[idDay];
               patientBookings.push({
                 doctorId: doctor._id,
                 doctorName: doctor.fullName,
@@ -1003,11 +1106,10 @@ exports.getUserBookings = async (req, res) => {
 
     res.status(200).json({ status: true, bookings: patientBookings });
   } catch (error) {
-    console.error("Error fetching user bookings:", error);
-    res.status(500).json({ status: false, message: "Server error" });
+    console.error('Error fetching user bookings:', error);
+    res.status(500).json({ status: false, message: 'Server error' });
   }
 };
-
 
 // exports.getPharmaInfo = async(req,res)=>{
 //   try{
