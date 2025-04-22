@@ -91,12 +91,10 @@ exports.createNewPharmatic = async (req, res) => {
       (r) => r._id.toString() === region
     );
     if (!regionExists)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Region not found in the selected city',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Region not found in the selected city',
+      });
 
     // Create a JWT token for the new pharmatic
     const token = await jwt.sign({ role: 'pharmatic' }, process.env.JWT_SECRET);
@@ -281,12 +279,10 @@ exports.getPharmas = async (req, res) => {
   );
 
   if (!existRegion)
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: 'Region not found in the selected city',
-      });
+    return res.status(400).json({
+      success: false,
+      message: 'Region not found in the selected city',
+    });
 
   const cityname = existCity.name;
   const regionname = existRegion.name;
@@ -300,7 +296,9 @@ exports.getPharmas = async (req, res) => {
   };
 
   try {
-    const findPharma = await Pharmatic.find(query).select('-password');
+    const findPharma = await Pharmatic.find(query).select(
+      '-password -resetCode -resetCodeExpires -approved'
+    );
 
     if (!findPharma || findPharma.length === 0) {
       return res.status(404).json({ status: false, message: 'No result' });
@@ -367,12 +365,10 @@ exports.updatePharmaticInfo = async (req, res) => {
           (r) => r._id.toString() === region
         );
         if (!existRegion) {
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message: 'Region not found in the selected city',
-            });
+          return res.status(400).json({
+            success: false,
+            message: 'Region not found in the selected city',
+          });
         }
         updateFields.region = existRegion.name;
       }
@@ -520,12 +516,10 @@ exports.createNewSeek = async (req, res) => {
       (r) => r._id.toString() === region
     );
     if (!regionExists)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Region not found in the selected city',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Region not found in the selected city',
+      });
 
     // Create JWT token
     const token = await jwt.sign({ role: 'user' }, process.env.JWT_SECRET);
@@ -633,12 +627,10 @@ exports.updateSickInfo = async (req, res) => {
           (r) => r._id.toString() === region
         );
         if (!existRegion) {
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message: 'Region not found in the selected city',
-            });
+          return res.status(400).json({
+            success: false,
+            message: 'Region not found in the selected city',
+          });
         }
         regionname = existRegion.name;
       }
@@ -715,12 +707,10 @@ exports.loginSeek = async (req, res) => {
     });
   } catch (err) {
     console.error('Error logging in:', err);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: `Internal server error: ${err.message}`,
-      });
+    return res.status(500).json({
+      success: false,
+      message: `Internal server error: ${err.message}`,
+    });
   }
 };
 
@@ -779,12 +769,10 @@ exports.loginPhar = async (req, res) => {
     });
   } catch (err) {
     console.error('Error logging in:', err);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: `Internal server error: ${err.message}`,
-      });
+    return res.status(500).json({
+      success: false,
+      message: `Internal server error: ${err.message}`,
+    });
   }
 };
 
@@ -1023,19 +1011,17 @@ exports.getFavourites = async (req, res) => {
     const { userId } = req.params;
 
     const favourites = await Favourite.find({ userId, isFavourite: true })
-      .populate('pharmaId')
+      .populate({path:'pharmaId' , select:'-password -resetCode -resetCodeExpires -approved -updatedAt'})
       .exec();
 
     if (favourites.length === 0) {
       return res.status(404).json({ message: 'No favourite doctors found' });
     }
 
-    res
-      .status(200)
-      .json({
-        message: 'Favourite doctors retrieved successfully',
-        favourites,
-      });
+    res.status(200).json({
+      message: 'Favourite doctors retrieved successfully',
+      favourites,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

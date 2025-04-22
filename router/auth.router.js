@@ -271,10 +271,10 @@ router.get('/patient-responses/:patientId', async (req, res) => {
     console.log(req.params.patientId);
     const patientRequests = await PrescriptionRequest.find({
       patientId: req.params.patientId,
-    }).populate(
+    }).populate({
       'pharmacistsResponded.pharmacistId',
       'fullName phone city region'
-    );
+  });
     let responses = [];
     patientRequests.forEach((request) => {
       request.pharmacistsResponded.forEach((response) => {
