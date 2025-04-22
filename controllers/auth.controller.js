@@ -616,9 +616,7 @@ exports.loginSeek = async (req, res) => {
   if(!password)
     return res.status(400).json({ message: 'password is required' });
   try {
-    const user = await Seek.findOne({ phone }).select(
-      '-password -resetCode -resetCodeExpires -notifications'
-    );
+    const user = await Seek.findOne({ phone })
     if (!user) {
       return res.status(404).json({ success: false, message: 'phone is Not Correct' });
     }
@@ -631,12 +629,16 @@ exports.loginSeek = async (req, res) => {
     const token = await jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET);
 
     await RefreshToken.create({ token , userRef:user._id });
-
+    const userObj = user.toObject();
+    delete userObj.password;
+    delete userObj.resetCode;
+    delete userObj.resetCodeExpires;
+    delete userObj.notifications;
     return res.status(200).json({
       success: true,
       message: 'Login successful',
       token,
-      user,
+      userObj,
     });
 
   } catch (err) {
