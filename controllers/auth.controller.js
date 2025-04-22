@@ -267,7 +267,7 @@ exports.ratePharmatic = async (req, res) => {
 
 exports.getPharmas = async (req, res) => {
   const { city, region } = req.params;
-  const userId = req.user._id;  // Assuming req.user contains the current user
+  const userId = req.user._id;
 
   const existCity = await City.findById(city);
   const existRegion = existCity.regions.find(r => r._id.toString() === region);
@@ -281,7 +281,7 @@ exports.getPharmas = async (req, res) => {
   const query = { role: 'pharmatic', city: cityname, region: regionname, approved: true };
 
   try {
-    const findPharma = await Pharmatic.find(query);
+    const findPharma = await Pharmatic.find(query).select('');
 
     if (!findPharma || findPharma.length === 0) {
       return res.status(404).json({ status: false, message: 'No result' });
@@ -305,8 +305,9 @@ exports.getPharmas = async (req, res) => {
     });
 
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
-
-    return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
+    const data = pharmaciesWithRatings.toObject()
+    delete data.password
+    return res.status(200).json({ status: true, data: data });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
