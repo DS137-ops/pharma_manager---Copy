@@ -618,7 +618,7 @@ exports.loginSeek = async (req, res) => {
   try {
     const user = await Seek.findOne({ phone }).select(
       '-password -resetCode -resetCodeExpires -notifications'
-    );;
+    );
     if (!user) {
       return res.status(404).json({ success: false, message: 'phone is Not Correct' });
     }
