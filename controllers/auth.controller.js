@@ -629,16 +629,16 @@ exports.loginSeek = async (req, res) => {
     const token = await jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET);
 
     await RefreshToken.create({ token , userRef:user._id });
-    const userObj = user.toObject();
-    delete userObj.password;
-    delete userObj.resetCode;
-    delete userObj.resetCodeExpires;
-    delete userObj.notifications;
+    const data = user.toObject();
+    delete data.password;
+    delete data.resetCode;
+    delete data.resetCodeExpires;
+    delete data.notifications;
     return res.status(200).json({
       success: true,
       message: 'Login successful',
       token,
-      userObj,
+      data,
     });
 
   } catch (err) {
