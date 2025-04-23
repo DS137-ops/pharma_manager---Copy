@@ -362,7 +362,7 @@ router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
     finalRate:parseFloat(averageRating)
   }
  
-  res.status(200).json({ success: true, data: finalRate });
+  res.status(200).json({ success: true, data: data });
 });
 
 router.post(
