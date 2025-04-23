@@ -224,37 +224,59 @@ exports.deleteAnalystAccount = async (req, res) => {
   }
 };
 exports.loginAna = async (req, res) => {
-  const { email, password } = req.body;
+const { email, password } = req.body;
+
   if (!email) {
-    return res.status(403).json({ message: 'email is required' });
+    return res.status(403).json({ message: 'Email is required' });
   }
+
   if (!password) {
-    return res.status(400).json({ message: 'password is required' });
+    return res.status(400).json({ message: 'Password is required' });
   }
+
   try {
     const user = await Analyst.findOne({ email });
     if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: 'Email is Not Correct' });
+        .json({ success: false, message: 'Email is not correct' });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res
         .status(401)
-        .json({ success: false, message: 'password is Not the same' });
+        .json({ success: false, message: 'Password is not correct' });
     }
-    const token = await jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
-    RefreshToken.create({ token, userRef: user._id });
 
-    res
-      .status(200)
-      .json({ success: true, message: 'Login successful', token, user });
+    await RefreshToken.deleteMany({ userRef: user._id });
+
+    const data = user.toObject({ getters: true, versionKey: false });
+    delete data.password;
+    delete data.resetCode;
+    delete data.resetCodeExpires;
+
+
+    const token = jwt.sign(
+      { id: user._id, role: 'analyst' },
+      '1001110',
+
+    );
+
+    await RefreshToken.create({ token, userRef: user._id });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+      data,
+    });
   } catch (err) {
     console.error('Error logging in:', err);
-    res
-      .status(500)
-      .json({ success: false, message: `Internal server error ${err}` });
+    return res.status(500).json({
+      success: false,
+      message: `Internal server error: ${err.message}`,
+    });
   }
 };
 exports.rateAnalyst = async (req, res) => {

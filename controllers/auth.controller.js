@@ -768,7 +768,6 @@ exports.loginPhar = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: 'pharmatic' },
       '1001110',
-      { expiresIn: '1h' }
     );
 
     await RefreshToken.create({ token, userRef: user._id });
@@ -788,16 +787,27 @@ exports.loginPhar = async (req, res) => {
   }
 };
 
-exports.logoutSpec = async (req, res, next) => {
-  const token =
-    req.headers.authorization && req.headers.authorization.split(' ')[1];
-  const { refreshToken } = req.body;
-  if (token) {
-    await Blacklist.create({ token });
-    await RefreshToken.deleteOne({ refreshToken });
-  }
+exports.logoutSpec = async (req, res) => {
+  try {
+    const token =
+      req.headers.authorization && req.headers.authorization.split(' ')[1];
+    const userId = req.user?.id; 
 
-  res.status(200).json({ success: true });
+    if (!token || !userId) {
+      return res.status(400).json({ success: false, message: 'Token or user not provided' });
+    }
+
+
+    await Blacklist.create({ token });
+
+
+    await RefreshToken.deleteMany({ userRef: userId });
+
+    return res.status(200).json({ success: true, message: 'Logged out successfully' });
+  } catch (err) {
+    console.error('Logout error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 };
 exports.logoutSeek = async (req, res, next) => {
   const token =
