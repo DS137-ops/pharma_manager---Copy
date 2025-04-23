@@ -960,21 +960,20 @@ exports.searchPharmaticsByName = async (req, res) => {
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
       const averageRating =
         ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
-
+      const pharmaObj = pharma.toObject()
+      delete pharmaObj.password
+      delete pharmaObj.resetCode
+      delete pharmaObj.resetCodeExpires
+      delete pharmaObj.rate
       return {
-        ...pharma.toObject(),
+        ...pharmaObj,
         finalRate: parseFloat(averageRating),
       };
     });
 
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
-    const data = pharmaciesWithRatings.toObject()
-    delete data.password
-    delete data.resetCode
-    delete data.resetCodeExpires
-    delete data.rate
-    delete data.approved
-    return res.status(200).json({ status: true,data });
+    
+    return res.status(200).json({ status: true,data:pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
