@@ -968,8 +968,13 @@ exports.searchPharmaticsByName = async (req, res) => {
     });
 
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
-
-    return res.status(200).json({ status: true, data:pharmaciesWithRatings });
+    const data = pharmaciesWithRatings.toObject()
+    delete data.password
+    delete data.resetCode
+    delete data.resetCodeExpires
+    delete data.rate
+    delete data.approved
+    return res.status(200).json({ status: true,data });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
