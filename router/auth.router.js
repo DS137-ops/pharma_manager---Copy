@@ -345,24 +345,26 @@ router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: 'Invalid user ID' });
   }
-  const user = await Pharmatic.findById(id);
+  const user = await Pharmatic.findById(id).select('-password -resetCode');
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
   const ratings = user.rate?.map((r) => r.rating) || [];
   const total = ratings.reduce((sum, rating) => sum + rating, 0);
-  const averageRating =
-    ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
-  const data1 = user.toObject()
-  delete data1.password
-  delete data1.resetCode
-  delete data1.rate
-  const data = {
-    ...data1,
-    finalRate:parseFloat(averageRating)
-  }
+  const averageRating = parseFloat(
+    ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0
+  );
+  
+  const userObj = user.toObject({ getters: true, versionKey: false });
+  
  
-  res.status(200).json({ success: true, data: data });
+  delete userObj.password;
+  delete userObj.resetCode;
+  delete userObj.rate;
+  
+  userObj.finalRate = averageRating;
+  
+  res.status(200).json({ success: true,data:userObj   });
 });
 
 router.post(
