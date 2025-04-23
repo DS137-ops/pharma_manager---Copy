@@ -754,6 +754,12 @@ exports.loginPhar = async (req, res) => {
         .json({ success: false, message: 'password is Not the same' });
     }
 
+
+    const data = user.toObject({getter:true , versionKey:false})
+    delete data.password
+    delete data.resetCode
+    delete data.resetCodeExpires
+
     const token = await jwt.sign(
       { id: user._id, role: 'pharmatic' },
       '1001110'
@@ -765,7 +771,7 @@ exports.loginPhar = async (req, res) => {
       success: true,
       message: 'Login successful',
       token,
-      user,
+      data,
     });
   } catch (err) {
     console.error('Error logging in:', err);
