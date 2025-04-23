@@ -946,7 +946,6 @@ exports.searchPharmaticsByName = async (req, res) => {
         .status(400)
         .json({ status: false, message: 'Please provide a name' });
     }
-
     const pharmatics = await Pharmatic.find({
       fullName: { $regex: fullName, $options: 'i' },
     });
@@ -956,8 +955,21 @@ exports.searchPharmaticsByName = async (req, res) => {
         .status(404)
         .json({ status: false, message: 'No matching pharmatics found' });
     }
+    const pharmaciesWithRatings = pharmatics.map((pharma) => {
+      const ratings = pharma.rate?.map((r) => r.rating) || [];
+      const total = ratings.reduce((sum, rating) => sum + rating, 0);
+      const averageRating =
+        ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
 
-    return res.status(200).json({ status: true, pharmatics });
+      return {
+        ...pharma.toObject(),
+        finalRate: parseFloat(averageRating),
+      };
+    });
+
+    pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
+
+    return res.status(200).json({ status: true, data:pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -1011,7 +1023,10 @@ exports.getFavourites = async (req, res) => {
     const { userId } = req.params;
 
     const favourites = await Favourite.find({ userId, isFavourite: true })
-      .populate({path:'pharmaId' , select:'-password -resetCode -resetCodeExpires -approved -updatedAt'})
+      .populate({
+        path: 'pharmaId',
+        select: '-password -resetCode -resetCodeExpires -approved',
+      })
       .exec();
 
     if (favourites.length === 0) {
