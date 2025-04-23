@@ -345,11 +345,29 @@ router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: 'Invalid user ID' });
   }
-  const user = await Pharmatic.findById(id);
+  const user = await Pharmatic.findById(id)
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
-  res.status(200).json({ success: true, data: user });
+  const pharmaciesWithRatings = user.map((pharma) => {
+    const ratings = pharma.rate?.map((r) => r.rating) || [];
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    const averageRating =
+      ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+    const pharmaObj = pharma.toObject()
+    delete pharmaObj.password
+    delete pharmaObj.resetCode
+    delete pharmaObj.resetCodeExpires
+    delete pharmaObj.rate
+    return {
+      ...pharmaObj,
+      finalRate: parseFloat(averageRating),
+    };
+  });
+
+  pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
+
+  res.status(200).json({ success: true, data: pharmaciesWithRatings });
 });
 
 router.post(
