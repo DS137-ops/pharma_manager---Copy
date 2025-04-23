@@ -735,34 +735,40 @@ exports.loginPhar = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email) {
-    return res.status(403).json({ message: 'email is required' });
+    return res.status(403).json({ message: 'Email is required' });
   }
-  if (!password)
-    return res.status(400).json({ message: 'password is required' });
+
+  if (!password) {
+    return res.status(400).json({ message: 'Password is required' });
+  }
+
   try {
     const user = await Pharmatic.findOne({ email });
     if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: 'Email is Not Correct' });
+        .json({ success: false, message: 'Email is not correct' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res
         .status(401)
-        .json({ success: false, message: 'password is Not the same' });
+        .json({ success: false, message: 'Password is not correct' });
     }
 
+    await RefreshToken.deleteMany({ userRef: user._id });
 
-    const data = user.toObject({getter:true , versionKey:false})
-    delete data.password
-    delete data.resetCode
-    delete data.resetCodeExpires
+    const data = user.toObject({ getters: true, versionKey: false });
+    delete data.password;
+    delete data.resetCode;
+    delete data.resetCodeExpires;
 
-    const token = await jwt.sign(
+
+    const token = jwt.sign(
       { id: user._id, role: 'pharmatic' },
-      '1001110'
+      '1001110',
+      { expiresIn: '1h' }
     );
 
     await RefreshToken.create({ token, userRef: user._id });
