@@ -83,7 +83,6 @@ router.get(
 router.post(
   '/rateRadiology/:radiologyId',
   checkprov.checkifLoggedIn,
-  ckeckSeek.authenticateSeek,
   RadiologyController.rateRadiology
 );
 router.post(
