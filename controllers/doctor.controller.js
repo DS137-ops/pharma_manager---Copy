@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
+const Specialty = require('./model/Specialty.model');
+
 const RefreshToken = require('../model/RefreshToken.model');
 const City = require('../model/cities.model');
 const FavouriteDoctor = require('../model/FavouriteDoctor.model');
@@ -1062,6 +1064,15 @@ exports.deleteFromFavo = async (req, res) => {
     return res.status(500).json({ message: `Server error ${err}` });
   }
 };
+
+exports.getSpecialties = async (req, res) => {
+  try {
+    const specialties = await Specialty.find({}).populate("-_id").sort({ customId: 1 });
+    res.status(200).json(specialties);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+}
 
 // exports.getDoctorInfo = async(req,res)=>{
 //   try{

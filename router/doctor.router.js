@@ -90,7 +90,7 @@ router.delete(
   checkprov.authMiddlewareforDoctor,
   doctorController.deleteDoctorAccount
 );
-
+router.get("/specialties", doctorController.getSpecialties);
 router.get('/approve/doctor/:id', doctorController.approveDoctor);
 router.get('/reject/doctor/:id', doctorController.rejectDoctor);
 router.post(

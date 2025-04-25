@@ -6,6 +6,7 @@ const AnalystRouter = require('./router/analyst.router');
 const adminRouter = require('./router/admin.router');
 const RadiologyRouter = require('./router/radiology.router');
 const DoctorRouter = require('./router/doctor.router');
+const Specialty = require('./model/Specialty.model');
 const http = require('http');
 app.use('/uploads', express.static('uploads'));
 const mongoose = require('mongoose');
@@ -29,6 +30,44 @@ mongoose
   .connect(GlobalUri)
   .then(() => console.log('MongoDB connected!'))
   .catch((err) => console.error('MongoDB connection error:', err));
+
+const specialties = [
+  'أسنان',
+  'مراكز تجميل',
+  'جلدية و تناسلية',
+  'باطنه',
+  'قلب و أوعية دموية',
+  'نساء و توليد',
+  'أنف و أذن و حنجرة',
+  'عظام',
+  'مخ و أعصاب',
+  'عيون',
+  'مسالك بولية',
+  'جهاز هضمي و كبد',
+  'كلى',
+  'أمراض دم',
+  'أورام',
+  'علاج طبيعي',
+  'الطب النفسي',
+  'تخسيس و تغذية',
+  'نطق و تخاطب',
+  'جراحة عامة',
+  'جراحة تجميل ',
+  'جراحة أطفال',
+  'جراحة أوعية دموية',
+  'جراحة قلب و صدر',
+  'جراحة مخ و اعصاب و عمود فقري',
+  'جراحة اورام',
+];
+ 
+const docs = specialties.map((name, index) => ({
+  name: name.trim(),
+  specId: index + 1,
+}));
+(async () => {
+  await Specialty.deleteMany();
+  await Specialty.insertMany(docs);
+})();
 
 app.use('/api/Pharmatic', PharmaticRouter);
 app.use('/api/Analyst', AnalystRouter);

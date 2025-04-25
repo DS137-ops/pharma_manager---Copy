@@ -44,7 +44,7 @@ router.post(
   ],
   authController.createNewSeek
 );
-router.post('/loginSeek', checkprov.checkifLoggedOut, authController.loginSeek);
+router.post('/loginSeek',  checkprov.checkifLoggedOut, authController.loginSeek);
 router.post(
   '/logoutSeek/:id',
   checkprov.checkifLoggedIn,
