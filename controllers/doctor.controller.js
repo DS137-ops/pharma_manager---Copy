@@ -1062,7 +1062,6 @@ exports.deleteFromFavo = async (req, res) => {
 exports.getSpecialties = async (req, res) => {
   try {
     const specialties = await Specialty.find({})
-      .populate('-_id')
       .sort({ specId: 1 });
     res.status(200).json({ success: true, data: specialties });
   } catch (error) {
