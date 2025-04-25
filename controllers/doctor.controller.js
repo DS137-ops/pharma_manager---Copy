@@ -1064,7 +1064,7 @@ exports.getSpecialties = async (req, res) => {
     const specialties = await Specialty.find({})
       .populate('-_id')
       .sort({ specId: 1 });
-    res.status(200).json({ success:true , data:specialties});
+    res.status(200).json({ success: true, data: specialties });
   } catch (error) {
     res.status(500).json({ error: `Server error ${error.message}` });
   }
