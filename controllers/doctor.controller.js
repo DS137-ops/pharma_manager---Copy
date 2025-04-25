@@ -1061,8 +1061,7 @@ exports.deleteFromFavo = async (req, res) => {
 
 exports.getSpecialties = async (req, res) => {
   try {
-    const specialties = await Specialty.find({})
-      .sort({ specId: 1 });
+    const specialties = await Specialty.find({}).sort({ specId: 1 });
     res.status(200).json({ success: true, data: specialties });
   } catch (error) {
     res.status(500).json({ error: `Server error ${error.message}` });
