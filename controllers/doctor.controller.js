@@ -1063,10 +1063,10 @@ exports.getSpecialties = async (req, res) => {
   try {
     const specialties = await Specialty.find({})
       .populate('-_id')
-      .sort({ customId: 1 });
-    res.status(200).json(specialties);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+      .sort({ specId: 1 });
+    res.status(200).json({ success:true , data:specialties});
+  } catch (error) {
+    res.status(500).json({ error: `Server error ${error.message}` });
   }
 };
 
