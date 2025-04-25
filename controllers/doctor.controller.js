@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
-const Specialty = require('./model/Specialty.model');
+const Specialty = require('../model/Specialty.model');
 
 const RefreshToken = require('../model/RefreshToken.model');
 const City = require('../model/cities.model');
@@ -546,59 +546,54 @@ exports.rejectDoctor = async (req, res) => {
 
 exports.loginDoctor = async (req, res) => {
   const { email, password } = req.body;
-  
-    if (!email) {
-      return res.status(403).json({ message: 'Email is required' });
+
+  if (!email) {
+    return res.status(403).json({ message: 'Email is required' });
+  }
+
+  if (!password) {
+    return res.status(400).json({ message: 'Password is required' });
+  }
+
+  try {
+    const user = await Doctor.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Email is not correct' });
     }
-  
-    if (!password) {
-      return res.status(400).json({ message: 'Password is required' });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'Password is not correct' });
     }
-  
-    try {
-      const user = await Doctor.findOne({ email });
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: 'Email is not correct' });
-      }
-  
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res
-          .status(401)
-          .json({ success: false, message: 'Password is not correct' });
-      }
-  
-      await RefreshToken.deleteMany({ userRef: user._id });
-  
-      const data = user.toObject({ getters: true, versionKey: false });
-      delete data.password;
-      delete data.resetCode;
-      delete data.resetCodeExpires;
-  
-  
-      const token = jwt.sign(
-        { id: user._id, role: 'doctor' },
-        '1001110',
-  
-      );
-  
-      await RefreshToken.create({ token, userRef: user._id });
-  
-      return res.status(200).json({
-        success: true,
-        message: 'Login successful',
-        token,
-        data,
-      });
-    } catch (err) {
-      console.error('Error logging in:', err);
-      return res.status(500).json({
-        success: false,
-        message: `Internal server error: ${err.message}`,
-      });
-    }
+
+    await RefreshToken.deleteMany({ userRef: user._id });
+
+    const data = user.toObject({ getters: true, versionKey: false });
+    delete data.password;
+    delete data.resetCode;
+    delete data.resetCodeExpires;
+
+    const token = jwt.sign({ id: user._id, role: 'doctor' }, '1001110');
+
+    await RefreshToken.create({ token, userRef: user._id });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+      data,
+    });
+  } catch (err) {
+    console.error('Error logging in:', err);
+    return res.status(500).json({
+      success: false,
+      message: `Internal server error: ${err.message}`,
+    });
+  }
 };
 
 exports.rateDoctor = async (req, res) => {
@@ -715,7 +710,6 @@ exports.getDoctors = async (req, res) => {
         .status(404)
         .json({ status: false, message: 'No doctors found' });
     }
-
 
     const favouriteDoctors = await FavouriteDoctor.find({ userId });
 
@@ -1067,12 +1061,14 @@ exports.deleteFromFavo = async (req, res) => {
 
 exports.getSpecialties = async (req, res) => {
   try {
-    const specialties = await Specialty.find({}).populate("-_id").sort({ customId: 1 });
+    const specialties = await Specialty.find({})
+      .populate('-_id')
+      .sort({ customId: 1 });
     res.status(200).json(specialties);
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: 'Server error' });
   }
-}
+};
 
 // exports.getDoctorInfo = async(req,res)=>{
 //   try{
