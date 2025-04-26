@@ -72,7 +72,7 @@ exports.createNewDoctor = async (req, res) => {
     region, // region ID
     address,
     phone,
-    specilizate,
+    specId,
     NumberState,
   } = req.body;
 
@@ -84,7 +84,7 @@ exports.createNewDoctor = async (req, res) => {
     !region ||
     !address ||
     !phone ||
-    !specilizate ||
+    !specId ||
     !NumberState
   ) {
     return res
@@ -112,7 +112,7 @@ exports.createNewDoctor = async (req, res) => {
         success: false,
         message: 'Region not found in the selected city',
       });
-      const existSpec = await Specialty.find({ specId:specilizate });
+      const existSpec = await Specialty.find({ specId:specId });
       console.log(existSpec)
     if (!existSpec) {
       return res.status(400).json({
