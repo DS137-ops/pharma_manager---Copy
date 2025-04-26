@@ -113,6 +113,7 @@ exports.createNewDoctor = async (req, res) => {
         message: 'Region not found in the selected city',
       });
       const existSpec = await Specialty.find({ specId:specilizate });
+      console.log(existSpec)
     if (!existSpec) {
       return res.status(400).json({
         success: false,
