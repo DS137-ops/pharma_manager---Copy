@@ -120,6 +120,7 @@ exports.createNewDoctor = async (req, res) => {
       });
     }
     const specName = existSpec.name;
+
     const token = await jwt.sign({ role: 'doctor' }, process.env.JWT_SECRET);
 
     const newUser = new Doctor({
@@ -130,7 +131,7 @@ exports.createNewDoctor = async (req, res) => {
       region: regionExists.name,
       address,
       phone,
-      specName,
+      specilizate:specName,
       NumberState,
     });
 
