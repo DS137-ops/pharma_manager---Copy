@@ -120,7 +120,7 @@ exports.createNewDoctor = async (req, res) => {
         message: 'Specialty not found',
       });
     }
-    const specName = existSpec.name;
+    const specName = existSpec[0].name;
 
     const token = await jwt.sign({ role: 'doctor' }, process.env.JWT_SECRET);
 
