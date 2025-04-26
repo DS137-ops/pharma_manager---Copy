@@ -880,22 +880,22 @@ exports.updateDoctorInfo = async (req, res) => {
       city,
       region,
       address,
-      specilizate,
+      specId,
       NumberState,
       doctorimage,
     } = req.body;
 
     if (fullName) updateFields.fullName = fullName;
     if (address) updateFields.address = address;
-    if (specilizate) {
-      const existSpec = await Specialty.find({specilizate})
+    if (specId) {
+      const existSpec = await Specialty.find({specId:specId})
       if(!existSpec){
         return res.status(400).json({
           success: false,
           message: 'Specialty not found in the selected city',
         });
       }
-      const specName = existSpec.name
+      const specName = existSpec[0].name
       updateFields.specilizate = specName
     }
     if (NumberState) updateFields.NumberState = NumberState;
