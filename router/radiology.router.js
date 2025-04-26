@@ -88,7 +88,6 @@ router.post(
 router.post(
   '/signinRadiology',
   checkprov.isProvvedRadio,
-  checkprov.checkifLoggedOut,
   RadiologyController.loginRadio
 );
 router.post(

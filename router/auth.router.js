@@ -44,7 +44,7 @@ router.post(
   ],
   authController.createNewSeek
 );
-router.post('/loginSeek',  checkprov.checkifLoggedOut, authController.loginSeek);
+router.post('/loginSeek',  authController.loginSeek);
 router.post(
   '/logoutSeek/:id',
   checkprov.checkifLoggedIn,
@@ -154,7 +154,6 @@ router.get('/reject/pharmatic/:id', authController.rejectPharmatic);
 router.post(
   '/signinPharmatic',
   checkprov.isProvvedPharm,
-  checkprov.checkifLoggedOut,
   authController.loginPhar
 );
 //checkprov.isProvvedPharm ,

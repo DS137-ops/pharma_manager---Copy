@@ -70,7 +70,6 @@ router.get(
 router.post(
   '/signinAnalyst',
   checkprov.isProvvedAna,
-  checkprov.checkifLoggedOut,
   analystController.loginAna
 );
 
