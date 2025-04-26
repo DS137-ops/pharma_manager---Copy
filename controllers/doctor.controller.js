@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const Specialty = require('../model/Specialty.model');
-
 const RefreshToken = require('../model/RefreshToken.model');
 const City = require('../model/cities.model');
 const FavouriteDoctor = require('../model/FavouriteDoctor.model');
@@ -113,31 +112,35 @@ exports.createNewDoctor = async (req, res) => {
         success: false,
         message: 'Region not found in the selected city',
       });
-
-    // إنشاء توكن JWT للطبيب الجديد
+      const existSpec = await Specialty.find({ specilizate });
+    if (!existSpec) {
+      return res.status(400).json({
+        success: false,
+        message: 'Specialty not found in the selected city',
+      });
+    }
+    const specName = existSpec.name;
     const token = await jwt.sign({ role: 'doctor' }, process.env.JWT_SECRET);
 
-    // إنشاء حساب الطبيب مع تخزين اسم المدينة والمنطقة بدلاً من الـ ID
     const newUser = new Doctor({
       fullName,
       email,
       password,
-      city: cityExists.name, // تخزين اسم المدينة
-      region: regionExists.name, // تخزين اسم المنطقة
+      city: cityExists.name,
+      region: regionExists.name,
       address,
       phone,
-      specilizate,
+      specName,
       NumberState,
     });
 
-    // حفظ الطبيب الجديد في قاعدة البيانات
+
     await newUser.save();
     await RefreshToken.create({ token, userRef: newUser._id });
-    // إنشاء روابط الموافقة والرفض
+
     const approvalLink = `http://147.93.106.92:8080/api/Doctor/approve/doctor/${newUser._id}`;
     const rejectLink = `http://147.93.106.92:8080/api/Doctor/reject/doctor/${newUser._id}`;
 
-    // إرسال بريد إلكتروني للإدارة لمراجعة الحساب الجديد
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',
@@ -150,7 +153,7 @@ exports.createNewDoctor = async (req, res) => {
         <p>City: ${cityExists.name}</p>
         <p>Region: ${regionExists.name}</p>
         <p>Phone: ${phone}</p>
-        <p>Specialization: ${specilizate}</p>
+        <p>Specialization: ${specName}</p>
         <p>NumberState: ${NumberState}</p>
         <p>Click below to approve or reject:</p>
         <a href="${approvalLink}" style="color:green">Approve</a> | 
@@ -698,11 +701,17 @@ exports.getDoctors = async (req, res) => {
         success: false,
         message: 'Region not found in the selected city',
       });
-
+    const existSpec = await Specialty.find({ spec });
+    if (!existSpec) {
+      return res.status(400).json({
+        success: false,
+        message: 'Specialty not found in the selected city',
+      });
+    }
     const cityname = existCity.name;
     const regionname = existRegion.name;
-
-    const query = { city: cityname, region: regionname, specilizate: spec };
+    const specName = existSpec.name;
+    const query = { city: cityname, region: regionname, specilizate: specName };
     const doctors = await Doctor.find(query);
 
     if (!doctors || doctors.length === 0) {
@@ -862,9 +871,8 @@ exports.deleteBookByPatient = async (req, res) => {
 exports.updateDoctorInfo = async (req, res) => {
   try {
     const id = req.params.id;
-    const updateFields = {}; // سيتم تخزين الحقول التي يجب تحديثها هنا
+    const updateFields = {};
 
-    // استخراج الحقول من body فقط إذا تم إرسالها
     const {
       fullName,
       city,
@@ -875,13 +883,21 @@ exports.updateDoctorInfo = async (req, res) => {
       doctorimage,
     } = req.body;
 
-    // تحقق إذا كانت الحقول موجودة وأضفها إلى updateFields
     if (fullName) updateFields.fullName = fullName;
     if (address) updateFields.address = address;
-    if (specilizate) updateFields.specilizate = specilizate;
+    if (specilizate) {
+      const existSpec = await Specialty.find({specilizate})
+      if(!existSpec){
+        return res.status(400).json({
+          success: false,
+          message: 'Specialty not found in the selected city',
+        });
+      }
+      const specName = existSpec.name
+      updateFields.specilizate = specName
+    }
     if (NumberState) updateFields.NumberState = NumberState;
 
-    // معالجة تحديث المدينة والمنطقة
     if (city && region) {
       const existCity = await City.findById(city);
       if (!existCity)
