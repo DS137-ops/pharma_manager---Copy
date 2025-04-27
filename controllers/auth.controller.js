@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
+const client = require('../whatsapp-service');
 const City = require('../model/cities.model');
 const FavouritePharma = require('../model/FavouritePharma.model');
 const Blacklist = require('../model/Blacklist.model');
@@ -554,55 +555,6 @@ exports.createNewSeek = async (req, res) => {
   }
 };
 
-// exports.createNewSeek = async (req, res) => {
-//   const { fullName, phone , password , age , city , region } = req.body;
-//   if(!password) return res
-//   .status(409)
-//   .json({ success: false, message: 'password should not empty' });
-//   if(!fullName) return res
-//   .status(409)
-//   .json({ success: false, message: 'fullname should not empty' });
-//   if(!phone) return res
-//   .status(409)
-//   .json({ success: false, message: 'phone should not empty' });
-//   if(!age) return res
-//   .status(409)
-//   .json({ success: false, message: 'age should not empty' });
-//   if(!city) return res
-//   .status(409)
-//   .json({ success: false, message: 'city should not empty' });
-//   if(!region) return res
-//   .status(409)
-//   .json({ success: false, message: 'region should not empty' });
-//   try {
-
-//     const existSeek = await Seek.findOne({ phone });
-//     if(existSeek)return res.status(400).json({success:false , messsage:'phone is already exist'})
-
-//      const token = await jwt.sign({  role: 'user' }, process.env.JWT_SECRET);
-
-//     await RefreshToken.create({ token });
-
-//     const newSeek = new Seek({ fullName, phone , password , age , city , region });
-
-//     await newSeek.save();
-//     return res.status(200).json({
-//       success: true,
-//       message: 'user register succesfully',
-//       token:token
-//     });
-//   } catch (err) {
-//     console.error('Error registering user:', err);
-//     if (err.name === 'ValidationError') {
-//       const errors = Object.values(err.errors).map((e) => e.message);
-//       return res
-//         .status(400)
-//         .json({ success: false, message: errors.join(', ') });
-//     }
-//     res.status(500).json({ success: false, message: 'Internal server error' });
-//   }
-// };
-
 exports.updateSickInfo = async (req, res) => {
   try {
     const { fullName, phone, age, city, region } = req.body;
@@ -610,7 +562,6 @@ exports.updateSickInfo = async (req, res) => {
 
     let cityname, regionname;
 
-    // Only validate city and region if both are provided
     if (city) {
       const existCity = await City.findById(city);
       if (!existCity) {
@@ -621,7 +572,6 @@ exports.updateSickInfo = async (req, res) => {
 
       cityname = existCity.name;
 
-      // If region is provided, validate it
       if (region) {
         const existRegion = existCity.regions.find(
           (r) => r._id.toString() === region
@@ -642,7 +592,6 @@ exports.updateSickInfo = async (req, res) => {
       age,
     };
 
-    // Only update city and region if they were provided
     if (cityname) updateData.cityname = cityname;
     if (regionname) updateData.regionname = regionname;
 
@@ -871,54 +820,37 @@ exports.resetPharmaPass = async (req, res) => {
   res.status(200).json({ message: 'Password reset successfully' });
 };
 
-exports.forgetPassForSick = async (req, res) => {
-  const { email } = req.body;
-  const user = await Seek.findOne({ email });
 
-  if (!user) return res.status(400).json({ message: 'User not found' });
 
-  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-  user.resetCode = resetCode;
-  user.resetCodeExpires = Date.now() + 20 * 60 * 1000;
-  await user.save();
+exports.sendResetCode = async (req, res) => {
+    const { phone } = req.body;
 
-  await transporter.sendMail({
-    from: 'nabd142025@gmail.com',
-    to: email,
-    subject: 'Password Reset Code',
-    html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
-  });
+    try {
+        const user = await Seek.findOne({ phone });
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-  res.status(200).json({ message: 'Reset code sent to your email' });
+        // Generate a random 6-digit code
+        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Save the code and expiry (e.g., 5 mins)
+        user.resetCode = resetCode;
+        user.resetCodeExpires = new Date(Date.now() + 5 * 60000); // 5 minutes
+        await user.save();
+
+        // Send code via WhatsApp
+        const chatId = phone + "@c.us"; // WhatsApp format
+        await client.sendMessage(chatId, `Your password reset code is: ${resetCode}`);
+
+        return res.status(200).json({ message: 'Reset code sent via WhatsApp' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
 };
 
-exports.verifyCodeSick = async (req, res) => {
-  const { email, code } = req.body;
-  const user = await Seek.findOne({ email });
 
-  if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-    return res.status(400).json({ message: 'Invalid or expired code' });
-  }
 
-  res.status(200).json({ message: 'Code verified successfully' });
-};
-
-exports.resetSickPass = async (req, res) => {
-  const { email, code, newPassword } = req.body;
-  const user = await Seek.findOne({ email });
-
-  if (!user || user.resetCode !== code || Date.now() > user.resetCodeExpires) {
-    return res.status(400).json({ message: 'Invalid or expired code' });
-  }
-
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-  user.password = hashedPassword;
-  user.resetCode = null;
-  user.resetCodeExpires = null;
-  await user.save();
-
-  res.status(200).json({ message: 'Password reset successfully' });
-};
 
 exports.addToFamousPhars = async (req, res) => {
   const { pharmaId } = req.body;
@@ -1002,7 +934,7 @@ exports.searchPharmaticsByName = async (req, res) => {
   }
 };
 
-// controllers/favouritesController.js
+
 
 exports.togglePharmaFavourite = async (req, res) => {
   try {
