@@ -4,11 +4,11 @@ const qrcode = require('qrcode-terminal');
 const client = new Client();
 
 client.on('qr', (qr) => {
-    qrcode.generate(qr, { small: true });
+  qrcode.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
-    console.log('✅ WhatsApp Client Ready!');
+  console.log('✅ WhatsApp Client Ready!');
 });
 
 client.initialize();
