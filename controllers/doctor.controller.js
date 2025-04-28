@@ -686,14 +686,11 @@ exports.getFinalRateforDoctor = async (req, res) => {
 exports.getDoctors = async (req, res) => {
   try {
     const userId = req.user._id;
-
     const { city, region, spec } = req.params;
 
     const existCity = await City.findById(city);
     if (!existCity)
-      return res
-        .status(400)
-        .json({ success: false, message: 'City not found' });
+      return res.status(400).json({ success: false, message: 'City not found' });
 
     const existRegion = existCity.regions.find(
       (r) => r._id.toString() === region
@@ -703,35 +700,43 @@ exports.getDoctors = async (req, res) => {
         success: false,
         message: 'Region not found in the selected city',
       });
-    const existSpec = await Specialty.findOne( {specId:spec} );
+
+    const existSpec = await Specialty.findOne({ specId: spec });
     if (!existSpec) {
       return res.status(400).json({
         success: false,
         message: 'Specialty not found in the selected city',
       });
     }
+
     const cityname = existCity.name;
     const regionname = existRegion.name;
     const specName = existSpec.name;
+
     const query = { city: cityname, region: regionname, specilizate: specName };
     const doctors = await Doctor.find(query);
 
     if (!doctors || doctors.length === 0) {
-      return res
-        .status(404)
-        .json({ status: false, message: 'No doctors found' });
+      return res.status(404).json({ status: false, message: 'No doctors found' });
     }
 
     const favouriteDoctors = await FavouriteDoctor.find({ userId });
+    const favouriteDoctorIds = favouriteDoctors.map((fav) => fav.doctorId.toString());
 
-    const favouriteDoctorIds = favouriteDoctors.map((fav) =>
-      fav.doctorId.toString()
-    );
+    const doctorsWithFavStatus = doctors.map((doctor) => {
+      const ratings = doctor.rate?.map((r) => r.rating) || [];
+      const total = ratings.reduce((sum, rating) => sum + rating, 0);
+      const averageRating = parseFloat(
+        ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0
+      );
 
-    const doctorsWithFavStatus = doctors.map((doctor) => ({
-      ...doctor.toObject(),
-      isFavourite: favouriteDoctorIds.includes(doctor._id.toString()),
-    }));
+      const doctorObj = doctor.toObject({ getters: true, versionKey: false });
+
+      doctorObj.isFavourite = favouriteDoctorIds.includes(doctor._id.toString());
+      doctorObj.finalRate = averageRating;
+
+      return doctorObj;
+    });
 
     res.status(200).json({ status: true, doctors: doctorsWithFavStatus });
   } catch (error) {
@@ -739,6 +744,7 @@ exports.getDoctors = async (req, res) => {
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
+
 
 exports.createNewBook = async (req, res) => {
   try {
