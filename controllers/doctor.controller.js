@@ -703,7 +703,7 @@ exports.getDoctors = async (req, res) => {
         success: false,
         message: 'Region not found in the selected city',
       });
-    const existSpec = await Specialty.find({ spec });
+    const existSpec = await Specialty.findOne( {specId:spec} );
     if (!existSpec) {
       return res.status(400).json({
         success: false,
