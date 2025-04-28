@@ -78,8 +78,6 @@ router.get(
     res.status(200).json({ success: true, data: user });
   }
 );
-
-router.post('/forgot-password-for-sick', authController.sendResetCode);
 router.get(
   '/search',
   checkprov.checkifLoggedIn,
