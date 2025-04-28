@@ -5,7 +5,6 @@ const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const adminmiddleware = require('../middleware/admin.middleware');
 const FavouriteDoctor = require('../model/FavouriteDoctor.model');
-
 const Doctor = require('../model/doctor.model');
 const mongoose = require('mongoose');
 const City = require('../model/cities.model');

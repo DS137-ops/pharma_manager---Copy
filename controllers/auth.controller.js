@@ -6,7 +6,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
-const client = require('../utils/sendWhatsAppMessage');
 const City = require('../model/cities.model');
 const FavouritePharma = require('../model/FavouritePharma.model');
 const Blacklist = require('../model/Blacklist.model');
@@ -818,35 +817,6 @@ exports.resetPharmaPass = async (req, res) => {
   await user.save();
 
   res.status(200).json({ message: 'Password reset successfully' });
-};
-
-
-
-exports.sendResetCode = async (req, res) => {
-    const { phone } = req.body;
-
-    try {
-        const user = await Seek.findOne({ phone });
-        if (!user) return res.status(404).json({ message: 'User not found' });
-
-        // Generate a random 6-digit code
-        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // Save the code and expiry (e.g., 5 mins)
-        user.resetCode = resetCode;
-        user.resetCodeExpires = new Date(Date.now() + 5 * 60000); // 5 minutes
-        await user.save();
-
-        // Send code via WhatsApp
-        const chatId = phone + "@c.us"; // WhatsApp format
-        await client.sendMessage(chatId, `Your password reset code is: ${resetCode}`);
-
-        return res.status(200).json({ message: 'Reset code sent via WhatsApp' });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
-    }
 };
 
 
