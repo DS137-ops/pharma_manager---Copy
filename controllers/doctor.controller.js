@@ -344,6 +344,52 @@ exports.getAvailableAppointments = async (req, res) => {
   }
 };
 
+
+exports.getAllAppointments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid Doctor ID format' });
+    }
+
+    const doctor = await Doctor.findById(id).select('rangeBooking booking');
+
+    if (!doctor) {
+      return res.status(404).json({ error: 'Doctor not found' });
+    }
+
+    let allAppointments = [];
+
+    doctor.booking.forEach((dayBooking, index) => {
+      if (dayBooking && dayBooking.bookingHours) {
+        const fullDay = {
+          day: doctor.rangeBooking[index]?.day,
+          appointments: dayBooking.bookingHours.map((hour) => ({
+            idHour: hour.idHour,
+            startTime: convertIdHourToTime(
+              hour.idHour,
+              doctor.rangeBooking[index]?.start
+            ),
+            patientCount: hour.patientIDs.length,
+            patientIDs: hour.patientIDs,
+          })),
+        };
+
+        allAppointments.push(fullDay);
+      }
+    });
+
+    return res.status(200).json({
+      message: 'All appointments (booked and available)',
+      data: allAppointments,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: `Error: ${err.message}` });
+  }
+};
+
+
 exports.updateBookingRange = async (req, res) => {
   try {
     const { id } = req.params;
@@ -428,7 +474,8 @@ exports.createBooking = async (req, res) => {
       day: dayMapping[day] ?? null,
       start: convertTimeTo24Hour(start),
       end: convertTimeTo24Hour(end),
-    }));
+    }
+  ));
 
     if (
       formattedRangeBooking.some(

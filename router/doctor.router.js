@@ -68,21 +68,7 @@ router.get(
 );
 router.post('/add-to-famous', doctorController.addToFamousDoctors);
 router.get('/famous', doctorController.getFamousDoctors);
-router.post(
-  '/createrangeBooking/:id',
-  checkprov.checkifLoggedIn,
-  doctorController.createBooking
-);
-router.put(
-  '/updateRangeBooking/:id',
-  checkprov.checkifLoggedIn,
-  doctorController.updateBookingRange
-);
-router.get(
-  '/getAvailableAppointments/:id',
-  checkprov.checkifLoggedIn,
-  doctorController.getAvailableAppointments
-);
+
 
 router.delete(
   '/delete-doctor-account',
@@ -172,12 +158,34 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
     return res.status(500).json({ success: false, err: err.message });
   }
 });
-
+router.post(
+  '/createrangeBooking/:id',
+  checkprov.checkifLoggedIn,
+  doctorController.createBooking
+);
 router.post(
   '/createNewBook',
   checkprov.checkifLoggedIn,
   doctorController.createNewBook
 );
+router.get(
+  '/getAvailableAppointments/:id',
+  checkprov.checkifLoggedIn,
+  doctorController.getAvailableAppointments
+);
+
+router.get(
+  '/getAllAppointments/:id',
+  checkprov.checkifLoggedIn,
+  doctorController.getAllAppointments
+);
+
+router.put(
+  '/updateRangeBooking/:id',
+  checkprov.checkifLoggedIn,
+  doctorController.updateBookingRange
+);
+
 router.delete(
   '/deleteBook',
   checkprov.checkifLoggedIn,
