@@ -272,11 +272,11 @@ const dayMapping = {
 function convertTimeTo24Hour(timeString) {
   const match = timeString.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
 
-  if (!match) return null; // Handle invalid formats
+  if (!match) return null; 
 
   let [_, hours, minutes, period] = match;
   hours = parseInt(hours, 10);
-  minutes = parseInt(minutes, 10) / 60; // Convert minutes to fraction (e.g., 30 min = 0.5)
+  minutes = parseInt(minutes, 10) / 60; 
 
   if (period === 'PM' && hours !== 12) {
     hours += 12;
@@ -285,7 +285,7 @@ function convertTimeTo24Hour(timeString) {
     hours = 0;
   }
 
-  return hours + minutes; // Return as a number
+  return hours + minutes;
 }
 
 function convertIdHourToTime(idHour, startHour) {

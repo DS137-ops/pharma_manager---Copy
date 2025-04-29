@@ -640,7 +640,7 @@ exports.loginSeek = async (req, res) => {
       { id: user._id, role: 'user' },
       process.env.JWT_SECRET
     );
-
+    await RefreshToken.deleteMany({ userRef: user._id });
     await RefreshToken.create({ token, userRef: user._id });
     const data = user.toObject();
     delete data.password;
