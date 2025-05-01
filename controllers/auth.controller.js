@@ -497,21 +497,19 @@ exports.createNewSeek = async (req, res) => {
       .json({ success: false, message: 'Region should not be empty' });
 
   try {
-    // Check if the phone number already exists
+
     const existSeek = await Seek.findOne({ phone });
     if (existSeek)
       return res
         .status(400)
         .json({ success: false, message: 'Phone number is already taken' });
 
-    // Find the city by ID
     const cityExists = await City.findById(city);
     if (!cityExists)
       return res
         .status(400)
         .json({ success: false, message: 'City not found' });
 
-    // Find the region by ID inside the city
     const regionExists = cityExists.regions.find(
       (r) => r._id.toString() === region
     );
@@ -521,26 +519,26 @@ exports.createNewSeek = async (req, res) => {
         message: 'Region not found in the selected city',
       });
 
-    // Create JWT token
+
     const token = await jwt.sign({ role: 'user' }, process.env.JWT_SECRET);
-    // Create the new Seek (patient) with city and region names
     const newSeek = new Seek({
       fullName,
       phone,
       password,
       age,
-      city: cityExists.name, // Store city name
-      region: regionExists.name, // Store region name
+      city: cityExists.name,
+      region: regionExists.name,
     });
 
-    // Save the new Seek to the database
+
     await newSeek.save();
     await RefreshToken.create({ token, userRef: newSeek._id });
-    // Return the success response
+
     return res.status(200).json({
       success: true,
       message: 'User registered successfully',
       token,
+      data:newSeek._id
     });
   } catch (err) {
     console.error('Error registering user:', err);
