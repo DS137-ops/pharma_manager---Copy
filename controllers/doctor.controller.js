@@ -361,24 +361,34 @@ exports.getAllAppointments = async (req, res) => {
 
     let allAppointments = [];
 
-    doctor.booking.forEach((dayBooking, index) => {
-      if (dayBooking && dayBooking.bookingHours) {
-        const fullDay = {
-          day: doctor.rangeBooking[index]?.day,
-          appointments: dayBooking.bookingHours.map((hour) => ({
-            idHour: hour.idHour,
-            startTime: convertIdHourToTime(
-              hour.idHour,
-              doctor.rangeBooking[index]?.start
-            ),
-            patientCount: hour.patientIDs.length,
-            patientIDs: hour.patientIDs,
-          })),
-        };
+ 
+    for (let i = 0; i < 7; i++) {
+      const rangeDay = doctor.rangeBooking[i];
+      const bookingDay = doctor.booking[i];
 
-        allAppointments.push(fullDay);
+      const day = rangeDay?.day ?? i; // fallback to index if missing
+
+      let appointments = [];
+
+      if (
+        rangeDay &&
+        bookingDay &&
+        bookingDay.bookingHours &&
+        Array.isArray(bookingDay.bookingHours)
+      ) {
+        appointments = bookingDay.bookingHours.map((hour) => ({
+          idHour: hour.idHour,
+          startTime: convertIdHourToTime(hour.idHour, rangeDay.start),
+          patientCount: hour.patientIDs.length,
+          patientIDs: hour.patientIDs,
+        }));
       }
-    });
+
+      allAppointments.push({
+        day,
+        appointments,
+      });
+    }
 
     return res.status(200).json({
       message: 'All appointments (booked and available)',
@@ -388,6 +398,7 @@ exports.getAllAppointments = async (req, res) => {
     return res.status(500).json({ message: `Error: ${err.message}` });
   }
 };
+
 
 
 exports.updateBookingRange = async (req, res) => {
