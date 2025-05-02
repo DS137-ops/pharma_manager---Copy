@@ -267,7 +267,7 @@ router.post('/respond-request-from-Pharmatic', async (req, res) => {
 });
 router.get('/patient-responses/:patientId', async (req, res) => {
   try {
-    console.log(req.params.patientId);
+
     const patientRequests = await PrescriptionRequest.find({
       patientId: req.params.patientId,
     }).populate(
@@ -484,7 +484,7 @@ const dayMapping2 = {
   5: 'الجمعة',
   6: 'السبت',
 };
-router.get('/AllPrescription/:patientId' , checkprov.checkifLoggedIn , async(req,res)=>{
+router.get('/AllOrders/:patientId' , checkprov.checkifLoggedIn , async(req,res)=>{
   try{
     const { patientId } = req.params;
     const fromPharma = await PrescriptionRequest.find(
@@ -532,6 +532,82 @@ router.get('/AllPrescription/:patientId' , checkprov.checkifLoggedIn , async(req
               });
     if (!fromPharma && !fromAnalyst && !fromRadiology && (!fromDoctor || fromDoctor.length === 0)) return res.status(404).json({ message: 'No orders ' });
 return res.status(200).json({succes:true , fromPharma:fromPharma , fromAnalyst:fromAnalyst , fromRadiology:fromRadiology , fromDoctor:patientBookings})
+  }catch(error){
+    res.status(500).json({succes:true , message:`internal server error ${error.message}`})
+  }
+})
+
+
+router.get('/AllResponses/:patientId' , checkprov.checkifLoggedIn , async(req,res)=>{
+  try{
+    const patientRequests = await PrescriptionRequest.find({
+      patientId: req.params.patientId,
+    }).populate(
+      'pharmacistsResponded.pharmacistId',
+      'fullName phone city region'
+    );
+    let fromPharma = [];
+    patientRequests.forEach((request) => {
+      request.pharmacistsResponded.forEach((response) => {
+        if (response.accepted) {
+          fromPharma.push({
+            pharmacistName: response.pharmacistId.fullName,
+            phone: response.pharmacistId.phone,
+            city: response.pharmacistId.city,
+            region: response.pharmacistId.region,
+            price: response.price,
+            status: request.status,
+          });
+        }
+      });
+    });
+
+
+     const patientRequests2 = await PrescriptionRadiologyRequest.find({
+          patientId: req.params.patientId,
+        }).populate(
+          'radiologysResponded.radiologyId',
+          'fullName phone city region'
+        );
+        let fromRadiology = [];
+    
+        patientRequests2.forEach((request) => {
+          request.radiologysResponded.forEach((response) => {
+            if (response.accepted && response.radiologyId) {
+              fromRadiology.push({
+                radiologyName: response.radiologyId?.fullName || 'N/A',
+                phone: response.radiologyId?.phone || 'N/A',
+                city: response.radiologyId?.city || 'N/A',
+                region: response.radiologyId?.region || 'N/A',
+                price: response.price || 0,
+                status: request.status || 'N/A',
+              });
+            }
+          });
+        });
+
+
+
+         const patientRequests3 = await PrescriptionAnalystRequest.find({
+              patientId: req.params.patientId,
+            }).populate('analystsResponded.analystId', 'fullName phone city region');
+        
+            let fromAnalyst = [];
+        
+            patientRequests3.forEach((request) => {
+              request.analystsResponded.forEach((response) => {
+                if (response.accepted) {
+                  fromAnalyst.push({
+                    analystName: response.analystId.fullName,
+                    phone: response.analystId.phone,
+                    city: response.analystId.city,
+                    region: response.analystId.region,
+                    price: response.price,
+                  });
+                }
+              });
+            });
+            return res.status(200).json({succes:true , fromPharma:fromPharma , fromRadiology:fromRadiology , fromAnalyst:fromAnalyst})
   }catch(error){
     res.status(500).json({succes:true , message:`internal server error ${error.message}`})
   }
