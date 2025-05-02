@@ -531,7 +531,7 @@ router.get('/AllPrescription/:patientId' , checkprov.checkifLoggedIn , async(req
                 });
               });
     if (!fromPharma && !fromAnalyst && !fromRadiology && (!fromDoctor || fromDoctor.length === 0)) return res.status(404).json({ message: 'No orders ' });
-return res.status(200).json({succes:true , fromPharma:fromPharma , fromAnalyst:fromAnalyst , fromRadiology:fromRadiology , fromDoctor:fromDoctor})
+return res.status(200).json({succes:true , fromPharma:fromPharma , fromAnalyst:fromAnalyst , fromRadiology:fromRadiology , fromDoctor:patientBookings})
   }catch(error){
     res.status(500).json({succes:true , message:`internal server error ${error.message}`})
   }
