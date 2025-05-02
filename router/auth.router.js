@@ -475,7 +475,15 @@ router.get(
     }
   }
 );
-
+const dayMapping2 = {
+  0: 'الأحد',
+  1: 'الإثنين',
+  2: 'الثلاثاء',
+  3: 'الأربعاء',
+  4: 'الخميس',
+  5: 'الجمعة',
+  6: 'السبت',
+};
 router.get('/AllPrescription/:patientId' , checkprov.checkifLoggedIn , async(req,res)=>{
   try{
     const { patientId } = req.params;
