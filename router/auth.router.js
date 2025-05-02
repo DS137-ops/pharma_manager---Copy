@@ -8,11 +8,17 @@ const FavouritePharmas = require('../model/FavouritePharma.model');
 const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Pharmatic = require('../model/auth.model');
+const Doctor = require('../model/doctor.model');
+const Radiology = require('../model/radiology.model');
+const Analyst = require('../model/analyst.model');
 const Seek = require('../model/seek.model');
 const City = require('../model/cities.model');
 const mongoose = require('mongoose');
 const PrescriptionRequest = require('../model/PrescriptionRequest.model');
+const PrescriptionAnalystRequest = require('../model/PrescriptionAnalystRequest.model');
+const PrescriptionRadiologyRequest = require('../model/PrescriptionRadiology.model');
 const multer = require('multer');
+
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
@@ -470,30 +476,58 @@ router.get(
   }
 );
 
-// router.delete("/delete-notification/:id", checkprov.checkifLoggedIn, async (req, res) => {
-//   try {
-//     const notificationId = req.params.id;
-//     if (!mongoose.Types.ObjectId.isValid(notificationId)) {
-//       return res.status(400).json({ message: "Invalid notification ID" });
-//     }
-
-//     const notification = await Notification.findById(notificationId);
-
-//     if (!notification) {
-//       return res.status(404).json({ message: "Notification not found" });
-//     }
-
-//     if (notification.userId.toString() !== req.user.id) {
-//       return res.status(403).json({ message: "Unauthorized action" });
-//     }
-
-//     await Notification.findByIdAndDelete(notificationId);
-
-//     res.json({ message: "Notification deleted successfully" });
-//   } catch (err) {
-//     res.status(500).json({ message: "Server error" });
-//   }
-// });
+router.get('/AllPrescription/:patientId' , checkprov.checkifLoggedIn , async(req,res)=>{
+  try{
+    const { patientId } = req.params;
+    const fromPharma = await PrescriptionRequest.find(
+      { patientId },
+      '-pharmacistsResponded'
+    );
+    const fromAnalyst = await PrescriptionAnalystRequest.find(
+      { patientId },
+        '-pharmacistsResponded'
+    );
+    const fromRadiology = await PrescriptionRadiologyRequest.find(
+            { patientId },
+            '-pharmacistsResponded'
+          );
+          const fromDoctor = await Doctor.find({
+                'booking.bookingHours.patientIDs.id': patientId,
+              }).select('fullName specilizate booking');
+          
+              if (!fromDoctor || fromDoctor.length === 0) {
+                return res
+                  .status(404)
+                  .json({ status: false, message: 'No bookings found for this patient' });
+              }
+          
+              let patientBookings = [];
+          
+              fromDoctor.forEach((doctor) => {
+                doctor.booking.forEach((day, idDay) => {
+                  day.bookingHours.forEach((hour, idHour) => {
+                    hour.patientIDs.forEach((patient) => {
+                      if (patient.id.toString() === patientId) {
+                        let dayname = dayMapping2[idDay];
+                        patientBookings.push({
+                          doctorId: doctor._id,
+                          doctorName: doctor.fullName,
+                          specialization: doctor.specilizate,
+                          dayname,
+                          idHour,
+                          appointmentDate: patient.date,
+                        });
+                      }
+                    });
+                  });
+                });
+              });
+    if (!fromPharma && !fromAnalyst && !fromRadiology && (!fromDoctor || fromDoctor.length === 0)) return res.status(404).json({ message: 'No orders ' });
+return res.status(200).json({succes:true , fromPharma:fromPharma , fromAnalyst:fromAnalyst , fromRadiology:fromRadiology , fromDoctor:fromDoctor})
+  }catch(error){
+    res.status(500).json({succes:true , message:`internal server error ${error.message}`})
+  }
+})
 
 //End Pharmatic
 
