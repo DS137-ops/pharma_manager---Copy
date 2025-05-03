@@ -1,30 +1,26 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+
 const requestSchema = new mongoose.Schema({
-  patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Seek" },
+  patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Seek' },
   imageUrl: String,
   city: String,
   region: String,
   date: {
     type: Date,
-    default: Date.now,
+    default: Date.now(),
   },
   status: {
     type: String,
-    enum: ["unread", "read"],
-    default: "unread",
+    enum: ['unread', 'read'],
+    default: 'unread',
   },
   pharmacistsResponded: [
     {
-      pharmacistId: { type: mongoose.Schema.Types.ObjectId, ref: "pharmatic" },
+      pharmacistId: { type: mongoose.Schema.Types.ObjectId, ref: 'pharmatic' },
       price: Number,
       accepted: Boolean,
-      status: {
-        type: String,
-        enum: ["unread", "read"],
-        default: "unread",
-      },
     },
   ],
 });
 
-module.exports = mongoose.model("PrescriptionRequest", requestSchema);
+module.exports = mongoose.model('PrescriptionRequest', requestSchema);

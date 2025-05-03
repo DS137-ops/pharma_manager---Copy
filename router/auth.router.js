@@ -232,8 +232,8 @@ router.get('/Pharmatic-requests/:pharmacistId', async (req, res) => {
     const formattedRequests = requests.map((req) => ({
       ...req.toObject(),
       status: req.status,
-      dateFormatted: new Date(req.date).toISOString().split('T')[0], // yyyy-mm-dd
-      timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5), // hh:mm
+      dateFormatted: new Date(req.date).toISOString().split('T')[0],
+      timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5),
     }));
 
     res.status(200).json({ requests: formattedRequests });
@@ -297,44 +297,9 @@ router.get('/patient-responses/:patientId', async (req, res) => {
       .json({ message: ` ${error}خطأ أثناء جلب الردود`, error: error });
   }
 });
-router.put('/update-request-status/:requestId', async (req, res) => {
-  const { requestId } = req.params;
-  const pharmacistId = req.body.pharmacistId;
 
-  try {
-    const result = await PrescriptionRequest.updateOne(
-      { _id: requestId, 'pharmacistsResponded.pharmacistId': pharmacistId },
-      { $set: { 'pharmacistsResponded.$.status': 'read' } }
-    );
 
-    if (result.modifiedCount === 0) {
-      return res.status(404).json({ message: "لم يتم تحديث الحالة. تأكد من وجود الطلب أو الصيدلي." });
-    }
 
-    res.status(200).json({ message: "تم تحديث حالة القراءة للصيدلي." });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.put('/update-sick-request-status-from-pharma/:requestId', async (req, res) => {
-  const { requestId } = req.params;
-
-  try {
-    const result = await PrescriptionRequest.updateOne(
-      { _id: requestId },
-      { $set: { status: 'read' } }
-    );
-
-    if (result.modifiedCount === 0) {
-      return res.status(404).json({ message: "لم يتم تحديث الحالة. تأكد من وجود الطلب." });
-    }
-
-    res.status(200).json({ message: "تم تحديث حالة القراءة للمريض." });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 
 
