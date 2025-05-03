@@ -298,24 +298,46 @@ router.get('/patient-responses/:patientId', async (req, res) => {
   }
 });
 router.put('/update-request-status/:requestId', async (req, res) => {
-  try {
-    const { status } = req.body;
+  const { requestId } = req.params;
+  const pharmacistId = req.body.pharmacistId;
 
-    if (!['read', 'unread'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status value' });
+  try {
+    const result = await PrescriptionRequest.updateOne(
+      { _id: requestId, 'pharmacistsResponded.pharmacistId': pharmacistId },
+      { $set: { 'pharmacistsResponded.$.status': 'read' } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: "لم يتم تحديث الحالة. تأكد من وجود الطلب أو الصيدلي." });
     }
 
-    const request = await PrescriptionRequest.findById(req.params.requestId);
-    if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
-
-    request.status = status;
-    await request.save();
-
-    res.status(200).json({ message: `تم تحديث حالة الطلب إلى ${status}` });
-  } catch (error) {
-    res.status(500).json({ message: 'خطأ أثناء تحديث الحالة', error });
+    res.status(200).json({ message: "تم تحديث حالة القراءة للصيدلي." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
+
+router.put('/update-sick-request-status-from-pharma/:requestId', async (req, res) => {
+  const { requestId } = req.params;
+
+  try {
+    const result = await PrescriptionRequest.updateOne(
+      { _id: requestId },
+      { $set: { status: 'read' } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: "لم يتم تحديث الحالة. تأكد من وجود الطلب." });
+    }
+
+    res.status(200).json({ message: "تم تحديث حالة القراءة للمريض." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
 
 router.post(
   '/logoutSpec',
