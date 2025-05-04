@@ -160,24 +160,37 @@ exports.addToFamousRadiologies = async (req, res) => {
 
     res.status(200).json({ message: 'radiology added to famous radiologies menu', radiology });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 exports.getFamousRadiologies = async (req, res) => {
   try {
-    const famousRadiologies = await Radiology.find({ isFamous: true });
 
+    const famousRadiologies = await Radiology.find({ isFamous: true });
+    
     if (famousRadiologies.length === 0) {
-      return res.status(404).json({ message: 'No famous Radiologies found' });
+      return res.status(200).json({ message: 'No famous Radiologies found' ,data:[] });
     }
 
-    res.status(200).json({ famousRadiologies });
+    const RadiologieswithRating = famousRadiologies.map((fam)=>{
+      let finalRate =0
+      if(fam.rate && fam.rate.length>0){
+        const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
+        finalRate = totalRating / fam.rate.length;
+      }
+      return{
+        ...fam._doc,
+        finalRate:Number(finalRate.toFixed(1))
+      }
+    })
+   
+    res.status(200).json({succes:true , data:RadiologieswithRating });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 exports.deleteRadiologyAccount = async (req, res) => {
   try {
     const { password } = req.body;
@@ -317,7 +330,44 @@ exports.getradiology = async (req, res) => {
 };
 
 
+exports.getFavourites = async (req, res) => {
+  try {
+    const { userId } = req.params;
 
+    const favourites = await Favourite.find({ userId, isFavourite: true })
+    .populate({
+      path:'radiologyId',
+      select:'-password -resetCode -resetCodeExpires -approved'
+    })
+      .exec();
+
+    const favouritesWithRating = favourites.map((fav) => {
+      const radiology = fav.radiologyId;
+      let finalRate = 0;
+
+      if (radiology && radiology.rate && radiology.rate.length > 0) {
+        const totalRating = radiology.rate.reduce((sum, r) => sum + r.rating, 0);
+        finalRate = totalRating / radiology.rate.length;
+      }
+
+      return {
+        ...fav._doc,
+        radiologyId: {
+          ...radiology._doc,
+          finalRate: Number(finalRate.toFixed(1)), 
+        },
+      };
+    });
+
+    res.status(200).json({
+      message: 'Favourite radiologies retrieved successfully',
+      favourites: favouritesWithRating,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 
 

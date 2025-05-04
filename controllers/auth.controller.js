@@ -858,6 +858,35 @@ exports.getFamousPhars = async (req, res) => {
   }
 };
 
+exports.getFamousPhars = async (req, res) => {
+  try {
+
+    const famousPharmas = await Pharmatic.find({ isFamous: true });
+    
+    if (famousPharmas.length === 0) {
+      return res.status(200).json({ message: 'No famous Pharmas found' ,data:[] });
+    }
+
+    const PharamswithRating = famousPharmas.map((fam)=>{
+      let finalRate =0
+      if(fam.rate && fam.rate.length>0){
+        const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
+        finalRate = totalRating / fam.rate.length;
+      }
+      return{
+        ...fam._doc,
+        finalRate:Number(finalRate.toFixed(1))
+      }
+    })
+   
+    res.status(200).json({succes:true , data:PharamswithRating });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 exports.searchPharmaticsByName = async (req, res) => {
   try {
     const { fullName } = req.query;
@@ -942,31 +971,45 @@ exports.togglePharmaFavourite = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 exports.getFavourites = async (req, res) => {
   try {
     const { userId } = req.params;
 
     const favourites = await Favourite.find({ userId, isFavourite: true })
       .populate({
-        path: 'pharmaId',
-        select: '-password -resetCode -resetCodeExpires -approved',
+        path:'pharmaId',
+        select:'-password -resetCode -resetCodeExpires -approved'
       })
       .exec();
 
-    if (favourites.length === 0) {
-      return res.status(200).json({ message: 'No favourite doctors found',data:[] });
-    }
+    const favouritesWithRating = favourites.map((fav) => {
+      const pharma = fav.pharmaId;
+      let finalRate = 0;
+
+      if (pharma && pharma.rate && pharma.rate.length > 0) {
+        const totalRating = pharma.rate.reduce((sum, r) => sum + r.rating, 0);
+        finalRate = totalRating / pharma.rate.length;
+      }
+
+      return {
+        ...fav._doc,
+        pharmaId: {
+          ...pharma._doc,
+          finalRate: Number(finalRate.toFixed(1)), 
+        },
+      };
+    });
 
     res.status(200).json({
-      message: 'Favourite doctors retrieved successfully',
-      favourites,
+      message: 'Favourite pharmas retrieved successfully',
+      favourites: favouritesWithRating,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 exports.deleteFromFavo = async (req, res) => {
   try {

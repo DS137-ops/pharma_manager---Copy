@@ -210,14 +210,26 @@ exports.addToFamousDoctors = async (req, res) => {
 
 exports.getFamousDoctors = async (req, res) => {
   try {
-    // Find all doctors where 'isFamous' is true
-    const famousDoctors = await Doctor.find({ isFamous: true });
 
+    const famousDoctors = await Doctor.find({ isFamous: true });
+    
     if (famousDoctors.length === 0) {
-      return res.status(404).json({ message: 'No famous doctors found' });
+      return res.status(200).json({ message: 'No famous doctors found' ,data:[] });
     }
 
-    res.status(200).json({ famousDoctors });
+    const doctorswithRating = famousDoctors.map((fam)=>{
+      let finalRate =0
+      if(fam.rate && fam.rate.length>0){
+        const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
+        finalRate = totalRating / fam.rate.length;
+      }
+      return{
+        ...fam._doc,
+        finalRate:Number(finalRate.toFixed(1))
+      }
+    })
+   
+    res.status(200).json({succes:true , data:doctorswithRating });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -1109,7 +1121,10 @@ exports.getFavourites = async (req, res) => {
     const { userId } = req.params;
 
     const favourites = await FavouriteDoctor.find({ userId, isFavourite: true })
-      .populate('doctorId')
+    .populate({
+      path:'doctorId',
+      select:'-password -resetCode -resetCodeExpires -approved'
+    })
       .exec();
 
     const favouritesWithRating = favourites.map((fav) => {

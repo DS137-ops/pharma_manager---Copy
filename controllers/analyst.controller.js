@@ -162,21 +162,36 @@ exports.addToFamousAnalysts = async (req, res) => {
   }
 };
 
+
 exports.getFamousAnalysts = async (req, res) => {
   try {
-    // Find all doctors where 'isFamous' is true
-    const famousAnalysts = await Analyst.find({ isFamous: true });
 
+    const famousAnalysts = await Analyst.find({ isFamous: true });
+    
     if (famousAnalysts.length === 0) {
-      return res.status(404).json({ message: 'No famous Analysts found' });
+      return res.status(200).json({ message: 'No famous Analysts found' ,data:[] });
     }
 
-    res.status(200).json({ famousAnalysts });
+    const analystswithRating = famousAnalysts.map((fam)=>{
+      let finalRate =0
+      if(fam.rate && fam.rate.length>0){
+        const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
+        finalRate = totalRating / fam.rate.length;
+      }
+      return{
+        ...fam._doc,
+        finalRate:Number(finalRate.toFixed(1))
+      }
+    })
+   
+    res.status(200).json({succes:true , data:analystswithRating });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
 
 exports.searchanalystByName = async (req, res) => {
   try {
@@ -589,17 +604,34 @@ exports.getFavourites = async (req, res) => {
     const { userId } = req.params;
 
     const favourites = await Favourite.find({ userId, isFavourite: true })
-      .populate({
-        path:'analystId',
-        select:'-password'
-      })
+    .populate({
+      path:'analystId',
+      select:'-password -resetCode -resetCodeExpires -approved'
+    })
       .exec();
 
-    if (favourites.length === 0) {
-      return res.status(200).json({ message: 'No favourite doctors found' ,data:[]});
-    }
+    const favouritesWithRating = favourites.map((fav) => {
+      const analyst = fav.analystId;
+      let finalRate = 0;
 
-    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
+      if (analyst && analyst.rate && analyst.rate.length > 0) {
+        const totalRating = analyst.rate.reduce((sum, r) => sum + r.rating, 0);
+        finalRate = totalRating / analyst.rate.length;
+      }
+
+      return {
+        ...fav._doc,
+        analystId: {
+          ...analyst._doc,
+          finalRate: Number(finalRate.toFixed(1)), 
+        },
+      };
+    });
+
+    res.status(200).json({
+      message: 'Favourite analysts retrieved successfully',
+      favourites: favouritesWithRating,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
