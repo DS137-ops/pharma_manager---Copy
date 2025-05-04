@@ -1108,7 +1108,7 @@ exports.getFavourites = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const favourites = await Favourite.find({ userId, isFavourite: true })
+    const favourites = await FavouriteDoctor.find({ userId, isFavourite: true })
       .populate('doctorId')
       .exec();
 
