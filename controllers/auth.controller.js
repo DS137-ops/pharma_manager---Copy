@@ -992,10 +992,9 @@ exports.getFavourites = async (req, res) => {
       }
 
       return {
-         {
+        
           ...pharma._doc,
           finalRate: Number(finalRate.toFixed(1)), 
-        },
       };
     });
 
