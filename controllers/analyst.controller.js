@@ -596,7 +596,7 @@ exports.getFavourites = async (req, res) => {
       .exec();
 
     if (favourites.length === 0) {
-      return res.status(404).json({ message: 'No favourite doctors found' });
+      return res.status(200).json({ message: 'No favourite doctors found' ,data:[]});
     }
 
     res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
