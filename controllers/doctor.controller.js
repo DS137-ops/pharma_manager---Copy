@@ -1111,14 +1111,25 @@ exports.getFavourites = async (req, res) => {
     const favourites = await FavouriteDoctor.find({ userId, isFavourite: true })
       .populate('doctorId')
       .exec();
+      const ratings = favourites.rate.map((r) => r.rating);
+const finalRate =0.0
+    if (ratings.length === 0) {
+      finalRate=0
+    }
+
+    // Calculate average rating
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
+    finalRate = parseFloat(averageRating)
+
 
     if (favourites.length === 0) {
-      return res.status(404).json({ message: 'No favourite doctors found' });
+      return res.status(200).json({ message: 'No favourite doctors found'  , data:[] });
     }
 
     res.status(200).json({
       message: 'Favourite doctors retrieved successfully',
-      favourites,
+      data:ratings,
     });
   } catch (error) {
     console.error(error);

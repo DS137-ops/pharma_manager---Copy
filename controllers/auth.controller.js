@@ -301,10 +301,9 @@ exports.getPharmas = async (req, res) => {
     );
 
     if (!findPharma || findPharma.length === 0) {
-      return res.status(404).json({ status: false, message: 'No result' });
+      return res.status(200).json({ status: false, message: 'No result' ,data:[] });
     }
 
-    // Fetch the user's favourite pharmacies
     const user = await Seek.findById(userId); // Assuming you have a User model
 
     const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
@@ -849,7 +848,7 @@ exports.getFamousPhars = async (req, res) => {
     const famousPharmas = await Pharmatic.find({ isFamous: true });
 
     if (famousPharmas.length === 0) {
-      return res.status(404).json({ message: 'No famous pharmas found' });
+      return res.status(200).json({ message: 'No famous pharmas found' , data:[] });
     }
 
     res.status(200).json({ famousPharmas });
@@ -874,8 +873,8 @@ exports.searchPharmaticsByName = async (req, res) => {
 
     if (pharmatics.length === 0) {
       return res
-        .status(404)
-        .json({ status: false, message: 'No matching pharmatics found' });
+        .status(200)
+        .json({ status: false, message: 'No matching pharmatics found' ,data:[] });
     }
     const pharmaciesWithRatings = pharmatics.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
@@ -956,7 +955,7 @@ exports.getFavourites = async (req, res) => {
       .exec();
 
     if (favourites.length === 0) {
-      return res.status(404).json({ message: 'No favourite doctors found' });
+      return res.status(200).json({ message: 'No favourite doctors found',data:[] });
     }
 
     res.status(200).json({
@@ -1005,8 +1004,8 @@ exports.getUserBookings = async (req, res) => {
 
     if (!doctors || doctors.length === 0) {
       return res
-        .status(404)
-        .json({ status: false, message: 'No bookings found for this patient' });
+        .status(200)
+        .json({ status: false, message: 'No bookings found for this patient' ,data:[]});
     }
 
     let patientBookings = [];
