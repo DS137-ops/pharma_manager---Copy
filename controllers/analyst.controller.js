@@ -620,11 +620,8 @@ exports.getFavourites = async (req, res) => {
       }
 
       return {
-        ...fav._doc,
-        analystId: {
           ...analyst._doc,
           finalRate: Number(finalRate.toFixed(1)), 
-        },
       };
     });
 
