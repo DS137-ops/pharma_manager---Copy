@@ -1111,31 +1111,35 @@ exports.getFavourites = async (req, res) => {
     const favourites = await FavouriteDoctor.find({ userId, isFavourite: true })
       .populate('doctorId')
       .exec();
-      const ratings = favourites.rate.map((r) => r.rating);
-const finalRate =0.0
-    if (ratings.length === 0) {
-      finalRate=0
-    }
 
-    // Calculate average rating
-    const total = ratings.reduce((sum, rating) => sum + rating, 0);
-    const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
-    finalRate = parseFloat(averageRating)
+    const favouritesWithRating = favourites.map((fav) => {
+      const doctor = fav.doctorId;
+      let finalRate = 0;
 
+      if (doctor && doctor.rate && doctor.rate.length > 0) {
+        const totalRating = doctor.rate.reduce((sum, r) => sum + r.rating, 0);
+        finalRate = totalRating / doctor.rate.length;
+      }
 
-    if (favourites.length === 0) {
-      return res.status(200).json({ message: 'No favourite doctors found'  , data:[] });
-    }
+      return {
+        ...fav._doc,
+        doctorId: {
+          ...doctor._doc,
+          finalRate: Number(finalRate.toFixed(1)), 
+        },
+      };
+    });
 
     res.status(200).json({
       message: 'Favourite doctors retrieved successfully',
-      data:ratings,
+      favourites: favouritesWithRating,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 exports.deleteFromFavo = async (req, res) => {
   try {
     const { cardId } = req.params;
