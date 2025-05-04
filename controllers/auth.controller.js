@@ -992,8 +992,7 @@ exports.getFavourites = async (req, res) => {
       }
 
       return {
-        ...fav._doc,
-        pharmaId: {
+         {
           ...pharma._doc,
           finalRate: Number(finalRate.toFixed(1)), 
         },
