@@ -91,12 +91,12 @@ const doctorSchema = new mongoose.Schema({
   ],
   approved: { type: Boolean, default: false },
   isFamous: { type: Boolean, default: false },
-  doctorimage: [
+  doctorimage: 
     {
       imageUrl: String,
       date: { type: Date, default: Date.now },
     },
-  ],
+  
   accountDate: {
     type: Date,
   },

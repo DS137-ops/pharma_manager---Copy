@@ -217,10 +217,10 @@ router.post(
       }
 
       const image = req.file.path;
-      TheDoctor.doctorimage.push({
+      TheDoctor.doctorimage = {
         imageUrl: image,
         date: new Date(),
-      });
+      };
       await TheDoctor.save();
       res.status(200).json({
         message: 'Image uploaded successfully',

@@ -90,8 +90,8 @@ exports.createNewAnalyst = async (req, res) => {
     await newUser.save();
     await RefreshToken.create({ token, userRef: newUser._id });
     // Create the approval and reject links
-    const approvalLink = `http://147.93.106.92/api/Analyst/approve/analyst/${newUser._id}`;
-    const rejectLink = `http://147.93.106.92/api/Analyst/reject/analyst/${newUser._id}`;
+    const approvalLink = `http://147.93.106.92:8080/api/Analyst/approve/analyst/${newUser._id}`;
+    const rejectLink = `http://147.93.106.92:8080/api/Analyst/reject/analyst/${newUser._id}`;
 
     // Send an email to the admin for approval
     const mailOptions = {
