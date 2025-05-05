@@ -260,7 +260,7 @@ router.post('/respond-request-from-Pharmatic', async (req, res) => {
     });
     await request.save();
 
-    res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
+    res.status(200).json({succes:true , message: 'تم إرسال الرد بنجاح' });
   } catch (error) {
     res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error });
   }
@@ -290,7 +290,7 @@ router.get('/patient-responses/:patientId', async (req, res) => {
       });
     });
 
-    res.status(200).json({ responses });
+    res.status(200).json({ succes:true , responses });
   } catch (error) {
     res
       .status(500)
@@ -378,8 +378,8 @@ router.get(
         { patientId },
         '-pharmacistsResponded'
       );
-      if (!requests) return res.status(404).json({ message: 'No orders ' });
-      return res.status(200).json({ message: requests });
+      if (!requests) return res.status(200).json({ succes:true , message: 'No orders ' , data:[] });
+      return res.status(200).json({ data: requests });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }

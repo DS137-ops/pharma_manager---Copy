@@ -196,8 +196,8 @@ router.get(
         { patientId },
         '-pharmacistsResponded'
       );
-      if (!requests) return res.status(404).json({ message: 'No orders' });
-      return res.status(200).json({ message: requests });
+      if (!requests) return res.status(200).json({ succes:true , message: 'No orders' ,data:[]});
+      return res.status(200).json({ data: requests });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -319,7 +319,7 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
       });
     });
 
-    res.status(200).json({ responses });
+    res.status(200).json({succes:true ,  data:responses });
   } catch (error) {
     console.error('Error fetching responses:', error);
     res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });

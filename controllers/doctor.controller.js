@@ -52,11 +52,11 @@ exports.searchdoctorByName = async (req, res) => {
 
     if (doctor.length === 0) {
       return res
-        .status(404)
-        .json({ status: false, message: 'No matching doctor found' });
+        .status(200)
+        .json({ status: false, message: 'No matching doctor found' , data:[] });
     }
 
-    return res.status(200).json({ status: true, doctor });
+    return res.status(200).json({ status: true, data:doctor });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -113,7 +113,6 @@ exports.createNewDoctor = async (req, res) => {
         message: 'Region not found in the selected city',
       });
       const existSpec = await Specialty.find({ specId:specId });
-      console.log(existSpec)
     if (!existSpec) {
       return res.status(400).json({
         success: false,
@@ -196,7 +195,7 @@ exports.addToFamousDoctors = async (req, res) => {
     );
 
     if (!doctor) {
-      return res.status(404).json({ message: 'Doctor not found' });
+      return res.status(404).json({succes:true , message: 'Doctor not found' });
     }
 
     res
@@ -634,7 +633,7 @@ exports.loginDoctor = async (req, res) => {
     const user = await Doctor.findOne({ email });
     if (!user) {
       return res
-        .status(404)
+        .status(401)
         .json({ success: false, message: 'Email is not correct' });
     }
 
@@ -697,18 +696,16 @@ exports.rateDoctor = async (req, res) => {
       doctor.rate = [];
     }
 
-    // التحقق مما إذا كان المستخدم قد قيم سابقًا
     const existingRatingIndex = doctor.rate.findIndex(
       (r) => r.userId.toString() === userId.toString()
     );
 
     if (existingRatingIndex !== -1) {
-      // تحديث التقييم الحالي
+ 
       doctor.rate[existingRatingIndex].rating = rating;
       doctor.rate[existingRatingIndex].review = review;
       doctor.rate[existingRatingIndex].date = new Date();
     } else {
-      // إضافة تقييم جديد
       doctor.rate.push({ userId, rating, review, date: new Date() });
     }
 
@@ -742,11 +739,10 @@ exports.getFinalRateforDoctor = async (req, res) => {
       });
     }
 
-    // Calculate average rating
     const total = ratings.reduce((sum, rating) => sum + rating, 0);
     const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
 
-    res.json({ doctorId, finalRate: parseFloat(averageRating) });
+    res.status(200).json({succes:true , doctorId, finalRate: parseFloat(averageRating) });
   } catch (error) {
     console.error('Error calculating rating:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -787,7 +783,7 @@ exports.getDoctors = async (req, res) => {
     const doctors = await Doctor.find(query);
 
     if (!doctors || doctors.length === 0) {
-      return res.status(404).json({ status: false, message: 'No doctors found' });
+      return res.status(200).json({ status: true, message: 'No doctors found' , data:[] });
     }
 
     const favouriteDoctors = await FavouriteDoctor.find({ userId });
@@ -808,7 +804,7 @@ exports.getDoctors = async (req, res) => {
       return doctorObj;
     });
 
-    res.status(200).json({ status: true, doctors: doctorsWithFavStatus });
+    res.status(200).json({ status: true, data: doctorsWithFavStatus });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -958,7 +954,7 @@ exports.updateDoctorInfo = async (req, res) => {
       address,
       specId,
       NumberState,
-      doctorimage,
+
     } = req.body;
 
     if (fullName) updateFields.fullName = fullName;
@@ -992,16 +988,10 @@ exports.updateDoctorInfo = async (req, res) => {
           message: 'Region not found in the selected city',
         });
 
-      updateFields.city = existCity.name; // حفظ اسم المدينة
-      updateFields.region = existRegion.name; // حفظ اسم المنطقة
+      updateFields.city = existCity.name; 
+      updateFields.region = existRegion.name; 
     }
 
-    // تحديث صور الطبيب إذا تم إرسالها
-    if (doctorimage && Array.isArray(doctorimage)) {
-      updateFields.doctorimage = doctorimage;
-    }
-
-    // تحديث الحقول المحددة فقط
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
       { $set: updateFields },
@@ -1024,6 +1014,8 @@ exports.updateDoctorInfo = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
+
 exports.forgetPassForDoctor = async (req, res) => {
   const { email } = req.body;
   const user = await Doctor.findOne({ email });

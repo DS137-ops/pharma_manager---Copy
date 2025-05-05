@@ -351,7 +351,6 @@ router.get(
         { patientId },
         '-pharmacistsResponded'
       );
-      if (!requests) return res.status(404).json({ message: 'No orders' });
       return res.status(200).json({ message: requests });
     } catch (error) {
       return res.status(500).json({ error: error.message });

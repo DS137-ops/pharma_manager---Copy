@@ -169,7 +169,7 @@ exports.getFamousAnalysts = async (req, res) => {
     const famousAnalysts = await Analyst.find({ isFamous: true });
     
     if (famousAnalysts.length === 0) {
-      return res.status(200).json({ message: 'No famous Analysts found' ,data:[] });
+      return res.status(200).json({succes:true , message: 'No famous Analysts found' ,data:[] });
     }
 
     const analystswithRating = famousAnalysts.map((fam)=>{
@@ -209,11 +209,11 @@ exports.searchanalystByName = async (req, res) => {
 
     if (!analysts.length) {
       return res
-        .status(404)
-        .json({ status: false, message: 'No matching analysts found' });
+        .status(200)
+        .json({ status: true, message: 'No matching analysts found' , analysts:[] });
     }
 
-    return res.status(200).json({ status: true, analysts });
+    return res.status(200).json({ status: true, analysts:analysts });
   } catch (error) {
     console.error('Search error:', error);
     res
@@ -407,7 +407,7 @@ exports.getAnalyst = async (req, res) => {
     const findAnalyst = await Analyst.find(query).select('-password');
 
     if (!findAnalyst || findAnalyst.length === 0) {
-      return res.status(404).json({ status: false, message: 'No result' });
+      return res.status(200).json({ succes:true, message: 'No result' ,data:[] });
     }
     const user = await Seek.findById(userId);
 
@@ -430,7 +430,7 @@ exports.getAnalyst = async (req, res) => {
 
     return res
       .status(200)
-      .json({ status: true, findAnalyst: analystsWithRatings });
+      .json({ status: true, data: analystsWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -526,7 +526,7 @@ exports.forgetPassForAnalyst = async (req, res) => {
     html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
   });
 
-  res.json({ message: 'Reset code sent to your email' });
+  res.status(200).json({succes:true , message: 'Reset code sent to your email' });
 };
 
 exports.verifyCodeAnalyst = async (req, res) => {
@@ -537,7 +537,7 @@ exports.verifyCodeAnalyst = async (req, res) => {
     return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
-  res.json({ message: 'Code verified successfully' });
+  res.status(200).json({ succes:true , message: 'Code verified successfully' });
 };
 
 exports.resetAnalystPass = async (req, res) => {
@@ -554,7 +554,7 @@ exports.resetAnalystPass = async (req, res) => {
   user.resetCodeExpires = null;
   await user.save();
 
-  res.json({ message: 'Password reset successfully' });
+  res.status(200).json({ succes:true , message: 'Password reset successfully' });
 };
 
 exports.toggleAnalystFavourite = async (req, res) => {

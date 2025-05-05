@@ -198,6 +198,7 @@ router.post(
   checkprov.checkifLoggedIn,
   doctorController.updateDoctorInfo
 );
+
 router.post(
   '/upload-doctor-photo/:id',
   checkprov.checkifLoggedIn,
@@ -232,13 +233,24 @@ router.post(
   }
 );
 
+router.delete('/delete-doctor-photo/:id' , checkprov.checkifLoggedIn , async(req,res)=>{
+  try{
+    const doctor = await Doctor.findById(id)
+    if(!doctor)return res.status(404).json({succes:true , message:`Doctor not found`})
+      const doctorImage = doctor.doctorimage
+
+  }catch(error){
+    res.status(500).json({succes:true , message:`${error.message}`})
+  }
+})
+
 router.get('/get-doctor-image/:id', async (req, res) => {
   try {
     const doctorId = req.params.id;
     const doctor = await Doctor.findById(doctorId);
-    const notify = doctor.doctorimage;
+    const image = doctor.doctorimage;
 
-    res.status(200).json({ success: true, notify });
+    res.status(200).json({ success: true, image });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -851,7 +851,7 @@ exports.getFamousPhars = async (req, res) => {
       return res.status(200).json({ message: 'No famous pharmas found' , data:[] });
     }
 
-    res.status(200).json({ famousPharmas });
+    res.status(200).json({ data:famousPharmas });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -1071,7 +1071,7 @@ exports.getUserBookings = async (req, res) => {
       });
     });
 
-    res.status(200).json({ status: true, bookings: patientBookings });
+    res.status(200).json({ status: true, data: patientBookings });
   } catch (error) {
     console.error('Error fetching user bookings:', error);
     res.status(500).json({ status: false, message: 'Server error' });

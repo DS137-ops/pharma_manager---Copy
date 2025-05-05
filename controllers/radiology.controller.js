@@ -31,10 +31,10 @@ exports.searchradiologyByName = async (req, res) => {
     });
 
     if (radiology.length === 0) {
-      return res.status(404).json({ status: false, message: 'No matching radiology found' });
+      return res.status(200).json({ status: true,data:[] });
     }
 
-    return res.status(200).json({ status: true, radiology });
+    return res.status(200).json({ status: true, data:radiology });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -169,7 +169,7 @@ exports.getFamousRadiologies = async (req, res) => {
     const famousRadiologies = await Radiology.find({ isFamous: true });
     
     if (famousRadiologies.length === 0) {
-      return res.status(200).json({ message: 'No famous Radiologies found' ,data:[] });
+      return res.status(200).json({succes:true  ,data:[] });
     }
 
     const RadiologieswithRating = famousRadiologies.map((fam)=>{
@@ -302,7 +302,7 @@ exports.getradiology = async (req, res) => {
     const findRadiology = await Radiology.find(query);
 
     if (!findRadiology || findRadiology.length === 0) {
-      return res.status(404).json({ status: false, message: 'No result' });
+      return res.status(200).json({ succes: true, message: 'No result',data:[] });
     }
     const user = await Seek.findById(userId);
 
@@ -322,7 +322,7 @@ exports.getradiology = async (req, res) => {
 
     radiologiesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
 
-    return res.status(200).json({ status: true, findRadiology: radiologiesWithRatings });
+    return res.status(200).json({ succes: true, data: radiologiesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -357,6 +357,7 @@ exports.getFavourites = async (req, res) => {
     });
 
     res.status(200).json({
+      succes:true,
       message: 'Favourite radiologies retrieved successfully',
       favourites: favouritesWithRating,
     });
@@ -445,7 +446,7 @@ exports.getFinalRateForRadiology = async (req, res) => {
     const total = ratings.reduce((sum, rating) => sum + rating, 0);
     const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
 
-    res.json({ radiologyId, finalRate: parseFloat(averageRating) });
+    res.status(200).json({succes:true , radiologyId, finalRate: parseFloat(averageRating) });
   } catch (error) {
     console.error('Error calculating rating:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -651,10 +652,10 @@ exports.getFavourites = async (req, res) => {
       .exec();
 
     if (favourites.length === 0) {
-      return res.status(404).json({ message: 'No favourite doctors found' });
+      return res.status(200).json({succes:true , message: 'No favourite doctors found',data:[] });
     }
 
-    res.status(200).json({ message: 'Favourite doctors retrieved successfully', favourites });
+    res.status(200).json({succes:true , message: 'Favourite doctors retrieved successfully', data:favourites });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
