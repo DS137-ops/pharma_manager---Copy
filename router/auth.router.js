@@ -277,7 +277,7 @@ router.get('/patient-responses/:patientId', async (req, res) => {
     let responses = [];
     patientRequests.forEach((request) => {
       request.pharmacistsResponded.forEach((response) => {
-        if (response.accepted) {
+        if (response.accepted && response.pharmacistId) {
           responses.push({
             pharmacistName: response.pharmacistId.fullName,
             phone: response.pharmacistId.phone,

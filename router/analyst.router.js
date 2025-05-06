@@ -275,12 +275,12 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
     const patientRequests = await PrescriptionAnalystRequest.find({
       patientId: req.params.patientId,
     }).populate('analystsResponded.analystId', 'fullName phone city region');
-
+console.log(`patientRequests: ${patientRequests}`)
     let responses = [];
 
     patientRequests.forEach((request) => {
       request.analystsResponded.forEach((response) => {
-        if (response.accepted) {
+        if (response.accepted && response.analystId) {
           responses.push({
             analystName: response.analystId.fullName,
             phone: response.analystId.phone,
@@ -292,12 +292,13 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
       });
     });
 
-    res.status(200).json({success:true, responses });
+    res.status(200).json({ success: true, data:responses });
   } catch (error) {
     console.error('Error fetching responses:', error);
-    res.status(500).json({ message: `${error.message}خطأ أثناء جلب الردود`  });
+    res.status(500).json({ message: `خطأ أثناء جلب الردود: ${error.message}` });
   }
 });
+
 router.put('/update-request-status/:requestId', async (req, res) => {
   try {
     const { status } = req.body;
