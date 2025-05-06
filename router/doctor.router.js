@@ -199,62 +199,10 @@ router.post(
   doctorController.updateDoctorInfo
 );
 
-router.post(
-  '/upload-doctor-photo/:id',
-  checkprov.checkifLoggedIn,
-  uploadfordoctor.single('image'),
-  async (req, res) => {
-    try {
-      const DoctorId = req.params.id;
-      if (!mongoose.Types.ObjectId.isValid(DoctorId)) {
-        return res.status(400).json({ message: 'Invalid pharmacy ID' });
-      }
-      const TheDoctor = await Doctor.findById(DoctorId);
-      if (!TheDoctor) {
-        return res.status(404).json({ message: 'Doctor not found' });
-      }
-      if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded' });
-      }
 
-      const image = req.file.path;
-      TheDoctor.doctorimage = {
-        imageUrl: image,
-        date: new Date(),
-      };
-      await TheDoctor.save();
-      res.status(200).json({
-        message: 'Image uploaded successfully',
-        data: TheDoctor,
-      });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server', error });
-    }
-  }
-);
 
-router.delete('/delete-doctor-photo/:id' , checkprov.checkifLoggedIn , async(req,res)=>{
-  try{
-    const doctor = await Doctor.findById(id)
-    if(!doctor)return res.status(404).json({succes:true , message:`Doctor not found`})
-      const doctorImage = doctor.doctorimage
 
-  }catch(error){
-    res.status(500).json({succes:true , message:`${error.message}`})
-  }
-})
 
-router.get('/get-doctor-image/:id', async (req, res) => {
-  try {
-    const doctorId = req.params.id;
-    const doctor = await Doctor.findById(doctorId);
-    const image = doctor.doctorimage;
-
-    res.status(200).json({ success: true, image });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 router.post(
   '/add-for-gallery/:id',
