@@ -275,7 +275,7 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
     const patientRequests = await PrescriptionAnalystRequest.find({
       patientId: req.params.patientId,
     }).populate('analystsResponded.analystId', 'fullName phone city region');
-console.log(`patientRequests: ${patientRequests}`)
+console.log(`patientRequests: ${patientRequests.imageUrl}`)
     let responses = [];
 
     patientRequests.forEach((request) => {
