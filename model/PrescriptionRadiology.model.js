@@ -24,6 +24,6 @@ const requestRadiologySchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model(
-  'requestRadiologySchema',
+  'PrescriptionRadiologyRequest',
   requestRadiologySchema
 );

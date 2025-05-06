@@ -295,7 +295,7 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
     res.status(200).json({success:true, responses });
   } catch (error) {
     console.error('Error fetching responses:', error);
-    res.status(500).json({ message: 'خطأ أثناء جلب الردود', error });
+    res.status(500).json({ message: `${error.message}خطأ أثناء جلب الردود`  });
   }
 });
 router.put('/update-request-status/:requestId', async (req, res) => {

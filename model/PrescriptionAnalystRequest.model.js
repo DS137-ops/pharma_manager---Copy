@@ -23,4 +23,4 @@ const requestAnalystSchema = new mongoose.Schema({
   ],
 });
 
-module.exports = mongoose.model('requestAnalystSchema', requestAnalystSchema);
+module.exports = mongoose.model('PrescriptionAnalystRequest', requestAnalystSchema);

@@ -60,11 +60,6 @@ const specialties = [
   'جراحة اورام',
 ];
 
-
-
-
-
-
 const docs = specialties.map((name, index) => ({
   name: name.trim(),
   specId: index + 1,

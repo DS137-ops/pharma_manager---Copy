@@ -290,7 +290,7 @@ router.get('/patient-responses/:patientId', async (req, res) => {
       });
     });
 
-    res.status(200).json({ succes:true , responses });
+    res.status(200).json({ succes:true , data:responses });
   } catch (error) {
     res
       .status(500)
