@@ -91,11 +91,7 @@ const doctorSchema = new mongoose.Schema({
   ],
   approved: { type: Boolean, default: false },
   isFamous: { type: Boolean, default: false },
-  doctorimage: 
-    {
-      imageUrl: String,
-      date: { type: Date, default: Date.now },
-    },
+  imageUrl: String,
   
   accountDate: {
     type: Date,

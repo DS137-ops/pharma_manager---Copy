@@ -285,6 +285,7 @@ router.get('/patient-responses/:patientId', async (req, res) => {
             region: response.pharmacistId.region,
             price: response.price,
             status: request.status,
+            imageurl:request.imageUrl
           });
         }
       });

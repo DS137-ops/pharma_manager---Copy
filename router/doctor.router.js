@@ -337,6 +337,53 @@ router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
   res.status(200).json({ success: true, data: user });
 });
 
+router.post('/upload-personal-photo/:doctorId', uploadfordoctor.single('image'), async (req, res) => {
+  try {
+    const doctorId = req.params.doctorId;
+    const imagePath = req.file ? req.file.path : null;
+
+    if (!imagePath) {
+      return res.status(400).json({ success: false, message: 'لم يتم رفع أي صورة' });
+    }
+
+    const doctor = await Doctor.findByIdAndUpdate(
+      doctorId,
+      { imageUrl: imagePath },
+      { new: true }
+    );
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'الطبيب غير موجود' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'تم رفع الصورة الشخصية بنجاح',
+      data: imagePath,
+    });
+  } catch (error) {
+    console.error('Upload Error:', error);
+    res.status(500).json({ success: false, message: 'حدث خطأ أثناء رفع الصورة' });
+  }
+});
+// GET - معلومات الطبيب تشمل الصورة
+router.get('/doctor/:doctorId', async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.doctorId);
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'الطبيب غير موجود' });
+    }
+
+    res.status(200).json({
+      success: true,
+        data: doctor.imageUrl, // ← يمكن عرضه مباشرة
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في جلب بيانات الطبيب' });
+  }
+});
+
 router.post(
   '/add-doctor-to-favourite',
   checkprov.checkifLoggedIn,

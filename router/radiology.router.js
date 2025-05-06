@@ -314,6 +314,7 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
             region: response.radiologyId?.region || 'N/A',
             price: response.price || 0,
             status: request.status || 'N/A',
+            imageurl:request.imageUrl
           });
         }
       });
