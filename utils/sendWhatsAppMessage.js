@@ -1,22 +1,14 @@
-// const axios = require('axios');
+const { Client } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
 
-// exports.sendWhatsAppMessage = async(phone, message)=> {
-//     const token = process.env.WHATSAPP_TOKEN;
-//     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const client = new Client();
 
-//     await axios.post(
-//         `https://graph.facebook.com/v17.0/${phoneNumberId}/messages`,
-//         {
-//             messaging_product: "whatsapp",
-//             to: phone,
-//             text: { body: message },
-//         },
-//         {
-//             headers: {
-//                 Authorization: `Bearer ${token}`,
-//                 "Content-Type": "application/json",
-//             },
-//         }
-//     );
-// }
+client.on('ready', () => {
+    console.log('Client is ready!');
+});
 
+client.on('qr', qr => {
+    qrcode.generate(qr, {small: true});
+});
+
+client.initialize();

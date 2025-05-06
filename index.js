@@ -12,7 +12,6 @@ app.use('/uploads', express.static('uploads'));
 const mongoose = require('mongoose');
 const PORT = process.env.PORT;
 const path = require('path');
-
 app.use(express.static(path.join(__dirname, 'assests')));
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
@@ -60,6 +59,11 @@ const specialties = [
   'جراحة مخ و اعصاب و عمود فقري',
   'جراحة اورام',
 ];
+
+
+
+
+
 
 const docs = specialties.map((name, index) => ({
   name: name.trim(),
