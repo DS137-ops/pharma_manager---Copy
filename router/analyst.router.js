@@ -275,19 +275,20 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
     const patientRequests = await PrescriptionAnalystRequest.find({
       patientId: req.params.patientId,
     }).populate('analystsResponded.analystId', 'fullName phone city region');
-console.log(`patientRequests: ${patientRequests.imageUrl}`)
+
     let responses = [];
 
     patientRequests.forEach((request) => {
       request.analystsResponded.forEach((response) => {
         if (response.accepted && response.analystId) {
           responses.push({
-            imageUrl: patientRequests.imageUrl,
+
             analystName: response.analystId.fullName,
             phone: response.analystId.phone,
             city: response.analystId.city,
             region: response.analystId.region,
             price: response.price,
+            imageurl:request.imageUrl
           });
         }
       });
