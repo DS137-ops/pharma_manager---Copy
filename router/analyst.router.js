@@ -282,6 +282,7 @@ console.log(`patientRequests: ${patientRequests}`)
       request.analystsResponded.forEach((response) => {
         if (response.accepted && response.analystId) {
           responses.push({
+            imageUrl: patientRequests.imageUrl,
             analystName: response.analystId.fullName,
             phone: response.analystId.phone,
             city: response.analystId.city,
