@@ -2,7 +2,7 @@ const Admin = require("../model/adminModel.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const RefreshToken = require('../model/RefreshToken.model');
-
+const PrivacyPolicy = require("../model/PrivacyPolicy.model");
 exports.createAdmin = async (req, res) => {
   try {
     const existingAdmin = await Admin.findOne();
@@ -42,3 +42,39 @@ exports.adminLogin = async (req, res) => {
 
 
 
+exports.setPrivacyPolicy = async (req, res) => {
+  try {
+    const { content } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ message: "Content is required." });
+    }
+
+    let policy = await PrivacyPolicy.findOne();
+
+    if (policy) {
+      policy.content = content;
+      await policy.save();
+    } else {
+      policy = new PrivacyPolicy({ content });
+      await policy.save();
+    }
+
+    res.status(200).json({ message: "Privacy policy saved.", policy });
+  } catch (err) {
+    res.status(500).json({ message: "Server error.", error: err.message });
+  }
+};
+exports.getPrivacyPolicy = async (req, res) => {
+  try {
+    const policy = await PrivacyPolicy.findOne();
+
+    if (!policy) {
+      return res.status(404).json({ message: "Privacy policy not found." });
+    }
+
+    res.status(200).json(policy);
+  } catch (err) {
+    res.status(500).json({ message: "Server error.", error: err.message });
+  }
+};

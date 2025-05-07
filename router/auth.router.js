@@ -299,12 +299,6 @@ router.get('/patient-responses/:patientId', async (req, res) => {
   }
 });
 
-
-
-
-
-
-
 router.post(
   '/logoutSpec',
   checkprov.checkifLoggedIn,
@@ -318,6 +312,7 @@ router.get(
   checkprov.checkifLoggedIn,
   authController.getUserBookings
 );
+
 router.post(
   '/forgot-password-for-pharmatic',
   authController.forgetPassForPharmatic
@@ -344,14 +339,13 @@ router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
   
   const userObj = user.toObject({ getters: true, versionKey: false });
   
- 
   delete userObj.password;
   delete userObj.resetCode;
   delete userObj.rate;
   
   userObj.finalRate = averageRating;
   
-  res.status(200).json({ success: true,data:userObj   });
+  res.status(200).json({ success: true,data:userObj });
 });
 
 router.post(

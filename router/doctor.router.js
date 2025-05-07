@@ -314,7 +314,7 @@ router.post('/upload-personal-photo/:doctorId', uploadfordoctor.single('image'),
     res.status(500).json({ success: false, message: 'حدث خطأ أثناء رفع الصورة' });
   }
 });
-// GET - معلومات الطبيب تشمل الصورة
+
 router.get('/doctor/:doctorId', async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.doctorId);
