@@ -8,6 +8,8 @@ const RadiologyRouter = require('./router/radiology.router');
 const DoctorRouter = require('./router/doctor.router');
 const Specialty = require('./model/Specialty.model');
 const http = require('http');
+const { Client } = require('whatsapp-web.js');
+const qrcode = require('qrcode');
 app.use('/uploads', express.static('uploads'));
 const mongoose = require('mongoose');
 const PORT = process.env.PORT;
@@ -75,14 +77,9 @@ app.use('/api/Radiology', RadiologyRouter);
 app.use('/api/Doctor', DoctorRouter);
 app.use('/admin', adminRouter);
 
-const { Client } = require('whatsapp-web.js');
-const qrcode = require('qrcode');
 
-
-// متغير لتخزين QR الحالي
 let currentQR = null;
 
-// إعداد WhatsApp client
 const client = new Client();
 
 client.on('qr', async (qr) => {
@@ -96,7 +93,7 @@ client.on('ready', () => {
 
 client.initialize();
 
-// GET /qr => يعرض صورة QR
+
 app.get('/qr', async (req, res) => {
     if (!currentQR) {
         return res.status(404).send('QR not available yet. Please wait...');
