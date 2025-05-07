@@ -60,7 +60,7 @@ router.post('/add-advert-for-doctor', async (req, res) => {
     });
 
     await newAdvert.save();
-    res.status(200).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+    res.status(200).json({ message: 'تمت إضافة الإعلان بنجاح', data: newAdvert });
 
   } catch (error) {
     res.status(500).json({ error: error.message });

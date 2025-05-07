@@ -81,7 +81,7 @@ router.get(
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.status(200).json({ success: true, data: user });
+    res.status(200).json({ success: true,message:'', data: user });
   }
 );
 router.get(
@@ -142,7 +142,7 @@ router.post('/isApprovedPharmatic', async (req, res) => {
   }
   res
     .status(200)
-    .json({ success: true, message: 'user is  approved sucessfully!' });
+    .json({ success: true, message: 'user is  approved sucessfully!' , data:[] });
 });
 router.post(
   '/ratePharmacy/:pharmaticId',
@@ -205,7 +205,7 @@ router.post(
       await newRequest.save();
       res
         .status(200)
-        .json({ message: 'تم إرسال الطلب بنجاح', request: newRequest });
+        .json({succes:true , message: 'تم إرسال الطلب بنجاح', data: newRequest });
     } catch (error) {
       console.error('خطأ أثناء إرسال الطلب:', error);
       res
@@ -236,7 +236,7 @@ router.get('/Pharmatic-requests/:pharmacistId', async (req, res) => {
       timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5),
     }));
 
-    res.status(200).json({ requests: formattedRequests });
+    res.status(200).json({ succes:true ,message:'', data: formattedRequests });
   } catch (error) {
     res
       .status(500)
@@ -260,7 +260,7 @@ router.post('/respond-request-from-Pharmatic', async (req, res) => {
     });
     await request.save();
 
-    res.status(200).json({succes:true , message: 'تم إرسال الرد بنجاح' });
+    res.status(200).json({succes:true , message: 'تم إرسال الرد بنجاح' ,data:[] });
   } catch (error) {
     res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error });
   }
@@ -291,7 +291,7 @@ router.get('/patient-responses/:patientId', async (req, res) => {
       });
     });
 
-    res.status(200).json({ succes:true , data:responses });
+    res.status(200).json({ succes:true ,message:'' , data:responses });
   } catch (error) {
     res
       .status(500)
@@ -345,7 +345,7 @@ router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
   
   userObj.finalRate = averageRating;
   
-  res.status(200).json({ success: true,data:userObj });
+  res.status(200).json({ success: true, message:'' ,data:userObj });
 });
 
 router.post(
@@ -374,7 +374,7 @@ router.get(
         '-pharmacistsResponded'
       );
       if (!requests) return res.status(200).json({ succes:true , message: 'No orders ' , data:[] });
-      return res.status(200).json({ data: requests });
+      return res.status(200).json({ succes:true , message:'', data: requests });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -451,7 +451,7 @@ router.get(
 
       return res
         .status(200)
-        .json({ success: true, data: pharmasWithFavStatus });
+        .json({ success: true,message:'' , data: pharmasWithFavStatus });
     } catch (err) {
       return res.status(500).json({ success: false, err: err.message });
     }
@@ -488,7 +488,7 @@ router.get('/AllOrders/:patientId' , checkprov.checkifLoggedIn , async(req,res)=
               if (!fromDoctor || fromDoctor.length === 0) {
                 return res
                   .status(200)
-                  .json({ status: false, message: 'No bookings found for this patient' , data:[] });
+                  .json({ status: true, message: 'No bookings found for this patient' , data:[] });
               }
           
               let patientBookings = [];
@@ -513,7 +513,7 @@ router.get('/AllOrders/:patientId' , checkprov.checkifLoggedIn , async(req,res)=
                 });
               });
     if (!fromPharma && !fromAnalyst && !fromRadiology && (!fromDoctor || fromDoctor.length === 0)) return res.status(200).json({ message: 'No orders ' , data:[] });
-return res.status(200).json({succes:true , fromPharma:fromPharma , fromAnalyst:fromAnalyst , fromRadiology:fromRadiology , fromDoctor:patientBookings})
+return res.status(200).json({succes:true ,message:'' , fromPharma:fromPharma , fromAnalyst:fromAnalyst , fromRadiology:fromRadiology , fromDoctor:patientBookings})
   }catch(error){
     res.status(500).json({succes:true , message:`internal server error ${error.message}`})
   }
@@ -589,7 +589,7 @@ router.get('/AllResponses/:patientId' , checkprov.checkifLoggedIn , async(req,re
                 }
               });
             });
-            return res.status(200).json({succes:true , fromPharma:fromPharma , fromRadiology:fromRadiology , fromAnalyst:fromAnalyst})
+            return res.status(200).json({succes:true , message:'', fromPharma:fromPharma , fromRadiology:fromRadiology , fromAnalyst:fromAnalyst})
   }catch(error){
     res.status(500).json({succes:true , message:`internal server error ${error.message}`})
   }

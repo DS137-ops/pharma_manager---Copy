@@ -148,7 +148,7 @@ exports.createNewPharmatic = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Registration request sent to admin. Please wait for approval.',
-      token: token,
+      data: token,
     });
   } catch (err) {
     console.error('Error registering user:', err);
@@ -177,7 +177,7 @@ exports.deletePharmaticAccount = async (req, res) => {
 
     await Pharmatic.findByIdAndDelete(user._id);
 
-    res.status(200).json({ message: 'Account deleted successfully', data: [] });
+    res.status(200).json({succes:true , message: 'Account deleted successfully', data: [] });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -223,6 +223,7 @@ exports.ratePharmatic = async (req, res) => {
     await pharmatic.save();
 
     res.status(200).json({
+      succes:true,
       message: 'Rating added successfully',
       data: pharmatic.rate, // Returns all ratings, including the new one
     });
@@ -231,43 +232,6 @@ exports.ratePharmatic = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
-// exports.getPharmas = async (req, res) => {
-//   const { city, region } = req.params;
-//   const existCity = await City.findById(city)
-//   const existRegion = existCity.regions.find(r=>r._id.toString()===region)
-//   if (!existRegion) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-//   const cityname = existCity.name
-//   const regionname = existRegion.name
-//   console.log(cityname, regionname)
-//   const query = { role: 'pharmatic', city: cityname, region: regionname, approved: true };
-
-//   try {
-//     const findPharma = await Pharmatic.find(query);
-
-//     if (!findPharma || findPharma.length === 0) {
-//       return res.status(404).json({ status: false, message: 'No result' });
-//     }
-
-//     const pharmaciesWithRatings = findPharma.map((pharma) => {
-//       const ratings = pharma.rate?.map((r) => r.rating) || [];
-//       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-//       const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
-
-//       return {
-//         ...pharma.toObject(),
-//         finalRate: parseFloat(averageRating),
-//       };
-//     });
-
-//     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
-
-//     return res.status(200).json({ status: true, findPharma: pharmaciesWithRatings });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ status: false, message: 'Server error' });
-//   }
-// };
 
 exports.getPharmas = async (req, res) => {
   const { city, region } = req.params;
@@ -301,7 +265,7 @@ exports.getPharmas = async (req, res) => {
     );
 
     if (!findPharma || findPharma.length === 0) {
-      return res.status(200).json({ status: false, message: 'No result' ,data:[] });
+      return res.status(200).json({ status: true, message: 'No result' ,data:[] });
     }
 
     const user = await Seek.findById(userId); // Assuming you have a User model
@@ -322,7 +286,7 @@ exports.getPharmas = async (req, res) => {
     });
 
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
-    return res.status(200).json({ status: true, data: pharmaciesWithRatings });
+    return res.status(200).json({ status: true,message:'' , data: pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -378,7 +342,7 @@ exports.updatePharmaticInfo = async (req, res) => {
       { $set: updateFields }
     );
 
-    res.status(200).json({ success: true, message: 'Updated Successfully' });
+    res.status(200).json({ success: true, message: 'Updated Successfully' ,data:[] });
   } catch (err) {
     console.error('Error updating analyst info:', err);
     if (err.name === 'ValidationError') {
@@ -424,7 +388,7 @@ exports.approvePharmatic = async (req, res) => {
     await transporter.sendMail(mailOptions);
     res
       .status(200)
-      .json({ success: true, user, message: 'User approved successfully' });
+      .json({ success: true, message: 'User approved successfully' , data:user});
   } catch (err) {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
@@ -459,7 +423,7 @@ exports.rejectPharmatic = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: true, message: 'User rejected successfully' });
+      .json({ success: true, message: 'User rejected successfully' , data:[] });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
@@ -596,7 +560,7 @@ exports.updateSickInfo = async (req, res) => {
       { $set: updateData }
     );
 
-    res.status(200).json({ success: true, message: 'Updated successfully' });
+    res.status(200).json({ success: true, message: 'Updated successfully' , data:updateData });
   } catch (err) {
     console.error('Error updating user:', err);
     if (err.name === 'ValidationError') {
@@ -670,7 +634,7 @@ exports.deleteSeekAccount = async (req, res) => {
 
     await Seek.findByIdAndDelete(user._id);
 
-    res.status(200).json({ message: 'Account deleted successfully', data: [] });
+    res.status(200).json({ succes:true , message: 'Account deleted successfully', data: [] });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -748,7 +712,7 @@ exports.logoutSpec = async (req, res) => {
 
     await RefreshToken.deleteMany({ userRef: userId });
 
-    return res.status(200).json({ success: true, message: 'Logged out successfully' });
+    return res.status(200).json({ success: true, message: 'Logged out successfully' , data:[] });
   } catch (err) {
     console.error('Logout error:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -764,7 +728,7 @@ exports.logoutSeek = async (req, res, next) => {
     await RefreshToken.deleteOne({ refreshToken });
   }
 
-  res.status(200).json({ success: true });
+  res.status(200).json({ success: true, message:'' , data:[] });
 };
 
 exports.forgetPassForPharmatic = async (req, res) => {
@@ -785,7 +749,7 @@ exports.forgetPassForPharmatic = async (req, res) => {
     html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
   });
 
-  res.status(200).json({ message: 'Reset code sent to your email' });
+  res.status(200).json({ succes:true , message: 'Reset code sent to your email' ,data:[] });
 };
 
 exports.verifyCodePharmatic = async (req, res) => {
@@ -796,7 +760,7 @@ exports.verifyCodePharmatic = async (req, res) => {
     return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
-  res.status(200).json({ message: 'Code verified successfully' });
+  res.status(200).json({succes:true , message: 'Code verified successfully' , data:[] });
 };
 
 exports.resetPharmaPass = async (req, res) => {
@@ -813,7 +777,7 @@ exports.resetPharmaPass = async (req, res) => {
   user.resetCodeExpires = null;
   await user.save();
 
-  res.status(200).json({ message: 'Password reset successfully' });
+  res.status(200).json({succes:true , message: 'Password reset successfully' , data:[] });
 };
 
 
@@ -835,7 +799,7 @@ exports.addToFamousPhars = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: 'pharma added to famous pharmas menu', pharma });
+      .json({succes:true , message: 'pharma added to famous pharmas menu', data:pharma });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -848,10 +812,10 @@ exports.getFamousPhars = async (req, res) => {
     const famousPharmas = await Pharmatic.find({ isFamous: true });
 
     if (famousPharmas.length === 0) {
-      return res.status(200).json({ message: 'No famous pharmas found' , data:[] });
+      return res.status(200).json({ succes:true , message: 'No famous pharmas found' , data:[] });
     }
 
-    res.status(200).json({ data:famousPharmas });
+    res.status(200).json({succes:true , message:'' , data:famousPharmas });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -864,7 +828,7 @@ exports.getFamousPhars = async (req, res) => {
     const famousPharmas = await Pharmatic.find({ isFamous: true });
     
     if (famousPharmas.length === 0) {
-      return res.status(200).json({ message: 'No famous Pharmas found' ,data:[] });
+      return res.status(200).json({succes:true , message: 'No famous Pharmas found' ,data:[] });
     }
 
     const PharamswithRating = famousPharmas.map((fam)=>{
@@ -879,7 +843,7 @@ exports.getFamousPhars = async (req, res) => {
       }
     })
    
-    res.status(200).json({succes:true , data:PharamswithRating });
+    res.status(200).json({succes:true , message:'' , data:PharamswithRating });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -903,7 +867,7 @@ exports.searchPharmaticsByName = async (req, res) => {
     if (pharmatics.length === 0) {
       return res
         .status(200)
-        .json({ status: false, message: 'No matching pharmatics found' ,data:[] });
+        .json({ status: true, message: 'No matching pharmatics found' ,data:[] });
     }
     const pharmaciesWithRatings = pharmatics.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
@@ -923,7 +887,7 @@ exports.searchPharmaticsByName = async (req, res) => {
 
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
     
-    return res.status(200).json({ status: true,data:pharmaciesWithRatings });
+    return res.status(200).json({ status: true,message:'',data:pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -962,6 +926,7 @@ exports.togglePharmaFavourite = async (req, res) => {
       await newFavourite.save();
 
       return res.status(200).json({
+        succes:true,
         message: 'Pharma added to favourites',
         isFavourite: true,
       });
@@ -999,8 +964,9 @@ exports.getFavourites = async (req, res) => {
     });
 
     res.status(200).json({
+      succes:true,
       message: 'Favourite pharmas retrieved successfully',
-      favourites: favouritesWithRating,
+      data: favouritesWithRating,
     });
   } catch (error) {
     console.error(error);
@@ -1019,7 +985,7 @@ exports.deleteFromFavo = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    return res.status(200).json({ message: 'Delete succesfully' });
+    return res.status(200).json({ succes:true , message: 'Delete succesfully' ,data:[] });
   } catch (err) {
     return res.status(500).json({ message: `Server error ${err}` });
   }
@@ -1046,7 +1012,7 @@ exports.getUserBookings = async (req, res) => {
     if (!doctors || doctors.length === 0) {
       return res
         .status(200)
-        .json({ status: false, message: 'No bookings found for this patient' ,data:[]});
+        .json({ status: true, message: 'No bookings found for this patient' ,data:[]});
     }
 
     let patientBookings = [];
@@ -1071,25 +1037,9 @@ exports.getUserBookings = async (req, res) => {
       });
     });
 
-    res.status(200).json({ status: true, data: patientBookings });
+    res.status(200).json({ succes: true,message:'', data: patientBookings });
   } catch (error) {
     console.error('Error fetching user bookings:', error);
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
-
-// exports.getPharmaInfo = async(req,res)=>{
-//   try{
-//     const id = req.params.id
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       return res.status(400).json({ message: 'Invalid User ID format' });
-//     }
-//     const pharma = await Pharmatic.findById(id)
-//     if(!pharma){
-//       return res.status(404).json({message:' user is not availble'})
-//     }
-//     return res.status(200).json({success:true , pharma })
-//   }catch(err){
-//     return res.status(500).json({message:'Server error'})
-//   }
-// }

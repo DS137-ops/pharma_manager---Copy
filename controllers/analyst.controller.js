@@ -121,7 +121,7 @@ exports.createNewAnalyst = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Registration request sent to admin. Please wait for approval.',
-      token: token,
+      data: token,
     });
   } catch (err) {
     console.error('Error registering user:', err);
@@ -155,7 +155,7 @@ exports.addToFamousAnalysts = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: 'analyst added to famous analysts menu', analyst });
+      .json({succes:true, message: 'analyst added to famous analysts menu', data:analyst });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -184,7 +184,7 @@ exports.getFamousAnalysts = async (req, res) => {
       }
     })
    
-    res.status(200).json({succes:true , data:analystswithRating });
+    res.status(200).json({succes:true , message:'' , data:analystswithRating  });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -210,7 +210,7 @@ exports.searchanalystByName = async (req, res) => {
     if (!analysts.length) {
       return res
         .status(200)
-        .json({ status: true, message: 'No matching analysts found' , analysts:[] });
+        .json({ status: true, message: 'No matching analysts found' , data:[] });
     }
 
     return res.status(200).json({ status: true, analysts:analysts });
@@ -233,7 +233,7 @@ exports.deleteAnalystAccount = async (req, res) => {
 
     await Analyst.findByIdAndDelete(user._id);
 
-    res.status(200).json({ message: 'Account deleted successfully', data: [] });
+    res.status(200).json({ succes:true , message: 'Account deleted successfully', data: [] });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -284,7 +284,7 @@ const { email, password } = req.body;
       success: true,
       message: 'Login successful',
       token,
-      data,
+      data:data,
     });
   } catch (err) {
     console.error('Error logging in:', err);

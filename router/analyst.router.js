@@ -89,7 +89,7 @@ router.post('/isApprovedAnalyst', async (req, res) => {
   }
   res
     .status(200)
-    .json({ success: true, message: 'user is  approved sucessfully!' });
+    .json({ success: true, message: 'user is  approved sucessfully!' , data:[] });
 });
 router.get('/approve/analyst/:id', analystController.approveAnalyst);
 router.get('/reject/analyst/:id', analystController.rejectAnalyst);
@@ -168,7 +168,7 @@ router.get(
 
       return res
         .status(200)
-        .json({ success: true, data: analystWithFavStatus });
+        .json({ success: true, message:'' , data: analystWithFavStatus });
     } catch (err) {
       return res.status(500).json({ success: false, err: err.message });
     }
@@ -220,7 +220,7 @@ router.post(
       await newRequest.save();
       res
         .status(200)
-        .json({ message: 'تم إرسال الطلب بنجاح', request: newRequest });
+        .json({succes:true , message: 'تم إرسال الطلب بنجاح', data: newRequest });
     } catch (error) {
       console.error('خطأ أثناء إرسال الطلب:', error);
       res
@@ -245,7 +245,7 @@ router.get('/Analyst-requests/:analystId', async (req, res) => {
       timeFormatted: new Date(req.date).toISOString().split('T')[1].slice(0, 5),
     }));
 
-    res.status(200).json({ requests: formattedRequests });
+    res.status(200).json({ succes:true , message:'' , data: formattedRequests });
   } catch (error) {
     res
       .status(500)
@@ -264,7 +264,7 @@ router.post('/respond-request-from-Analyst', async (req, res) => {
     request.analystsResponded.push({ analystId: specId, price, accepted });
     await request.save();
 
-    res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
+    res.status(200).json({ succes:true , message: 'تم إرسال الرد بنجاح' ,data:[] });
   } catch (error) {
     res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error: error });
   }
@@ -294,7 +294,7 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
       });
     });
 
-    res.status(200).json({ success: true, data:responses });
+    res.status(200).json({ success: true, message:'', data:responses });
   } catch (error) {
     console.error('Error fetching responses:', error);
     res.status(500).json({ message: `خطأ أثناء جلب الردود: ${error.message}` });
@@ -342,7 +342,7 @@ router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
-  res.status(200).json({ success: true, data: user });
+  res.status(200).json({ success: true,message:'', data: user });
 });
 router.get(
   '/patient-orders/:patientId',
@@ -354,7 +354,7 @@ router.get(
         { patientId },
         '-pharmacistsResponded'
       );
-      return res.status(200).json({ message: requests });
+      return res.status(200).json({succes:true , message:'' , data: requests });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -362,7 +362,6 @@ router.get(
 );
 
 router.get('/search', analystController.searchanalystByName);
-//checkprov.checkifLoggedIn ,
 
 router.delete(
   '/from-favourite/:cardId',
