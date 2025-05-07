@@ -9,7 +9,7 @@ const DoctorRouter = require('./router/doctor.router');
 const Specialty = require('./model/Specialty.model');
 const http = require('http');
 const { Client } = require('whatsapp-web.js');
-const qrcode = require('qrcode');
+const qrcodeTerminal = require('qrcode-terminal');
 app.use('/uploads', express.static('uploads'));
 const mongoose = require('mongoose');
 const PORT = process.env.PORT;
@@ -82,9 +82,9 @@ let currentQR = null;
 
 const client = new Client();
 
-client.on('qr', async (qr) => {
-    console.log('QR received');
-    currentQR = qr;
+client.on('qr', qr => {
+  currentQR = qr;
+  qrcodeTerminal.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
@@ -95,24 +95,31 @@ client.initialize();
 
 
 app.get('/qr', async (req, res) => {
-    if (!currentQR) {
-        return res.status(404).send('QR not available yet. Please wait...');
-    }
+  if (!currentQR) {
+      return res.send(`
+          <html>
+              <body>
+                  <h2>QR code is not ready yet. Please wait a few seconds and refresh.</h2>
+              </body>
+          </html>
+      `);
+  }
 
-    try {
-        const qrImageData = await qrcode.toDataURL(currentQR);
-        res.send(`
-            <html>
-                <body>
-                    <h2>Scan this QR code with WhatsApp:</h2>
-                    <img src="${qrImageData}" />
-                </body>
-            </html>
-        `);
-    } catch (err) {
-        res.status(500).send('Error generating QR code');
-    }
+  try {
+      const qrImageData = await qrcode.toDataURL(currentQR);
+      res.send(`
+          <html>
+              <body>
+                  <h2>Scan this QR code with WhatsApp:</h2>
+                  <img src="${qrImageData}" />
+              </body>
+          </html>
+      `);
+  } catch (err) {
+      res.status(500).send('Error generating QR code');
+  }
 });
+
 server.listen(PORT, () => {
   console.log(`Server is Running ${PORT}`);
 });
