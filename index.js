@@ -94,31 +94,24 @@ client.on('ready', () => {
 client.initialize();
 
 
-app.get('/qr', async (req, res) => {
+app.get('/qr', (req, res) => {
   if (!currentQR) {
-      return res.send(`
-          <html>
-              <body>
-                  <h2>QR code is not ready yet. Please wait a few seconds and refresh.</h2>
-              </body>
-          </html>
-      `);
+      return res.status(404).send('QR not available yet. Please wait...');
   }
 
-  try {
-      const qrImageData = await qrcode.toDataURL(currentQR);
-      res.send(`
-          <html>
-              <body>
-                  <h2>Scan this QR code with WhatsApp:</h2>
-                  <img src="${qrImageData}" />
-              </body>
-          </html>
-      `);
-  } catch (err) {
-      res.status(500).send('Error generating QR code');
-  }
+
+  res.send(`
+      <html>
+          <body>
+              <h2>Scan this QR code with WhatsApp:</h2>
+              <p>Copy this QR string and use it with a QR scanner app:</p>
+              <pre>${currentQR}</pre>
+              <p>Or use a QR generator like <a href="https://www.qr-code-generator.com/" target="_blank">QR Code Generator</a></p>
+          </body>
+      </html>
+  `);
 });
+
 
 server.listen(PORT, () => {
   console.log(`Server is Running ${PORT}`);
