@@ -31,7 +31,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => ({
-    folder: `pharmacies/${req.params.id}`,
+    folder: `pharmacies`,
     allowed_formats: ['jpg', 'png', 'jpeg'],
   }),
 });
