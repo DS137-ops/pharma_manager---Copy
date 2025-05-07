@@ -7,7 +7,7 @@ const requestSchema = new mongoose.Schema({
   region: String,
   date: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
   status: {
     type: String,

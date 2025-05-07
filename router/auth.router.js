@@ -175,25 +175,34 @@ router.post(
   async (req, res) => {
     try {
       const { patientId, city, region } = req.params;
+
+      if (!mongoose.Types.ObjectId.isValid(patientId)) {
+        return res.status(400).json({ message: 'Invalid Patient ID' });
+      }
+
       const existCity = await City.findById(city);
+      if (!existCity) {
+        return res.status(400).json({ success: false, message: 'City not found' });
+      }
+
       const existRegion = existCity.regions.find(
         (r) => r._id.toString() === region
       );
-      if (!existRegion)
+      if (!existRegion) {
         return res.status(400).json({
           success: false,
           message: 'Region not found in the selected city',
         });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'No image uploaded' });
+      }
+
+      const imageUrl = req.file.path;
       const cityname = existCity.name;
       const regionname = existRegion.name;
 
-      const imageUrl = req.file.path;
-      if (!mongoose.Types.ObjectId.isValid(patientId)) {
-        return res.status(400).json({ message: 'Invalid Seek ID' });
-      }
-      if (!req.file) {
-        return res.status(400).json({ message: 'no image upload' });
-      }
       const newRequest = new PrescriptionRequest({
         patientId,
         imageUrl,
@@ -201,19 +210,29 @@ router.post(
         region: regionname,
         status: 'unread',
       });
-
+      console.log('patientId:', patientId);
+      console.log('city:', cityname);
+      console.log('region:', regionname);
+      console.log('req.file:', req.file);
+      
       await newRequest.save();
-      res
-        .status(200)
-        .json({succes:true , message: 'تم إرسال الطلب بنجاح', data: newRequest });
+
+      res.status(200).json({
+        success: true,
+        message: 'تم إرسال الطلب بنجاح',
+        data: newRequest,
+      });
+
     } catch (error) {
       console.error('خطأ أثناء إرسال الطلب:', error);
-      res
-        .status(500)
-        .json({ message: 'حدث خطأ أثناء إرسال الطلب', error: error.message });
+      res.status(500).json({
+        message: 'حدث خطأ أثناء إرسال الطلب',
+        error: error.message,
+      });
     }
   }
 );
+
 
 router.get('/Pharmatic-requests/:pharmacistId', async (req, res) => {
   const pharmacist = await Pharmatic.findById(req.params.pharmacistId);
