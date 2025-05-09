@@ -267,14 +267,14 @@ exports.getPharmas = async (req, res) => {
       return res.status(200).json({ status: true, message: 'No result' ,data:[] });
     }
 
-    const user = await Seek.findById(userId); // Assuming you have a User model
+    const user = await Seek.findById(userId);
 
     const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
 
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
-      const total = ratings.reduce((sum, rating) => sum + rating, 0.0);
-      const averageRating = parseFloat((ratings.length ? total / ratings.length : 0).toFixed(1));
+      const total = ratings.reduce((sum, rating) => sum + rating, 0);
+      const averageRating = parseFloat((ratings.length ? total / ratings.length : 0.0).toFixed(1));
 
     
       return {
