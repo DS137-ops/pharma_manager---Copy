@@ -79,7 +79,11 @@ app.use('/admin', adminRouter);
 
 let currentQR = null;
 
-const client = new Client();
+const client = new Client({
+  puppeteer: {
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  }
+});
 
 client.on('qr', (qr) => {
   currentQR = qr;
