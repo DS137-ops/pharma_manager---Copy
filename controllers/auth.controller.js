@@ -286,7 +286,7 @@ exports.getPharmas = async (req, res) => {
     
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
     
-    return res.status(200).json({ status: true,message:'' , data: pharmaciesWithRatings });
+    return res.status(200).json({ succes: true,message:'' , data: pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
