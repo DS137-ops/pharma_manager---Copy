@@ -77,38 +77,36 @@ app.use('/api/Radiology', RadiologyRouter);
 app.use('/api/Doctor', DoctorRouter);
 app.use('/admin', adminRouter);
 
-
 let currentQR = null;
 
 const client = new Client();
 
-client.on('qr', qr => {
+client.on('qr', (qr) => {
   currentQR = qr;
   qrcodeTerminal.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
-    console.log('WhatsApp Client is ready!');
+  console.log('WhatsApp Client is ready!');
 });
 
 client.initialize();
 
-
 app.get('/qr', (req, res) => {
   if (!currentQR) {
-      return res.status(404).send('QR not available yet. Please wait...');
+    return res.status(404).send('QR not available yet. Please wait...');
   }
 
+  const qrImageURL = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(currentQR)}`;
 
   res.send(`
-      <html>
-          <body>
-              <h2>Scan this QR code with WhatsApp:</h2>
-              <p>Copy this QR string and use it with a QR scanner app:</p>
-              <pre>${currentQR}</pre>
-              <p>Or use a QR generator like <a href="https://www.qr-code-generator.com/" target="_blank">QR Code Generator</a></p>
-          </body>
-      </html>
+    <html>
+      <body>
+        <h2>Scan this QR code with WhatsApp:</h2>
+        <img src="${qrImageURL}" alt="WhatsApp QR Code"/>
+        <p>If the QR code doesn’t load, <a href="${qrImageURL}" target="_blank">click here</a></p>
+      </body>
+    </html>
   `);
 });
 
