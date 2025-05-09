@@ -87,7 +87,7 @@ const client = new Client({
 
 client.on('qr', (qr) => {
   currentQR = qr;
-  console.log('qr1')
+  console.log('qr11')
   qrcodeTerminal.generate(qr, { small: true });
 });
 
