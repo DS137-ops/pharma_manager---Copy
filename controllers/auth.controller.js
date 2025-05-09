@@ -274,7 +274,7 @@ exports.getPharmas = async (req, res) => {
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = parseFloat((ratings.length ? total / ratings.length : 0.0)).toFixed(1);
+      const averageRating = parseFloat((ratings.length ? total / ratings.length : 0.0));
 
     
       return {
