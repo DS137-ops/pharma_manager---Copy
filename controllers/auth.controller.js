@@ -273,13 +273,13 @@ exports.getPharmas = async (req, res) => {
 
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
-      const total = ratings.reduce((sum, rating) => sum + rating, 0);
+      const total = ratings.reduce((sum, rating) => sum + rating, 0.0);
       const averageRating = parseFloat((ratings.length ? total / ratings.length : 0).toFixed(1));
 
     
       return {
         ...pharma.toObject(),
-        finalRate: averageRating, // Always a float like 3.0, 0.0, etc.
+        finalRate: averageRating,
         isfavourite: userFavourites.includes(pharma._id.toString()),
       };
     });
