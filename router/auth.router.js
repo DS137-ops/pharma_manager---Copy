@@ -298,7 +298,7 @@ router.get('/patient-responses/:patientId', async (req, res) => {
       request.pharmacistsResponded.forEach((response) => {
         if (response.accepted && response.pharmacistId) {
           responses.push({
-            pharmacistName: response.pharmacistId.fullName,
+            name: response.pharmacistId.fullName,
             phone: response.pharmacistId.phone,
             city: response.pharmacistId.city,
             region: response.pharmacistId.region,

@@ -283,7 +283,7 @@ router.get('/patient-responses-from-analyst/:patientId', async (req, res) => {
         if (response.accepted && response.analystId) {
           responses.push({
 
-            analystName: response.analystId.fullName,
+            name: response.analystId.fullName,
             phone: response.analystId.phone,
             city: response.analystId.city,
             region: response.analystId.region,

@@ -308,7 +308,7 @@ router.get('/patient-responses-from-radiology/:patientId', async (req, res) => {
       request.radiologysResponded.forEach((response) => {
         if (response.accepted && response.radiologyId) {
           responses.push({
-            radiologyName: response.radiologyId?.fullName || 'N/A',
+            name: response.radiologyId?.fullName || 'N/A',
             phone: response.radiologyId?.phone || 'N/A',
             city: response.radiologyId?.city || 'N/A',
             region: response.radiologyId?.region || 'N/A',
