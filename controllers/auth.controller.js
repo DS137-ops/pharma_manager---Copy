@@ -274,11 +274,10 @@ let x=3;
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = (ratings.length ? parseFloat((total / ratings.length).toFixed(1)) : 0.0);
-      console.log(parseFloat(x))
+      const averageRating = (ratings.length ? total / ratings.length : 0.0).toFixed(1);
       return {
         ...pharma.toObject(),
-        finalRate: averageRating,
+        finalRate: parseFloat(averageRating),
         isfavourite: userFavourites.includes(pharma._id.toString()),
       };
     });

@@ -5,10 +5,9 @@ const qrcode = require('qrcode');
 const app = express();
 const port = 3000;
 
-// متغير لتخزين QR الحالي
+
 let currentQR = null;
 
-// إعداد WhatsApp client
 const client = new Client();
 
 client.on('qr', async (qr) => {
@@ -22,7 +21,6 @@ client.on('ready', () => {
 
 client.initialize();
 
-// GET /qr => يعرض صورة QR
 app.get('/qr', async (req, res) => {
     if (!currentQR) {
         return res.status(404).send('QR not available yet. Please wait...');
