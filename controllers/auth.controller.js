@@ -270,13 +270,12 @@ exports.getPharmas = async (req, res) => {
     const user = await Seek.findById(userId);
 
     const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
-
+let x=3;
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = parseFloat((ratings.length ? total / ratings.length : 0.0));
-
-    
+      const averageRating = (ratings.length ? parseFloat((total / ratings.length).toFixed(1)) : 0.0);
+      console.log(parseFloat(x.toFixed(1)))
       return {
         ...pharma.toObject(),
         finalRate: averageRating,
