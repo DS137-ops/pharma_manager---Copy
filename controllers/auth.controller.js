@@ -278,7 +278,7 @@ exports.getPharmas = async (req, res) => {
     
       return {
         ...pharma.toObject(),
-        finalRate: parseFloat(averageRating), // Always a float like 3.0, 0.0, etc.
+        finalRate: averageRating, // Always a float like 3.0, 0.0, etc.
         isfavourite: userFavourites.includes(pharma._id.toString()),
       };
     });
