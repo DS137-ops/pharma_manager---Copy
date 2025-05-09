@@ -82,12 +82,12 @@ let currentQR = null;
 const client = new Client({
   puppeteer: {
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  }
+  },
 });
 
 client.on('qr', (qr) => {
   currentQR = qr;
-  console.log('qr11')
+  console.log('qr11');
   qrcodeTerminal.generate(qr, { small: true });
 });
 
@@ -102,7 +102,9 @@ app.get('/qr', (req, res) => {
     return res.status(404).send('QR not available yet. Please wait...');
   }
 
-  const qrImageURL = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(currentQR)}`;
+  const qrImageURL = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(
+    currentQR
+  )}`;
 
   res.send(`
     <html>
@@ -114,7 +116,6 @@ app.get('/qr', (req, res) => {
     </html>
   `);
 });
-
 
 server.listen(PORT, () => {
   console.log(`Server is Running ${PORT}`);
