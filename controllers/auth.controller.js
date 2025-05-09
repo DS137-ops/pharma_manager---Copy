@@ -187,7 +187,6 @@ exports.ratePharmatic = async (req, res) => {
     const pharmaticId = req.params.pharmaticId;
     const { userId, rating, review } = req.body;
 
-    // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(pharmaticId)) {
       return res.status(400).json({ message: 'Invalid Pharmacist ID format' });
     }
@@ -275,17 +274,17 @@ exports.getPharmas = async (req, res) => {
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating =
-        ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
-
+      const averageRating = (ratings.length > 0 ? (total / ratings.length) : 0).toFixed(1);
+    
       return {
         ...pharma.toObject(),
-        finalRate: parseFloat(averageRating),
-        isfavourite: userFavourites.includes(pharma._id.toString()), // Check if the pharmacy is in user's favourites
+        finalRate: parseFloat(averageRating), // Always a float like 3.0, 0.0, etc.
+        isfavourite: userFavourites.includes(pharma._id.toString()),
       };
     });
-
+    
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
+    
     return res.status(200).json({ status: true,message:'' , data: pharmaciesWithRatings });
   } catch (error) {
     console.error(error);
