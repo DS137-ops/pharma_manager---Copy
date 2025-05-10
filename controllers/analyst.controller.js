@@ -176,11 +176,11 @@ exports.getFamousAnalysts = async (req, res) => {
       let finalRate =0
       if(fam.rate && fam.rate.length>0){
         const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
-        finalRate = totalRating / fam.rate.length;
+        finalRate = Math.round((totalRating / fam.rate.length).toFixed(1))
       }
       return{
         ...fam._doc,
-        finalRate:Number(finalRate.toFixed(1))
+        finalRate:finalRate
       }
     })
    
@@ -412,16 +412,16 @@ exports.getAnalyst = async (req, res) => {
     const user = await Seek.findById(userId);
 
     const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
-
+    
     const analystsWithRatings = findAnalyst.map((analyst) => {
       const ratings = analyst.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
       const averageRating =
-        ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+        ratings.length > 0 ? Math.round((total / ratings.length).toFixed(1)) :0;
 
       return {
         ...analyst.toObject(),
-        finalRate: parseFloat(averageRating),
+        finalRate: averageRating,
         isfavourite: userFavourites.includes(analyst._id.toString()),
       };
     });
@@ -616,12 +616,12 @@ exports.getFavourites = async (req, res) => {
 
       if (analyst && analyst.rate && analyst.rate.length > 0) {
         const totalRating = analyst.rate.reduce((sum, r) => sum + r.rating, 0);
-        finalRate = totalRating / analyst.rate.length;
+        finalRate = Math.round((totalRating / analyst.rate.length).toFixed(1))
       }
 
       return {
           ...analyst._doc,
-          finalRate: finalRate.toFixed(1), 
+          finalRate: finalRate, 
       };
     });
 
