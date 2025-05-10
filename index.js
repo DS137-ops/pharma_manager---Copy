@@ -85,11 +85,26 @@ const client = new Client({
   },
 });
 
+let qrShown = false;
+
 client.on('qr', (qr) => {
   currentQR = qr;
-  console.log('qr11');
+
+  if (!qrShown) {
+    console.log('QR code generated. Waiting for scan...');
+    qrShown = true;
+  }
+
   qrcodeTerminal.generate(qr, { small: true });
 });
+client.on('authenticated', () => {
+  console.log('WhatsApp Client is authenticated!');
+});
+client.on('auth_failure', () => {
+  console.log('Authentication failed, resetting QR flag.');
+  qrShown = false;
+});
+
 
 client.on('ready', () => {
   console.log('WhatsApp Client is ready!');
