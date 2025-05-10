@@ -176,11 +176,11 @@ exports.getFamousRadiologies = async (req, res) => {
       let finalRate =0
       if(fam.rate && fam.rate.length>0){
         const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
-        finalRate = totalRating / fam.rate.length;
+        finalRate = Math.round((totalRating / fam.rate.length).toFixed(1))
       }
       return{
         ...fam._doc,
-        finalRate:Number(finalRate.toFixed(1))
+        finalRate:finalRate
       }
     })
    
@@ -311,11 +311,11 @@ exports.getradiology = async (req, res) => {
     const radiologiesWithRatings = findRadiology.map((radiology) => {
       const ratings = radiology.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+      const averageRating = ratings.length > 0 ? Math.round((total / ratings.length).toFixed(1)) : 0;
 
       return {
         ...radiology.toObject(),
-        finalRate: parseFloat(averageRating),
+        finalRate: averageRating,
         isfavourite: userFavourites.includes(radiology._id.toString()),
       };
     });
@@ -347,12 +347,12 @@ exports.getFavourites = async (req, res) => {
 
       if (radiology && radiology.rate && radiology.rate.length > 0) {
         const totalRating = radiology.rate.reduce((sum, r) => sum + r.rating, 0);
-        finalRate = totalRating / radiology.rate.length;
+        finalRate = Math.round((totalRating / radiology.rate.length).toFixed(1))
       }
 
       return {
           ...radiology._doc,
-          finalRate: Number(finalRate.toFixed(1)), 
+          finalRate: finalRate, 
       };
     });
 
@@ -444,9 +444,9 @@ exports.getFinalRateForRadiology = async (req, res) => {
 
     // Calculate average rating
     const total = ratings.reduce((sum, rating) => sum + rating, 0);
-    const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
+    const averageRating = Math.round((total / ratings.length).toFixed(1));
 
-    res.status(200).json({succes:true , radiologyId, finalRate: parseFloat(averageRating) });
+    res.status(200).json({succes:true , radiologyId, finalRate: averageRating });
   } catch (error) {
     console.error('Error calculating rating:', error);
     res.status(500).json({ message: 'Internal server error' });

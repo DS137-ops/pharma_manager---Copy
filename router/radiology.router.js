@@ -148,7 +148,7 @@ router.get(
             fullName: 1,
             StartJob: 1,
             EndJob: 1,
-            finalRate: '$averageRating',
+            finalRate: { $round: ['$averageRating', 0] },
           },
         },
       ]);

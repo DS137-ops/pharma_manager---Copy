@@ -139,7 +139,7 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
           fullName: 1,
           specializate: 1,
           doctorImage: 1,
-          finalRate: "$averageRating"
+          finalRate: { $round: ['$averageRating', 0] }
         }
       }
     ]);

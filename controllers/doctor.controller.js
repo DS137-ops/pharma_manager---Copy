@@ -220,11 +220,11 @@ exports.getFamousDoctors = async (req, res) => {
       let finalRate =0
       if(fam.rate && fam.rate.length>0){
         const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
-        finalRate = totalRating / fam.rate.length;
+        finalRate = Math.round((totalRating / fam.rate.length).toFixed(1))
       }
       return{
         ...fam._doc,
-        finalRate:Number(finalRate.toFixed(1))
+        finalRate:finalRate
       }
     })
    
@@ -740,9 +740,9 @@ exports.getFinalRateforDoctor = async (req, res) => {
     }
 
     const total = ratings.reduce((sum, rating) => sum + rating, 0);
-    const averageRating = (total / ratings.length).toFixed(1); // Keep 1 decimal place
+    const averageRating = Math.round((total / ratings.length).toFixed(1))
 
-    res.status(200).json({succes:true , doctorId, finalRate: parseFloat(averageRating) });
+    res.status(200).json({succes:true , doctorId, finalRate: averageRating});
   } catch (error) {
     console.error('Error calculating rating:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -792,9 +792,8 @@ exports.getDoctors = async (req, res) => {
     const doctorsWithFavStatus = doctors.map((doctor) => {
       const ratings = doctor.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = parseFloat(
-        ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0
-      );
+      const averageRating =
+        ratings.length > 0 ? Math.round((total / ratings.length).toFixed(1)) : 0
 
       const doctorObj = doctor.toObject({ getters: true, versionKey: false });
 
@@ -1125,14 +1124,14 @@ exports.getFavourites = async (req, res) => {
 
       if (doctor && doctor.rate && doctor.rate.length > 0) {
         const totalRating = doctor.rate.reduce((sum, r) => sum + r.rating, 0);
-        finalRate = totalRating / doctor.rate.length;
+        finalRate = Math.round((totalRating / doctor.rate.length).toFixed(1))
       }
 
       return {
         ...fav._doc,
         doctorId: {
           ...doctor._doc,
-          finalRate: Number(finalRate.toFixed(1)), 
+          finalRate: finalRate, 
         },
       };
     });

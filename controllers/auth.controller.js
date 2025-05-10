@@ -274,10 +274,10 @@ let x=3;
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = (ratings.length ? total / ratings.length : 0.0).toFixed(1);
+      const averageRating = (ratings.length ? Math.round((total / ratings.length).toFixed(1)) : 0);
       return {
         ...pharma.toObject(),
-        finalRate: parseFloat(averageRating),
+        finalRate: averageRating,
         isfavourite: userFavourites.includes(pharma._id.toString()),
       };
     });
@@ -623,12 +623,9 @@ exports.loginSeek = async (req, res) => {
 
 exports.deleteSeekAccount = async (req, res) => {
   try {
-    const { password } = req.body;
-    const user = req.user;
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: 'Incorrect password' });
+    const user = req.user;
+    if(!user._id)return res.status(404).json({succes:true , message:'Invalid ID' , data:[]})
 
     await Seek.findByIdAndDelete(user._id);
 
@@ -833,11 +830,11 @@ exports.getFamousPhars = async (req, res) => {
       let finalRate =0
       if(fam.rate && fam.rate.length>0){
         const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
-        finalRate = totalRating / fam.rate.length;
+        finalRate = Math.round((totalRating / fam.rate.length).toFixed(1))
       }
       return{
         ...fam._doc,
-        finalRate:Number(finalRate.toFixed(1))
+        finalRate:finalRate
       }
     })
    
@@ -871,7 +868,7 @@ exports.searchPharmaticsByName = async (req, res) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
       const averageRating =
-        ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+        ratings.length > 0 ? Math.round((total / ratings.length).toFixed(1)) : 0;
       const pharmaObj = pharma.toObject()
       delete pharmaObj.password
       delete pharmaObj.resetCode
@@ -879,7 +876,7 @@ exports.searchPharmaticsByName = async (req, res) => {
       delete pharmaObj.rate
       return {
         ...pharmaObj,
-        finalRate: parseFloat(averageRating),
+        finalRate: averageRating,
       };
     });
 
@@ -951,13 +948,13 @@ exports.getFavourites = async (req, res) => {
 
       if (pharma && pharma.rate && pharma.rate.length > 0) {
         const totalRating = pharma.rate.reduce((sum, r) => sum + r.rating, 0);
-        finalRate = totalRating / pharma.rate.length;
+        finalRate = Math.round((totalRating / pharma.rate.length).toFixed(1))
       }
 
       return {
         
           ...pharma._doc,
-          finalRate: Number(finalRate.toFixed(1)), 
+          finalRate: finalRate, 
       };
     });
 

@@ -64,7 +64,6 @@ router.post(
 router.delete(
   '/delete-sick-account',
   checkprov.checkifLoggedIn,
-  ckeckSeek.authMiddlewareforSeek,
   authController.deleteSeekAccount
 );
 router.get(
@@ -352,9 +351,8 @@ router.get('/get-profile/:id', checkprov.checkifLoggedIn, async (req, res) => {
   }
   const ratings = user.rate?.map((r) => r.rating) || [];
   const total = ratings.reduce((sum, rating) => sum + rating, 0);
-  const averageRating = parseFloat(
-    ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0
-  );
+  const averageRating =
+    ratings.length > 0 ? Math.round((total / ratings.length).toFixed(1)) : 0
   
   const userObj = user.toObject({ getters: true, versionKey: false });
   
@@ -453,7 +451,7 @@ router.get(
             fullName: 1,
             StartJob: 1,
             EndJob: 1,
-            finalRate: '$averageRating',
+            finalRate: { $round: ['$averageRating', 0] },
           },
         },
       ]);
