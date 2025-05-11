@@ -625,6 +625,7 @@ exports.deleteSeekAccount = async (req, res) => {
   try {
 
     const user = req.user;
+    console.log(user)
     if(!user._id)return res.status(404).json({succes:true , message:'Invalid ID' , data:[]})
 
     await Seek.findByIdAndDelete(user._id);
