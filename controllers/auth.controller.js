@@ -97,7 +97,7 @@ exports.createNewPharmatic = async (req, res) => {
       });
 
     // Create a JWT token for the new pharmatic
-    const token = await jwt.sign({ role: 'pharmatic' }, process.env.JWT_SECRET);
+const token = jwt.sign({ _id: existingUser._id, role: 'pharmatic' }, process.env.JWT_SECRET);    
 
     // Create a new Pharmatic instance with the name of the city and region
     const newUser = new Pharmatic({
@@ -168,12 +168,8 @@ exports.createNewPharmatic = async (req, res) => {
 
 exports.deletePharmaticAccount = async (req, res) => {
   try {
-    const { password } = req.body;
-    const user = req.user;
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: 'Incorrect password' });
+    const user = req.user;
 
     await Pharmatic.findByIdAndDelete(user._id);
 
@@ -430,7 +426,6 @@ exports.rejectPharmatic = async (req, res) => {
 exports.createNewSeek = async (req, res) => {
   const { fullName, phone, password, age, city, region } = req.body;
 
-  // Validation checks
   if (!password)
     return res
       .status(409)
@@ -481,8 +476,8 @@ exports.createNewSeek = async (req, res) => {
       });
 
 
-    const token = await jwt.sign({ role: 'user' }, process.env.JWT_SECRET);
-    const newSeek = new Seek({
+const token = jwt.sign({ _id: existSeek._id, role: 'user' }, process.env.JWT_SECRET);    
+const newSeek = new Seek({
       fullName,
       phone,
       password,
@@ -596,9 +591,11 @@ exports.loginSeek = async (req, res) => {
     }
 
     const token = await jwt.sign(
-      { id: user._id, role: 'user' },
+      { _id: user._id, role: 'user' },
       process.env.JWT_SECRET
     );
+
+    
     await RefreshToken.deleteMany({ userRef: user._id });
     await RefreshToken.create({ token, userRef: user._id });
     const data = user.toObject();
@@ -625,8 +622,8 @@ exports.deleteSeekAccount = async (req, res) => {
   try {
 
     const user = req.user;
-    console.log(user)
-    console.log(111111)
+console.log(user)
+
     if(!user._id)return res.status(404).json({succes:true , message:'Invalid ID' , data:[]})
 
     await Seek.findByIdAndDelete(user._id);
@@ -672,7 +669,7 @@ exports.loginPhar = async (req, res) => {
 
 
     const token = jwt.sign(
-      { id: user._id, role: 'pharmatic' },
+      { _id: user._id, role: 'pharmatic' },
       '1001110',
     );
 
@@ -697,7 +694,7 @@ exports.logoutSpec = async (req, res) => {
   try {
     const token =
       req.headers.authorization && req.headers.authorization.split(' ')[1];
-    const userId = req.user?.id; 
+    const userId = req.user?._id; 
 
     if (!token || !userId) {
       return res.status(400).json({ success: false, message: 'Token or user not provided' });

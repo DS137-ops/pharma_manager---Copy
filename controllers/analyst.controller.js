@@ -71,7 +71,7 @@ exports.createNewAnalyst = async (req, res) => {
       });
 
     // Create a JWT token for the new analyst
-    const token = await jwt.sign({ role: 'analyst' }, process.env.JWT_SECRET);
+    const token = await jwt.sign({_id:existingUser._id, role: 'analyst' }, process.env.JWT_SECRET);
 
     // Create a new Analyst instance with the name of the city and region
     const newUser = new Analyst({

@@ -75,16 +75,14 @@ exports.createNewRadiology = async (req, res) => {
       return res.status(409).json({ success: false, message: 'Email already exists' });
     }
 
-    // جلب بيانات المدينة باستخدام الـ ID
+
     const cityExists = await City.findById(city);
     if (!cityExists) return res.status(400).json({ success: false, message: 'City not found' });
 
-    // التحقق من أن المنطقة تنتمي إلى المدينة المحددة
     const regionExists = cityExists.regions.find(r => r._id.toString() === region);
     if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
 
-    // إنشاء توكن JWT للمستخدم الجديد
-    const token = await jwt.sign({ role: 'radiology' }, process.env.JWT_SECRET);
+    const token = await jwt.sign({_id:existingUser._id role: 'radiology' }, process.env.JWT_SECRET);
     
 
     // إنشاء مستخدم جديد مع تخزين اسم المدينة والمنطقة بدلاً من الـ ID
@@ -193,11 +191,7 @@ exports.getFamousRadiologies = async (req, res) => {
 
 exports.deleteRadiologyAccount = async (req, res) => {
   try {
-    const { password } = req.body;
     const user = req.user;
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
 
     await Radiology.findByIdAndDelete(user._id);
 
@@ -488,7 +482,7 @@ exports.loginRadio = async (req, res) => {
   
   
       const token = jwt.sign(
-        { id: user._id, role: 'doctor' },
+        { _id: user._id, role: 'doctor' },
         '1001110',
       );
   

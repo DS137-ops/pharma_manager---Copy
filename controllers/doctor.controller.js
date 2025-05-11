@@ -121,7 +121,7 @@ exports.createNewDoctor = async (req, res) => {
     }
     const specName = existSpec[0].name;
 
-    const token = await jwt.sign({ role: 'doctor' }, process.env.JWT_SECRET);
+    const token = await jwt.sign({ _id:existingUser._id , role: 'doctor' }, process.env.JWT_SECRET);
 
     const newUser = new Doctor({
       fullName,
@@ -534,12 +534,7 @@ exports.createBooking = async (req, res) => {
 };
 exports.deleteDoctorAccount = async (req, res) => {
   try {
-    const { password } = req.body;
     const user = req.user;
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: 'Incorrect password' });
 
     await Doctor.findByIdAndDelete(user._id);
 
@@ -611,7 +606,7 @@ exports.rejectDoctor = async (req, res) => {
     await Doctor.deleteOne({ _id: req.params.id });
 
     res
-      .status(200)
+      login.status(200)
       .json({ success: true, message: 'User rejected successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -651,7 +646,7 @@ exports.loginDoctor = async (req, res) => {
     delete data.resetCode;
     delete data.resetCodeExpires;
 
-    const token = jwt.sign({ id: user._id, role: 'doctor' }, '1001110');
+    const token = jwt.sign({ _id: user._id, role: 'doctor' }, '1001110');
 
     await RefreshToken.create({ token, userRef: user._id });
 
