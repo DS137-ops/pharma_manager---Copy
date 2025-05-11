@@ -71,7 +71,6 @@ exports.createNewPharmatic = async (req, res) => {
   }
 
   try {
-    // Check if the email already exists in the database
     const existingUser = await Pharmatic.findOne({ email });
     if (existingUser) {
       return res
@@ -79,14 +78,12 @@ exports.createNewPharmatic = async (req, res) => {
         .json({ success: false, message: 'Email already exists' });
     }
 
-    // Look up the city by ID and get its name
     const cityExists = await City.findById(city);
     if (!cityExists)
       return res
         .status(400)
         .json({ success: false, message: 'City not found' });
 
-    // Look up the region by ID within the selected city
     const regionExists = cityExists.regions.find(
       (r) => r._id.toString() === region
     );
@@ -96,10 +93,8 @@ exports.createNewPharmatic = async (req, res) => {
         message: 'Region not found in the selected city',
       });
 
-    // Create a JWT token for the new pharmatic
-const token = jwt.sign({ _id: existingUser._id, role: 'pharmatic' }, process.env.JWT_SECRET);    
 
-    // Create a new Pharmatic instance with the name of the city and region
+
     const newUser = new Pharmatic({
       fullName,
       email,
@@ -112,13 +107,13 @@ const token = jwt.sign({ _id: existingUser._id, role: 'pharmatic' }, process.env
       EndJob,
     });
 
-    // Save the new Pharmatic to the database
     await newUser.save();
+    const token = jwt.sign({ _id: newUser._id, role: 'pharmatic' }, process.env.JWT_SECRET);    
+
     await RefreshToken.create({ token, userRef: newUser._id });
 
-    // Create the approval and reject links
-    const approvalLink = `http://147.93.106.92/api/Pharmatic/approve/pharmatic/${newUser._id}`;
-    const rejectLink = `http://147.93.106.92/api/Pharmatic/reject/pharmatic/${newUser._id}`;
+    const approvalLink = `http://147.93.106.92:8080/api/Pharmatic/approve/pharmatic/${newUser._id}`;
+    const rejectLink = `http://147.93.106.92:8008/api/Pharmatic/reject/pharmatic/${newUser._id}`;
 
     // Send an email to the admin for approval
     const mailOptions = {
@@ -476,7 +471,6 @@ exports.createNewSeek = async (req, res) => {
       });
 
 
-const token = jwt.sign({ _id: existSeek._id, role: 'user' }, process.env.JWT_SECRET);    
 const newSeek = new Seek({
       fullName,
       phone,
@@ -488,6 +482,7 @@ const newSeek = new Seek({
 
 
     await newSeek.save();
+    const token = jwt.sign({ _id: newSeek._id, role: 'user' }, process.env.JWT_SECRET);    
     await RefreshToken.create({ token, userRef: newSeek._id });
 
     return res.status(200).json({
@@ -582,7 +577,6 @@ exports.loginSeek = async (req, res) => {
         .status(404)
         .json({ success: false, message: 'phone is Not Correct' });
     }
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res

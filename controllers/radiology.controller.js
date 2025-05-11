@@ -82,7 +82,6 @@ exports.createNewRadiology = async (req, res) => {
     const regionExists = cityExists.regions.find(r => r._id.toString() === region);
     if (!regionExists) return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
 
-    const token = await jwt.sign({_id:existingUser._id ,role: 'radiology' }, process.env.JWT_SECRET);
     
 
     // إنشاء مستخدم جديد مع تخزين اسم المدينة والمنطقة بدلاً من الـ ID
@@ -98,14 +97,12 @@ exports.createNewRadiology = async (req, res) => {
       EndJob,
     });
 
-    // حفظ المستخدم الجديد في قاعدة البيانات
     await newUser.save();
+    const token = await jwt.sign({_id:newUser._id ,role: 'radiology' }, process.env.JWT_SECRET);
     await RefreshToken.create({ token , userRef:newUser._id });
-    // إنشاء روابط الموافقة والرفض
     const approvalLink = `http://147.93.106.92/api/Radiology/approve/radiology/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Radiology/reject/radiology/${newUser._id}`;
 
-    // إرسال بريد إلكتروني للإدارة لمراجعة الحساب الجديد
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',

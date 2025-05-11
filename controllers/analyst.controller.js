@@ -71,29 +71,27 @@ exports.createNewAnalyst = async (req, res) => {
       });
 
     // Create a JWT token for the new analyst
-    const token = await jwt.sign({_id:existingUser._id, role: 'analyst' }, process.env.JWT_SECRET);
 
     // Create a new Analyst instance with the name of the city and region
     const newUser = new Analyst({
       fullName,
       email,
       password,
-      city: cityExists.name, // Store city name
-      region: regionExists.name, // Store region name
+      city: cityExists.name,
+      region: regionExists.name,
       address,
       phone,
       StartJob,
       EndJob,
     });
 
-    // Save the new Analyst to the database
+
     await newUser.save();
+    const token = await jwt.sign({_id:newUser._id, role: 'analyst' }, process.env.JWT_SECRET);
     await RefreshToken.create({ token, userRef: newUser._id });
-    // Create the approval and reject links
     const approvalLink = `http://147.93.106.92:8080/api/Analyst/approve/analyst/${newUser._id}`;
     const rejectLink = `http://147.93.106.92:8080/api/Analyst/reject/analyst/${newUser._id}`;
 
-    // Send an email to the admin for approval
     const mailOptions = {
       from: email,
       to: 'feadkaffoura@gmail.com',

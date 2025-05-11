@@ -121,7 +121,6 @@ exports.createNewDoctor = async (req, res) => {
     }
     const specName = existSpec[0].name;
 
-    const token = await jwt.sign({ _id:existingUser._id , role: 'doctor' }, process.env.JWT_SECRET);
 
     const newUser = new Doctor({
       fullName,
@@ -137,6 +136,7 @@ exports.createNewDoctor = async (req, res) => {
 
 
     await newUser.save();
+    const token = await jwt.sign({ _id:newUser._id , role: 'doctor' }, process.env.JWT_SECRET);
     await RefreshToken.create({ token, userRef: newUser._id });
 
     const approvalLink = `http://147.93.106.92:8080/api/Doctor/approve/doctor/${newUser._id}`;
