@@ -557,14 +557,14 @@ exports.resetAnalystPass = async (req, res) => {
 
 exports.toggleAnalystFavourite = async (req, res) => {
   try {
-    const { userId, analystId } = req.body;
+    const { userId, specId } = req.body;
 
-    const pharma = await Analyst.findById(analystId);
+    const pharma = await Analyst.findById(specId);
     if (!pharma) {
       return res.status(404).json({ message: 'Analyst not found' });
     }
 
-    const existingFavourite = await Favourite.findOne({ userId, analystId });
+    const existingFavourite = await Favourite.findOne({ userId, specId });
 
     if (existingFavourite) {
       existingFavourite.isFavourite = !existingFavourite.isFavourite;
@@ -579,7 +579,7 @@ exports.toggleAnalystFavourite = async (req, res) => {
     } else {
       const newFavourite = new Favourite({
         userId,
-        analystId,
+        specId,
         isFavourite: true,
       });
       await newFavourite.save();

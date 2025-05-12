@@ -886,14 +886,14 @@ exports.searchPharmaticsByName = async (req, res) => {
 
 exports.togglePharmaFavourite = async (req, res) => {
   try {
-    const { userId, pharmaId } = req.body;
+    const { userId, specId } = req.body;
 
-    const pharma = await Pharmatic.findById(pharmaId);
+    const pharma = await Pharmatic.findById(specId);
     if (!pharma) {
       return res.status(404).json({ message: 'Pharma not found' });
     }
 
-    const existingFavourite = await Favourite.findOne({ userId, pharmaId });
+    const existingFavourite = await Favourite.findOne({ userId, specId });
 
     if (existingFavourite) {
       existingFavourite.isFavourite = !existingFavourite.isFavourite;
@@ -908,7 +908,7 @@ exports.togglePharmaFavourite = async (req, res) => {
     } else {
       const newFavourite = new Favourite({
         userId,
-        pharmaId,
+        specId,
         isFavourite: true,
       });
       await newFavourite.save();

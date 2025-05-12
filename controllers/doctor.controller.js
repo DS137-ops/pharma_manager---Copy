@@ -1061,16 +1061,16 @@ exports.resetDoctorPass = async (req, res) => {
 
 exports.toggleDoctorFavourite = async (req, res) => {
   try {
-    const { userId, doctorId } = req.body;
+    const { specId, doctorId } = req.body;
 
-    const pharma = await Doctor.findById(doctorId);
+    const pharma = await Doctor.findById(specId);
     if (!pharma) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
     const existingFavourite = await FavouriteDoctor.findOne({
       userId,
-      doctorId,
+      specId,
     });
 
     if (existingFavourite) {
@@ -1086,7 +1086,7 @@ exports.toggleDoctorFavourite = async (req, res) => {
     } else {
       const newFavourite = new FavouriteDoctor({
         userId,
-        doctorId,
+        specId,
         isFavourite: true,
       });
       await newFavourite.save();
