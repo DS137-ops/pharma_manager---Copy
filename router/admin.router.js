@@ -5,7 +5,7 @@ const RadiologyAdvert = require('../model/radiologyAdvert.model');
 const AnalystAdvert = require('../model/analystAdvert.model');
 const SupportTicket = require('../model/supportSchema.model');
 const SeekAdvert = require('../model/seekAdvert.model');
-const { createAdmin, adminLogin ,setPrivacyPolicy ,getPrivacyPolicy } = require("../controllers/adminController.controller");
+const { createAdmin, adminLogin ,setPrivacyPolicy ,getPrivacyPolicy , addAboutUs ,getAboutUs } = require("../controllers/adminController.controller");
 const City = require("../model/cities.model");
 const mongoose = require("mongoose")
 const { body } = require("express-validator");
@@ -71,6 +71,9 @@ router.post("/addprivacy", setPrivacyPolicy);
 
 router.get("/getprivacy", getPrivacyPolicy);
 
+router.post("/add-aboutus", addAboutUs)
+
+router.get("/get-aboutus", getAboutUs)
 
 router.get('/adverts-for-doctor', async (req, res) => {
   try {
@@ -220,6 +223,8 @@ router.get('/adverts-for-seek', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
 
 router.post("/contact-us", async (req, res) => {
   try {

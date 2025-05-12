@@ -449,6 +449,7 @@ router.get(
         {
           $project: {
             fullName: 1,
+            role:1,
             StartJob: 1,
             EndJob: 1,
             finalRate: { $round: ['$averageRating', 0] },

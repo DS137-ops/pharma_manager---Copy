@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const RefreshToken = require('../model/RefreshToken.model');
 const PrivacyPolicy = require("../model/PrivacyPolicy.model");
+const AboutUs = require("../model/aboutus.model");
 exports.createAdmin = async (req, res) => {
   try {
     const existingAdmin = await Admin.findOne();
@@ -78,3 +79,38 @@ exports.getPrivacyPolicy = async (req, res) => {
     res.status(500).json({ message: "Server error.", error: err.message });
   }
 };
+
+exports.addAboutUs = async(req,res)=>{
+  try{
+  const { content } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ message: "Content is required." });
+    }
+    let about = await AboutUs.findOne()
+    if(about){
+      about.content = content
+      await about.save()
+    }else{
+      about = new AboutUs({ content })
+      await about.save()
+    }
+    res.status(200).json({ message: "About us saved.", about });
+  }catch(err){
+  res.status(500).json({ message: "Server error.", error: err.message });
+  }
+}
+
+exports.getAboutUs = async(req,res)=>{
+  try {
+    const about = await AboutUs.findOne();
+
+    if (!about) {
+      return res.status(404).json({ message: "about us not found." });
+    }
+
+    res.status(200).json(about);
+  } catch (err) {
+    res.status(500).json({ message: "Server error.", error: err.message });
+  }
+}
