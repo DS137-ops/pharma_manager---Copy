@@ -13,6 +13,8 @@ const Radiology = require('../model/radiology.model');
 const Analyst = require('../model/analyst.model');
 const Seek = require('../model/seek.model');
 const City = require('../model/cities.model');
+const client = require("../whatsappClient");
+const otpStore = new Map();
 const mongoose = require('mongoose');
 const PrescriptionRequest = require('../model/PrescriptionRequest.model');
 const PrescriptionAnalystRequest = require('../model/PrescriptionAnalystRequest.model');
@@ -612,6 +614,58 @@ router.get('/AllResponses/:patientId' , checkprov.checkifLoggedIn , async(req,re
     res.status(500).json({succes:true , message:`internal server error ${error.message}`})
   }
 })
+
+router.post("/forgot-password", async (req, res) => {
+  const { phone } = req.body;
+
+  const user = await Seek.findOne({ phone });
+  if (!user) {
+    return res.status(404).json({ message: "رقم الهاتف غير مسجل." });
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+
+  try {
+    await client.sendMessage(`${phone}@c.us`, `رمز التحقق لإعادة تعيين كلمة المرور هو: ${otp}`);
+    return res.status(200).json({succes:true , message: "تم إرسال رمز التحقق عبر واتساب." ,data:[] });
+  } catch (error) {
+    return res.status(500).json({ message: "فشل إرسال الرسالة." });
+  }
+});
+router.post("/verify-otp", (req, res) => {
+  const { phone, otp } = req.body;
+
+  const record = otpStore.get(phone);
+  if (!record || record.otp !== otp) {
+    return res.status(400).json({ message: "رمز التحقق غير صحيح." });
+  }
+
+  if (Date.now() > record.expiresAt) {
+    otpStore.delete(phone);
+    return res.status(400).json({ message: "انتهت صلاحية رمز التحقق." });
+  }
+
+  return res.status(200).json({succes:true , message: "تم التحقق بنجاح. يمكنك الآن إعادة تعيين كلمة المرور." , data:[] });
+});
+
+
+router.post("/reset-password", async (req, res) => {
+  const { phone, newPassword } = req.body;
+
+  const user = await User.findOne({ phone });
+  if (!user) {
+    return res.status(404).json({ message: "رقم الهاتف غير موجود." });
+  }
+
+  user.password = password;
+  await user.save();
+
+  otpStore.delete(phone);
+
+  return res.status(200).json({ succes:true ,message: "تم تحديث كلمة المرور بنجاح." ,data:[] });
+});
 
 //End Pharmatic
 
