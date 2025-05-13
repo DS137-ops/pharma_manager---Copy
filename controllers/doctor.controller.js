@@ -1061,7 +1061,7 @@ exports.resetDoctorPass = async (req, res) => {
 
 exports.toggleDoctorFavourite = async (req, res) => {
   try {
-    const { specId, doctorId } = req.body;
+    const {userId , specId } = req.body;
 
     const pharma = await Doctor.findById(specId);
     if (!pharma) {
@@ -1086,7 +1086,7 @@ exports.toggleDoctorFavourite = async (req, res) => {
     } else {
       const newFavourite = new FavouriteDoctor({
         userId,
-        specId,
+        doctorId:specId,
         isFavourite: true,
       });
       await newFavourite.save();

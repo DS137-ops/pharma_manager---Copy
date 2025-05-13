@@ -602,7 +602,7 @@ exports.resetRadiologyPass = async (req, res) => {
 
 exports.toggleRadiologyFavourite = async (req, res) => {
   try {
-    const { specId, radiologyId } = req.body;
+    const { userId,specId } = req.body;
 
     const pharma = await Radiology.findById(specId);
     if (!pharma) {
@@ -620,7 +620,7 @@ exports.toggleRadiologyFavourite = async (req, res) => {
         isFavourite: existingFavourite.isFavourite
       });
     } else {
-      const newFavourite = new Favourite({ userId, specId, isFavourite: true });
+      const newFavourite = new Favourite({ userId, radiologyId:specId, isFavourite: true });
       await newFavourite.save();
 
       return res.status(200).json({
