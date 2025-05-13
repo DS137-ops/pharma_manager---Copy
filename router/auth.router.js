@@ -654,12 +654,12 @@ router.post("/verify-otp", (req, res) => {
 router.post("/reset-password", async (req, res) => {
   const { phone, newPassword } = req.body;
 
-  const user = await User.findOne({ phone });
+  const user = await Seek.findOne({ phone });
   if (!user) {
     return res.status(404).json({ message: "رقم الهاتف غير موجود." });
   }
 
-  user.password = password;
+  user.password = newPassword;
   await user.save();
 
   otpStore.delete(phone);
