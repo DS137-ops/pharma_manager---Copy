@@ -625,7 +625,7 @@ exports.getFavourites = async (req, res) => {
 
     res.status(200).json({
       message: 'Favourite analysts retrieved successfully',
-      favourites: favouritesWithRating,
+      data: favouritesWithRating,
     });
   } catch (error) {
     console.error(error);
