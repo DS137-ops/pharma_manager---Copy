@@ -677,6 +677,7 @@ router.post("/verify-otp", (req, res) => {
 
 router.post("/reset-password", async (req, res) => {
   const { phone, newPassword } = req.body;
+  console.log(req.body)
 
   const user = await Seek.findOne({ phone });
   if (!user) {
