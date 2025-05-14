@@ -8,8 +8,7 @@ const RadiologyRouter = require('./router/radiology.router');
 const DoctorRouter = require('./router/doctor.router');
 const Specialty = require('./model/Specialty.model');
 const http = require('http');
-const { Client } = require('whatsapp-web.js');
-const qrcodeTerminal = require('qrcode-terminal');
+
 app.use('/uploads', express.static('uploads'));
 const mongoose = require('mongoose');
 const PORT = process.env.PORT;
@@ -23,7 +22,7 @@ app.use(express.json());
 app.use(mongoSanitize());
 app.use(xss());
 app.use(helmet());
-
+const whatsappClient = require('./utils/sendWhatsAppMessage');
 const server = http.createServer(app);
 const localUri = 'mongodb://localhost:27017/medicalapp',
   GlobalUri =
@@ -77,60 +76,7 @@ app.use('/api/Radiology', RadiologyRouter);
 app.use('/api/Doctor', DoctorRouter);
 app.use('/admin', adminRouter);
 
-let currentQR = null;
 
-const client = new Client({
-  puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  },
-});
-
-let qrShown = false;
-
-client.on('qr', (qr) => {
-  currentQR = qr;
-
-  if (!qrShown) {
-    console.log('QR code generated. Waiting for scan...');
-    qrShown = true;
-  }
-
-  qrcodeTerminal.generate(qr, { small: true });
-});
-client.on('authenticated', () => {
-  console.log('WhatsApp Client is authenticated!');
-});
-client.on('auth_failure', () => {
-  console.log('Authentication failed, resetting QR flag.');
-  qrShown = false;
-});
-
-
-client.on('ready', () => {
-  console.log('WhatsApp Client is ready!');
-});
-
-client.initialize();
-
-app.get('/qr', (req, res) => {
-  if (!currentQR) {
-    return res.status(404).send('QR not available yet. Please wait...');
-  }
-
-  const qrImageURL = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(
-    currentQR
-  )}`;
-
-  res.send(`
-    <html>
-      <body>
-        <h2>Scan this QR code with WhatsApp:</h2>
-        <img src="${qrImageURL}" alt="WhatsApp QR Code"/>
-        <p>If the QR code doesn’t load, <a href="${qrImageURL}" target="_blank">click here</a></p>
-      </body>
-    </html>
-  `);
-});
 
 server.listen(PORT, () => {
   console.log(`Server is Running ${PORT}`);
