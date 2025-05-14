@@ -13,7 +13,7 @@ const Radiology = require('../model/radiology.model');
 const Analyst = require('../model/analyst.model');
 const Seek = require('../model/seek.model');
 const City = require('../model/cities.model');
-const client = require('../utils/sendWhatsAppMessage');
+const {client , isClientReady} = require('../utils/sendWhatsAppMessage');
 //const client = require("../whatsappClient");
 const otpStore = new Map();
 const mongoose = require('mongoose');
@@ -623,7 +623,9 @@ router.post("/forgot-password", async (req, res) => {
   if (!user) {
     return res.status(404).json({ message: "رقم الهاتف غير مسجل." });
   }
-
+if (!isClientReady) {
+    return res.status(500).json({ message: "العميل غير متصل بعد. حاول لاحقًا." });
+  }
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
   otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });

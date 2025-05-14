@@ -30,9 +30,10 @@ client.on('auth_failure', () => {
   qrShown = false;
 });
 
-
+let isClientReady = false;
 client.on('ready', () => {
   console.log('WhatsApp Client is ready!');
+  isClientReady = true;
 });
 
 client.initialize();
@@ -57,4 +58,4 @@ app.get('/qr', (req, res) => {
   `);
 });
 
-module.exports = client;
+module.exports = {client , isClientReady };
