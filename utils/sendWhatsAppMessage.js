@@ -16,7 +16,7 @@ client.on('qr', (qr) => {
   currentQR = qr;
 
   if (!qrShown) {
-    console.log('QR code generated. Waiting for scan...');
+    console.log('QR code generated. Waiting for scan....');
     qrShown = true;
   }
 
