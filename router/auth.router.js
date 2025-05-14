@@ -632,7 +632,8 @@ router.post("/forgot-password", async (req, res) => {
     await client.sendMessage(`${phone}@c.us`, `رمز التحقق لإعادة تعيين كلمة المرور هو: ${otp}`);
     return res.status(200).json({succes:true , message: "تم إرسال رمز التحقق عبر واتساب." ,data:[] });
   } catch (error) {
-    return res.status(500).json({ message: "فشل إرسال الرسالة." });
+    console.log(error)
+    return res.status(500).json({ message: "فشل إرسال الرسالة.", error:error.message });
   }
 });
 router.post("/verify-otp", (req, res) => {
