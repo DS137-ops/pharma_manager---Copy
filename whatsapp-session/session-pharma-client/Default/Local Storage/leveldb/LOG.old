@@ -1,2 +1,3 @@
-2025/05/14-23:55:19.441 4048 Creating DB C:\Users\DS-Ops137\Desktop\my-pro\pharma_manager - Copy\whatsapp-session\session-pharma-client\Default\Local Storage\leveldb since it was missing.
-2025/05/14-23:55:20.368 4048 Reusing MANIFEST C:\Users\DS-Ops137\Desktop\my-pro\pharma_manager - Copy\whatsapp-session\session-pharma-client\Default\Local Storage\leveldb/MANIFEST-000001
+2025/05/14-20:57:52.448 9114 Reusing MANIFEST /root/medical-app/pharma_manager---Copy/whatsapp-session/session-pharma-client/Default/Local Storage/leveldb/MANIFEST-000001
+2025/05/14-20:57:52.448 9114 Recovering log #3
+2025/05/14-20:57:52.448 9114 Reusing old log /root/medical-app/pharma_manager---Copy/whatsapp-session/session-pharma-client/Default/Local Storage/leveldb/000003.log 
