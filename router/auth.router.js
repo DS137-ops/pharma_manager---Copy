@@ -13,7 +13,7 @@ const Radiology = require('../model/radiology.model');
 const Analyst = require('../model/analyst.model');
 const Seek = require('../model/seek.model');
 const City = require('../model/cities.model');
-const {client , isClientReady} = require('../utils/sendWhatsAppMessage');
+const client = require('../utils/sendWhatsAppMessage');
 //const client = require("../whatsappClient");
 const otpStore = new Map();
 const mongoose = require('mongoose');
@@ -616,28 +616,48 @@ router.get('/AllResponses/:patientId' , checkprov.checkifLoggedIn , async(req,re
   }
 })
 
-router.post("/forgot-password", async (req, res) => {
+router.post('/forgot-password', async (req, res) => {
   const { phone } = req.body;
+
+  if (!phone) {
+    return res.status(400).json({ message: 'رقم الهاتف مطلوب.' });
+  }
 
   const user = await Seek.findOne({ phone });
   if (!user) {
-    return res.status(404).json({ message: "رقم الهاتف غير مسجل." });
+    return res.status(404).json({ message: 'رقم الهاتف غير مسجل.' });
   }
-if (!isClientReady) {
-    return res.status(500).json({ message: "العميل غير متصل بعد. حاول لاحقًا." });
-  }
+
+  // توليد OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 }); // صلاحية 5 دقائق
 
-  otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
-
+  // إرسال الرسالة عبر WhatsApp
   try {
-    await client.sendMessage(`${phone}@c.us`, `رمز التحقق لإعادة تعيين كلمة المرور هو: ${otp}`);
-    return res.status(200).json({succes:true , message: "تم إرسال رمز التحقق عبر واتساب." ,data:[] });
+    // تأكد أن client جاهز
+    if (!client.info) {
+      return res.status(500).json({ message: 'العميل غير متصل بعد. حاول لاحقًا.' });
+    }
+
+    const chatId = `${phone}@c.us`; // تأكد أن الرقم بصيغة دولية
+
+    await client.sendMessage(chatId, `🔐 رمز التحقق الخاص بك هو: *${otp}*\nصالح لمدة 5 دقائق.`);
+
+    return res.status(200).json({
+      success: true,
+      message: 'تم إرسال رمز التحقق عبر واتساب.',
+      data: []
+    });
   } catch (error) {
-    console.log(error)
-    return res.status(500).json({ message: "فشل إرسال الرسالة.", error:error.message });
+    console.error('❌ Error sending WhatsApp message:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'فشل إرسال الرسالة.',
+      error: error.message
+    });
   }
 });
+
 router.post("/verify-otp", (req, res) => {
   const { phone, otp } = req.body;
 

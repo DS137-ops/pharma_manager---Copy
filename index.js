@@ -22,7 +22,7 @@ app.use(express.json());
 app.use(mongoSanitize());
 app.use(xss());
 app.use(helmet());
-const whatsappClient = require('./utils/sendWhatsAppMessage');
+require('./utils/sendWhatsAppMessage');
 const server = http.createServer(app);
 const localUri = 'mongodb://localhost:27017/medicalapp',
   GlobalUri =
