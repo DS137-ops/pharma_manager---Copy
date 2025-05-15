@@ -261,7 +261,6 @@ exports.getPharmas = async (req, res) => {
     const user = await Seek.findById(userId);
 
     const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
-let x=3;
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
