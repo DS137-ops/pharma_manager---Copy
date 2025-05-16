@@ -1,4 +1,0 @@
-2025/05/14-21:19:53.048 925c Creating DB /root/medical-app/pharma_manager---Copy/whatsapp-session/session-pharma-client/Default/Local Storage/leveldb since it was missing.
-2025/05/14-21:19:53.053 925c Reusing MANIFEST /root/medical-app/pharma_manager---Copy/whatsapp-session/session-pharma-client/Default/Local Storage/leveldb/MANIFEST-000001
-2025/05/14-21:19:53.053 925c Recovering log #3
-2025/05/14-21:19:53.053 925c Reusing old log /root/medical-app/pharma_manager---Copy/whatsapp-session/session-pharma-client/Default/Local Storage/leveldb/000003.log 
