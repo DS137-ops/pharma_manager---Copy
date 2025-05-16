@@ -350,7 +350,7 @@ exports.getFavourites = async (req, res) => {
     res.status(200).json({
       succes:true,
       message: 'Favourite radiologies retrieved successfully',
-      favourites: favouritesWithRating,
+      data: favouritesWithRating,
     });
   } catch (error) {
     console.error(error);
@@ -634,24 +634,24 @@ exports.toggleRadiologyFavourite = async (req, res) => {
   }
 };
 
-exports.getFavourites = async (req, res) => {
-  try {
-    const { userId } = req.params;
+// exports.getFavourites = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
 
-    const favourites = await Favourite.find({ userId, isFavourite: true })
-      .populate('radiologyId')
-      .exec();
+//     const favourites = await Favourite.find({ userId, isFavourite: true })
+//       .populate('radiologyId')
+//       .exec();
 
-    if (favourites.length === 0) {
-      return res.status(200).json({succes:true , message: 'No favourite doctors found',data:[] });
-    }
+//     if (favourites.length === 0) {
+//       return res.status(200).json({succes:true , message: 'No favourite doctors found',data:[] });
+//     }
 
-    res.status(200).json({succes:true , message: 'Favourite doctors retrieved successfully', data:favourites });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+//     res.status(200).json({succes:true , message: 'Favourite doctors retrieved successfully', data:favourites });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
 exports.deleteFromFavo = async (req,res)=>{
   try{
     const {cardId} = req.params
