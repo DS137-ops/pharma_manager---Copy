@@ -1,3 +1,2 @@
-2025/05/14-21:19:53.079 9258 Reusing MANIFEST /root/medical-app/pharma_manager---Copy/whatsapp-session/session-pharma-client/Default/Service Worker/Database/MANIFEST-000001
-2025/05/14-21:19:53.079 9258 Recovering log #3
-2025/05/14-21:19:53.079 9258 Reusing old log /root/medical-app/pharma_manager---Copy/whatsapp-session/session-pharma-client/Default/Service Worker/Database/000003.log 
+2025/05/15-07:23:36.078 9eab Creating DB /root/medical-app/pharma_manager---Copy/whatsapp-session/session-pharma-client/Default/Service Worker/Database since it was missing.
+2025/05/15-07:23:36.082 9eab Reusing MANIFEST /root/medical-app/pharma_manager---Copy/whatsapp-session/session-pharma-client/Default/Service Worker/Database/MANIFEST-000001
