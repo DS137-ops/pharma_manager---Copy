@@ -2844,3 +2844,28 @@
 2025/05/16-13:15:07.787 d3ff compacted to: files[ 0 2 24 0 0 0 0 ]
 2025/05/16-13:15:07.787 d3ff Delete type=2 #2816
 2025/05/16-13:15:07.787 d3ff Delete type=2 #2818
+2025/05/16-13:20:31.036 d42d Compacting 1@1 + 10@2 files
+2025/05/16-13:20:31.096 d42d Generated table #2821@1: 80924 keys, 2240318 bytes
+2025/05/16-13:20:31.134 d42d Generated table #2822@1: 27332 keys, 2175733 bytes
+2025/05/16-13:20:31.175 d42d Generated table #2823@1: 48677 keys, 2208178 bytes
+2025/05/16-13:20:31.194 d42d Generated table #2824@1: 2754 keys, 2166226 bytes
+2025/05/16-13:20:31.214 d42d Generated table #2825@1: 3177 keys, 2161129 bytes
+2025/05/16-13:20:31.234 d42d Generated table #2826@1: 3487 keys, 2156846 bytes
+2025/05/16-13:20:31.257 d42d Generated table #2827@1: 3771 keys, 2162266 bytes
+2025/05/16-13:20:31.278 d42d Generated table #2828@1: 3513 keys, 2157776 bytes
+2025/05/16-13:20:31.304 d42d Generated table #2829@1: 10854 keys, 2169427 bytes
+2025/05/16-13:20:31.364 d42d Generated table #2830@1: 31568 keys, 2252885 bytes
+2025/05/16-13:20:31.366 d42d Generated table #2831@1: 487 keys, 38630 bytes
+2025/05/16-13:20:31.366 d42d Compacted 1@1 + 10@2 files => 21889414 bytes
+2025/05/16-13:20:31.368 d42d compacted to: files[ 0 1 25 0 0 0 0 ]
+2025/05/16-13:20:31.368 d42d Delete type=2 #2807
+2025/05/16-13:20:31.368 d42d Delete type=2 #2804
+2025/05/16-13:20:31.368 d42d Delete type=2 #2799
+2025/05/16-13:20:31.368 d42d Delete type=2 #2801
+2025/05/16-13:20:31.368 d42d Delete type=2 #2805
+2025/05/16-13:20:31.368 d42d Delete type=2 #2819
+2025/05/16-13:20:31.368 d42d Delete type=2 #2802
+2025/05/16-13:20:31.368 d42d Delete type=2 #2803
+2025/05/16-13:20:31.368 d42d Delete type=2 #2808
+2025/05/16-13:20:31.368 d42d Delete type=2 #2806
+2025/05/16-13:20:31.368 d42d Delete type=2 #2800
