@@ -616,81 +616,79 @@ router.get('/AllResponses/:patientId' , checkprov.checkifLoggedIn , async(req,re
   }
 })
 
-router.post('/forgot-password', async (req, res) => {
-  const { phone } = req.body;
+// router.post('/forgot-password', async (req, res) => {
+//   const { phone } = req.body;
 
-  if (!phone) {
-    return res.status(400).json({ message: 'رقم الهاتف مطلوب.' });
-  }
+//   if (!phone) {
+//     return res.status(400).json({ message: 'رقم الهاتف مطلوب.' });
+//   }
 
-  const user = await Seek.findOne({ phone });
-  if (!user) {
-    return res.status(404).json({ message: 'رقم الهاتف غير مسجل.' });
-  }
+//   const user = await Seek.findOne({ phone });
+//   if (!user) {
+//     return res.status(404).json({ message: 'رقم الهاتف غير مسجل.' });
+//   }
 
-  // توليد OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 }); // صلاحية 5 دقائق
+//   // توليد OTP
+//   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+//   otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 }); // صلاحية 5 دقائق
 
-  // إرسال الرسالة عبر WhatsApp
-  try {
-    // تأكد أن client جاهز
-    if (!client.info) {
-      return res.status(500).json({ message: 'العميل غير متصل بعد. حاول لاحقًا.' });
-    }
+//   // إرسال الرسالة عبر WhatsApp
+//   try {
+//     // تأكد أن client جاهز
+//     if (!client.info) {
+//       return res.status(500).json({ message: 'العميل غير متصل بعد. حاول لاحقًا.' });
+//     }
 
-    const chatId = `${phone}@c.us`; // تأكد أن الرقم بصيغة دولية
+//     const chatId = `${phone}@c.us`; // تأكد أن الرقم بصيغة دولية
 
-    await client.sendMessage(chatId, `🔐 رمز التحقق الخاص بك هو: *${otp}*\nصالح لمدة 5 دقائق.`);
+//     await client.sendMessage(chatId, `🔐 رمز التحقق الخاص بك هو: *${otp}*\nصالح لمدة 5 دقائق.`);
 
-    return res.status(200).json({
-      success: true,
-      message: 'تم إرسال رمز التحقق عبر واتساب.',
-      data: []
-    });
-  } catch (error) {
-    console.error('❌ Error sending WhatsApp message:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'فشل إرسال الرسالة.',
-      error: error.message
-    });
-  }
-});
+//     return res.status(200).json({
+//       success: true,
+//       message: 'تم إرسال رمز التحقق عبر واتساب.',
+//       data: []
+//     });
+//   } catch (error) {
+//     console.error('❌ Error sending WhatsApp message:', error);
+//     return res.status(500).json({
+//       success: false,
+//       message: 'فشل إرسال الرسالة.',
+//       error: error.message
+//     });
+//   }
+// });
 
-router.post("/verify-otp", (req, res) => {
-  const { phone, otp } = req.body;
+// router.post("/verify-otp", (req, res) => {
+//   const { phone, otp } = req.body;
 
-  const record = otpStore.get(phone);
-  if (!record || record.otp !== otp) {
-    return res.status(400).json({ message: "رمز التحقق غير صحيح." });
-  }
+//   const record = otpStore.get(phone);
+//   if (!record || record.otp !== otp) {
+//     return res.status(400).json({ message: "رمز التحقق غير صحيح." });
+//   }
 
-  if (Date.now() > record.expiresAt) {
-    otpStore.delete(phone);
-    return res.status(400).json({ message: "انتهت صلاحية رمز التحقق." });
-  }
+//   if (Date.now() > record.expiresAt) {
+//     otpStore.delete(phone);
+//     return res.status(400).json({ message: "انتهت صلاحية رمز التحقق." });
+//   }
 
-  return res.status(200).json({succes:true , message: "تم التحقق بنجاح. يمكنك الآن إعادة تعيين كلمة المرور." , data:[] });
-});
+//   return res.status(200).json({succes:true , message: "تم التحقق بنجاح. يمكنك الآن إعادة تعيين كلمة المرور." , data:[] });
+// });
 
 
-router.post("/reset-password", async (req, res) => {
-  const { phone, newPassword } = req.body;
-  console.log(req.body)
+// router.post("/reset-password/:id", async (req, res) => {
+//   const { newPassword } = req.body;
+//   const user = await Seek.findById({ id });
+//   if (!user) {
+//     return res.status(404).json({ message: "Invalid ID" });
+//   }
 
-  const user = await Seek.findOne({ phone });
-  if (!user) {
-    return res.status(404).json({ message: "رقم الهاتف غير موجود." });
-  }
+//   user.password = newPassword;
+//   await user.save();
 
-  user.password = newPassword;
-  await user.save();
+//   otpStore.delete(phone);
 
-  otpStore.delete(phone);
-
-  return res.status(200).json({ succes:true ,message: "تم تحديث كلمة المرور بنجاح." ,data:[] });
-});
+//   return res.status(200).json({ succes:true ,message: "تم تحديث كلمة المرور بنجاح." ,data:[] });
+// });
 
 //End Pharmatic
 
