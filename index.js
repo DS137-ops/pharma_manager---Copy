@@ -8,11 +8,12 @@ const RadiologyRouter = require('./router/radiology.router');
 const DoctorRouter = require('./router/doctor.router');
 const Specialty = require('./model/Specialty.model');
 const http = require('http');
-
+const cloudinary = require('./config/cloudinary');
 app.use('/uploads', express.static('uploads'));
 const mongoose = require('mongoose');
 const PORT = process.env.PORT;
 const path = require('path');
+const fs = require('fs');
 app.use(express.static(path.join(__dirname, 'assests')));
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
@@ -31,6 +32,7 @@ mongoose
   .connect(GlobalUri)
   .then(() => console.log('MongoDB connected!'))
   .catch((err) => console.error('MongoDB connection error:', err));
+
 
 const specialties = [
   'أسنان',
@@ -61,13 +63,44 @@ const specialties = [
   'جراحة اورام',
 ];
 
-const docs = specialties.map((name, index) => ({
-  name: name.trim(),
-  specId: index + 1,
-}));
 (async () => {
-  await Specialty.deleteMany();
-  await Specialty.insertMany(docs);
+  try {
+    await Specialty.deleteMany();
+
+    const docs = [];
+
+    for (let i = 0; i < specialties.length; i++) {
+      const name = specialties[i].trim();
+      const specId = i + 1;
+
+      const imagePath = path.join(__dirname, 'specialty_images', `${name}.jpg`);
+
+      if (!fs.existsSync(imagePath)) {
+        console.warn(`❌ الصورة غير موجودة: ${imagePath}`);
+        continue;
+      }
+
+      const uploadResult = await cloudinary.uploader.upload(imagePath, {
+        folder: 'specialties',
+        public_id: `spec_${specId}`,
+      });
+
+      docs.push({
+        specId,
+        name,
+        image: uploadResult.secure_url,
+      });
+
+      console.log(`✅ تم رفع: ${name}`);
+    }
+
+    await Specialty.insertMany(docs);
+    console.log('🎉 تم إدخال جميع التخصصات مع الصور بنجاح!');
+    process.exit();
+  } catch (err) {
+    console.error('❌ خطأ أثناء رفع الصور أو الإدخال:', err);
+    process.exit(1);
+  }
 })();
 
 app.use('/api/Pharmatic', PharmaticRouter);
