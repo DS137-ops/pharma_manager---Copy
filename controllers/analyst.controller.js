@@ -579,7 +579,7 @@ exports.toggleAnalystFavourite = async (req, res) => {
     } else {
       const newFavourite = new Favourite({
         userId,
-        analystId:specId,
+        specId,
         isFavourite: true,
       });
       await newFavourite.save();

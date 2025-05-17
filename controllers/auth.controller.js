@@ -907,7 +907,7 @@ exports.togglePharmaFavourite = async (req, res) => {
     } else {
       const newFavourite = new Favourite({
         userId,
-        pharmaId:specId,
+        specId,
         isFavourite: true,
       });
       await newFavourite.save();

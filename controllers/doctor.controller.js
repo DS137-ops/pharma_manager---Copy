@@ -1086,7 +1086,7 @@ exports.toggleDoctorFavourite = async (req, res) => {
     } else {
       const newFavourite = new FavouriteDoctor({
         userId,
-        doctorId:specId,
+        specId,
         isFavourite: true,
       });
       await newFavourite.save();
