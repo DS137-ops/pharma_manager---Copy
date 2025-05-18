@@ -477,7 +477,7 @@ const newSeek = new Seek({
       age,
       city: cityExists.name,
       region: regionExists.name,
-    });
+    }).select('_id fullName');
 
 
     await newSeek.save();
