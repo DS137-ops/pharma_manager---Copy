@@ -450,7 +450,7 @@ exports.updateAnalystInfo = async (req, res) => {
       req.body;
     const id = req.params.id;
 
-    const updateFields = {}; // تخزين القيم المراد تحديثها فقط
+    const updateFields = {}; 
 
     if (fullName) updateFields.fullName = fullName;
     if (address) updateFields.address = address;
