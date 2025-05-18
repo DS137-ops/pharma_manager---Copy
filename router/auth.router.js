@@ -440,7 +440,7 @@ router.get(
         },
         {
           $match: {
-            averageRating: { $ne: null },
+             averageRating: { $gte: 0 }
           },
         },
         {
@@ -462,7 +462,7 @@ router.get(
 
       const favouritePharmas = await FavouritePharmas.find({ userId });
       const favouritePharmaIds = favouritePharmas.map((fav) =>
-        fav.pharmaId.toString()
+        fav.specId.toString()
       );
 
       const pharmasWithFavStatus = topPharmas.map((pharma) => ({

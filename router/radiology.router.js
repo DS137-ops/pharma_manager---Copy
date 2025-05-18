@@ -134,7 +134,7 @@ router.get(
         },
         {
           $match: {
-            averageRating: { $ne: null },
+             averageRating: { $gte: 0 }
           },
         },
         {
@@ -156,7 +156,7 @@ router.get(
 
       const favouriteRadiolgy = await FavouriteRadiologies.find({ userId });
       const favouriteRadiologyIds = favouriteRadiolgy.map((fav) =>
-        fav.radiologyId.toString()
+        fav.specId.toString()
       );
 
       const radiolgyWithFavStatus = topRadiology.map((radiology) => ({
