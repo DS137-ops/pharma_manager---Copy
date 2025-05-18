@@ -202,15 +202,15 @@ mongoose
   .then(async () => {
     console.log('MongoDB connected!');
 
-    try {
-      await Specialty.deleteMany();
-      await Specialty.insertMany(docs);
-      console.log('added images succesfully');
-      process.exit(0);
-    } catch (err) {
-      console.error('error', err);
-      process.exit(1);
-    }
+    // try {
+    //   await Specialty.deleteMany();
+    //   await Specialty.insertMany(docs);
+    //   console.log('added images succesfully');
+    //   process.exit(0);
+    // } catch (err) {
+    //   console.error('error', err);
+    //   process.exit(1);
+    // }
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
