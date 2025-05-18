@@ -126,7 +126,7 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
       },
       {
         $match: {
-          averageRating: { $ne: null }
+           averageRating: { $gte: 0 }
         }
       },
       {
@@ -146,6 +146,7 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
         }
       }
     ]);
+console.log("Top Doctors:", topDoctors);
 
     const favouriteDoctors = await FavouriteDoctor.find({ userId });
     const favouriteDoctorIds = favouriteDoctors.map(fav => fav.doctorId.toString());
@@ -153,7 +154,8 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
 
     const doctorsWithFavStatus = topDoctors.map(doctor => ({
       ...doctor,
-      isFavourite: favouriteDoctorIds.includes(doctor._id.toString())
+      isFavourite: doctor._id ? favouriteDoctorIds.includes(doctor._id.toString()) : false
+
     }));
 
     return res.status(200).json({ success: true, data: doctorsWithFavStatus });
