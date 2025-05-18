@@ -477,7 +477,7 @@ const newSeek = new Seek({
       age,
       city: cityExists.name,
       region: regionExists.name,
-    }).select('_id fullName');
+    })
 
 
     await newSeek.save();
@@ -488,7 +488,10 @@ const newSeek = new Seek({
       success: true,
       message: 'User registered successfully',
       token,
-      data:newSeek._id
+      data:{
+        _id:newSeek._id,
+        fullName:newSeek.fullName
+      }
     });
   } catch (err) {
     console.error('Error registering user:', err);
