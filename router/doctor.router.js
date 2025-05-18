@@ -101,7 +101,8 @@ router.get(
 router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req, res) => {
   try {
     const { city, region } = req.params;
-    const userId = req.user._id; 
+    const userId = req.user._id;
+    console.log(userId)
     const existCity = await City.findById(city);
     if (!existCity) return res.status(400).json({ success: false, message: 'City not found' });
 
@@ -136,6 +137,7 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
       },
       {
         $project: {
+          _id: 1,
           fullName: 1,
           role:1,
           specilizate: 1,
