@@ -205,10 +205,10 @@ mongoose
     try {
       await Specialty.deleteMany();
       await Specialty.insertMany(docs);
-      console.log('✅ تم إدخال التخصصات بنجاح مع الصور.');
+      console.log('added images succesfully');
       process.exit(0);
     } catch (err) {
-      console.error('❌ حدث خطأ أثناء الإدخال:', err);
+      console.error('error', err);
       process.exit(1);
     }
   })
