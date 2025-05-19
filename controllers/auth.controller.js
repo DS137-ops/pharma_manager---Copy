@@ -712,12 +712,14 @@ console.log('Decoded user in logoutSpec:', req.user);
 exports.logoutSeek = async (req, res, next) => {
   const token =
     req.headers.authorization && req.headers.authorization.split(' ')[1];
-  const { refreshToken } = token;
-  if (token) {
-    console.log(token);
-    await Blacklist.create({ token });
-    await RefreshToken.deleteOne({ refreshToken });
-  }
+     const userId = req.user?._id; 
+   if (!token || !userId) {
+      return res.status(400).json({ success: false, message: 'Token or user not provided' });
+    }
+ await Blacklist.create({ token });
+
+
+    await RefreshToken.deleteMany({ userRef: userId });
 
   res.status(200).json({ success: true, message:'logout succesfully' , data:[] });
 };
