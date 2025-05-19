@@ -59,6 +59,16 @@ const storage4 = new CloudinaryStorage({
 const Advert_for_radiology = multer({ storage: storage4 });
 
 
+const storage5 = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `doctorAdvert`,
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+const Advert_for_doctor = multer({ storage: storage5 });
+
+
 const router = express.Router();
   const validateAdmin = [
    body("username").isString().notEmpty().withMessage("Username is required"),
@@ -68,9 +78,12 @@ const router = express.Router();
 router.post("/create", validateAdmin, createAdmin);
 router.post("/login", validateAdmin, adminLogin);
 
-router.post('/add-advert-for-doctor', async (req, res) => {
+router.post('/add-advert-for-doctor',Advert_for_doctor.single('image') , async (req, res) => {
   try {
-    const {  imageUrl } = req.body;
+   if(!req.file){
+    return res.status(404).json({message:'no file uploaded'})
+  }
+const imageUrl = req.file.path;
 
     if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
