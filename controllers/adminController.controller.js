@@ -106,7 +106,7 @@ exports.getAboutUs = async(req,res)=>{
     const about = await AboutUs.findOne();
 
     if (!about) {
-      return res.status(404).json({ message: "about us not found." });
+      return res.status(200).json({ message: "about us is Empty" , data:[] });
     }
 
     res.status(200).json(about);

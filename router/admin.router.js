@@ -38,6 +38,27 @@ const storage2 = new CloudinaryStorage({
 });
 const Advert_for_seek = multer({ storage: storage2 });
 
+const storage3 = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `analystAdvert`,
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+
+const Advert_for_analyst = multer({ storage: storage3 });
+
+
+const storage4 = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => ({
+    folder: `radiologyAdvert`,
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  }),
+});
+const Advert_for_radiology = multer({ storage: storage4 });
+
+
 const router = express.Router();
   const validateAdmin = [
    body("username").isString().notEmpty().withMessage("Username is required"),
@@ -123,8 +144,11 @@ router.get('/adverts-for-pharmacy', async (req, res) => {
 });
 
 
-router.post('/add-advert-for-radiology', async (req, res) => {
-  const {imageUrl } = req.body;
+router.post('/add-advert-for-radiology',Advert_for_radiology.single('image')  , async (req, res) => {
+   if(!req.file){
+    return res.status(404).json({message:'no file uploaded'})
+  }
+  const {imageUrl} = req.file.path;
 
     if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
@@ -155,8 +179,12 @@ router.get('/adverts-for-radiology', async (req, res) => {
 });
 
 
-router.post('/add-advert-for-analyst', async (req, res) => {
-  const {imageUrl } = req.body;
+router.post('/add-advert-for-analyst',Advert_for_analyst.single('image'), async (req, res) => {
+  if(!req.file){
+    return res.status(404).json({message:'no file uploaded'})
+  }
+  const {imageUrl} = req.file.path;
+
 
     if ( !imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
