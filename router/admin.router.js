@@ -113,7 +113,8 @@ router.post('/add-advert-for-pharmacy',Advert_for_pharmacy.single('image'), asyn
   if(!req.file){
     return res.status(404).json({message:'no file uploaded'})
   }
-  const {imageUrl} = req.file.path;
+const imageUrl = req.file.path;
+
 
     if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
@@ -148,7 +149,8 @@ router.post('/add-advert-for-radiology',Advert_for_radiology.single('image')  , 
    if(!req.file){
     return res.status(404).json({message:'no file uploaded'})
   }
-  const {imageUrl} = req.file.path;
+const imageUrl = req.file.path;
+
 
     if (!imageUrl) {
       return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
@@ -183,7 +185,8 @@ router.post('/add-advert-for-analyst',Advert_for_analyst.single('image'), async 
   if(!req.file){
     return res.status(404).json({message:'no file uploaded'})
   }
-  const {imageUrl} = req.file.path;
+const imageUrl = req.file.path;
+
 
 
     if ( !imageUrl) {
