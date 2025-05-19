@@ -691,7 +691,7 @@ exports.logoutSpec = async (req, res) => {
     const token =
       req.headers.authorization && req.headers.authorization.split(' ')[1];
     const userId = req.user?._id; 
-console.log(userId)
+console.log('Decoded user in logoutSpec:', req.user);
     if (!token || !userId) {
       return res.status(400).json({ success: false, message: 'Token or user not provided' });
     }
