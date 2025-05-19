@@ -222,13 +222,10 @@ exports.searchanalystByName = async (req, res) => {
 
 exports.deleteAnalystAccount = async (req, res) => {
   try {
-    const { password } = req.body;
+
     const user = req.user;
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: 'Incorrect password' });
-
+ if(!user._id)return res.status(404).json({succes:false , message:'Invalid ID' , data:[]})
     await Analyst.findByIdAndDelete(user._id);
 
     res.status(200).json({ succes:true , message: 'Account deleted successfully', data: [] });

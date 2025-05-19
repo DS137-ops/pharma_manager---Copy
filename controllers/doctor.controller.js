@@ -535,6 +535,7 @@ exports.createBooking = async (req, res) => {
 exports.deleteDoctorAccount = async (req, res) => {
   try {
     const user = req.user;
+    if(!user._id)return res.status(404).json({succes:false , message:'Invalid ID' , data:[]})
 
     await Doctor.findByIdAndDelete(user._id);
 

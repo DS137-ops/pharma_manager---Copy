@@ -189,6 +189,7 @@ exports.getFamousRadiologies = async (req, res) => {
 exports.deleteRadiologyAccount = async (req, res) => {
   try {
     const user = req.user;
+    if(!user._id)return res.status(404).json({succes:false , message:'Invalid ID' , data:[]})
 
     await Radiology.findByIdAndDelete(user._id);
 
