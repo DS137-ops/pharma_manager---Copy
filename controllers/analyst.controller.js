@@ -87,7 +87,7 @@ exports.createNewAnalyst = async (req, res) => {
 
 
     await newUser.save();
-    const token = await jwt.sign({_id:newUser._id, role: 'analyst' }, process.env.JWT_SECRET);
+    const token = await jwt.sign({_id:newUser._id, role: 'analyst' }, process.env.JWT_SECRET ,   { expiresIn: '1d' });
     await RefreshToken.create({ token, userRef: newUser._id });
     const approvalLink = `http://147.93.106.92:8080/api/Analyst/approve/analyst/${newUser._id}`;
     const rejectLink = `http://147.93.106.92:8080/api/Analyst/reject/analyst/${newUser._id}`;
@@ -273,7 +273,7 @@ const { email, password } = req.body;
     const token = jwt.sign(
       { id: user._id, role: 'analyst' },
       '1001110',
-
+  { expiresIn: '1d' }
     );
 
     await RefreshToken.create({ token, userRef: user._id });
