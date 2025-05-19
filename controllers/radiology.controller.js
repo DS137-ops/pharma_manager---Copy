@@ -328,13 +328,13 @@ exports.getFavourites = async (req, res) => {
 
     const favourites = await Favourite.find({ userId, isFavourite: true })
     .populate({
-      path:'radiologyId',
+      path:'specId',
       select:'-password -resetCode -resetCodeExpires -approved'
     })
       .exec();
 
     const favouritesWithRating = favourites.map((fav) => {
-      const radiology = fav.radiologyId;
+      const radiology = fav.specId;
       let finalRate = 0;
 
       if (radiology && radiology.rate && radiology.rate.length > 0) {

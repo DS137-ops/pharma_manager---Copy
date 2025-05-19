@@ -1109,13 +1109,13 @@ exports.getFavourites = async (req, res) => {
 
     const favourites = await FavouriteDoctor.find({ userId, isFavourite: true })
     .populate({
-      path:'doctorId',
+      path:'specId',
       select:'-password -resetCode -resetCodeExpires -approved'
     })
       .exec();
 
     const favouritesWithRating = favourites.map((fav) => {
-      const doctor = fav.doctorId;
+      const doctor = fav.specId;
       let finalRate = 0;
 
       if (doctor && doctor.rate && doctor.rate.length > 0) {
@@ -1124,11 +1124,9 @@ exports.getFavourites = async (req, res) => {
       }
 
       return {
-        ...fav._doc,
-        doctorId: {
+
           ...doctor._doc,
           finalRate: finalRate, 
-        },
       };
     });
 

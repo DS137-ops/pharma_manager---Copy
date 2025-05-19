@@ -600,13 +600,13 @@ exports.getFavourites = async (req, res) => {
 
     const favourites = await Favourite.find({ userId, isFavourite: true })
     .populate({
-      path:'analystId',
+      path:'specId',
       select:'-password -resetCode -resetCodeExpires -approved'
     })
       .exec();
 
     const favouritesWithRating = favourites.map((fav) => {
-      const analyst = fav.analystId;
+      const analyst = fav.specId;
       let finalRate = 0;
 
       if (analyst && analyst.rate && analyst.rate.length > 0) {

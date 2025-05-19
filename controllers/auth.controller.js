@@ -165,6 +165,7 @@ exports.deletePharmaticAccount = async (req, res) => {
   try {
 
     const user = req.user;
+    if(!user._id)return res.status(200).json({succes:false , message: 'user not found', data: [] });
 
     await Pharmatic.findByIdAndDelete(user._id);
 
@@ -935,13 +936,13 @@ exports.getFavourites = async (req, res) => {
 
     const favourites = await Favourite.find({ userId, isFavourite: true })
       .populate({
-        path:'pharmaId',
+        path:'specId',
         select:'-password -resetCode -resetCodeExpires -approved'
       })
       .exec();
 
     const favouritesWithRating = favourites.map((fav) => {
-      const pharma = fav.pharmaId;
+      const pharma = fav.specId;
       let finalRate = 0;
 
       if (pharma && pharma.rate && pharma.rate.length > 0) {
