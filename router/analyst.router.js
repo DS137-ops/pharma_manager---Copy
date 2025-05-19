@@ -52,7 +52,7 @@ router.post(
 
 router.delete(
   '/delete-analyst-account',
-  checkprov.authMiddlewareforAnalyst,
+  checkprov.checkifLoggedIn,
   analystController.deleteAnalystAccount
 );
 

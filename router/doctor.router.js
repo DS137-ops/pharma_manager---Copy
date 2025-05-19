@@ -72,7 +72,7 @@ router.get('/famous', doctorController.getFamousDoctors);
 
 router.delete(
   '/delete-doctor-account',
-  checkprov.authMiddlewareforDoctor,
+  checkprov.checkifLoggedIn,
   doctorController.deleteDoctorAccount
 );
 router.get("/specialties", doctorController.getSpecialties);

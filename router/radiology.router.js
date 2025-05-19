@@ -51,7 +51,7 @@ router.post(
 
 router.delete(
   '/delete-radiology-account',
-  checkprov.authMiddlewareforRadiology,
+  checkprov.checkifLoggedIn,
   RadiologyController.deleteRadiologyAccount
 );
 
