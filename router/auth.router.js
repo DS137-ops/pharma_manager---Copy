@@ -55,7 +55,7 @@ router.post(
 );
 router.post('/loginSeek',  authController.loginSeek);
 router.post(
-  '/logoutSeek/:id',
+  '/logoutSeek',
   checkprov.checkifLoggedIn,
   authController.logoutSeek
 );

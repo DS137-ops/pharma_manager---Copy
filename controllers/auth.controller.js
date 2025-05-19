@@ -719,7 +719,7 @@ exports.logoutSeek = async (req, res, next) => {
     await RefreshToken.deleteOne({ refreshToken });
   }
 
-  res.status(200).json({ success: true, message:'' , data:[] });
+  res.status(200).json({ success: true, message:'logout succesfully' , data:[] });
 };
 
 exports.forgetPassForPharmatic = async (req, res) => {
