@@ -124,7 +124,7 @@ router.post(
 );
 router.delete(
   '/delete-pharmatic-account',
-  checkprov.authMiddlewareforPharmatic,
+  checkprov.checkifLoggedIn,
   authController.deletePharmaticAccount
 );
 
