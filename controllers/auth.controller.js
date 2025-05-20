@@ -7,7 +7,6 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 var nodemailer = require('nodemailer');
 const City = require('../model/cities.model');
-const FavouritePharma = require('../model/FavouritePharma.model');
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
 require('dotenv').config();
@@ -261,7 +260,7 @@ exports.getPharmas = async (req, res) => {
 
     const user = await Seek.findById(userId);
 
-    const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
+    const userFavourites = user ? user.Favourite.map((f) => f.toString()) : [];
     const pharmaciesWithRatings = findPharma.map((pharma) => {
       const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
