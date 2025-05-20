@@ -154,7 +154,7 @@ router.get(
         },
       ]);
 
-      const favouriteRadiolgy = await FavouriteRadiologies.find({ userId });
+      const favouriteRadiolgy = await FavouriteRadiologies.find({ userId , isFavourite:true });
       const favouriteRadiologyIds = favouriteRadiolgy.map((fav) =>
         fav.specId.toString()
       );

@@ -157,7 +157,7 @@ router.get(
         },
       ]);
 
-      const favouriteAnalyst = await FavouriteRadiologies.find({ userId });
+      const favouriteAnalyst = await FavouriteRadiologies.find({ userId , isFavourite:true });
       const favouriteAnalystIds = favouriteAnalyst.map((fav) =>
         fav.specId.toString()
       );

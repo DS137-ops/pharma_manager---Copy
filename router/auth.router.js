@@ -460,7 +460,7 @@ router.get(
         },
       ]);
 
-      const favouritePharmas = await FavouritePharmas.find({ userId });
+      const favouritePharmas = await FavouritePharmas.find({ userId , isFavourite:true });
       const favouritePharmaIds = favouritePharmas.map((fav) =>
         fav.specId.toString()
       );
