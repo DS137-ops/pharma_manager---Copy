@@ -1,0 +1,21 @@
+{
+  "user_not_found": "المستخدم غير موجود",
+  "user_approved_successfully": "تم اعتماد المستخدم بنجاح",
+  "user_rejected_successfully": "تم رفض المستخدم بنجاح",
+  "region_not_found_in_selected_city": "المنطقة غير موجودة في المدينة المحددة",
+  "no_result": "لا توجد نتائج",
+  "server_error": "خطأ في الخادم",
+  "updated_successfully": "تم التحديث بنجاح",
+  "city_not_found": "المدينة غير موجودة",
+  "invalid_or_expired_code": "الرمز غير صالح أو منتهي الصلاحية",
+  "reset_code_sent_to_email": "تم إرسال رمز إعادة التعيين إلى بريدك الإلكتروني",
+  "code_verified_successfully": "تم التحقق من الرمز بنجاح",
+  "password_reset_successfully": "تم إعادة تعيين كلمة المرور بنجاح",
+  "analyst_not_found": "المحلل غير موجود",
+  "analyst_added_to_favourites": "تمت إضافة المحلل إلى المفضلة",
+  "analyst_removed_from_favourites": "تمت إزالة المحلل من المفضلة",
+  "favourite_analysts_retrieved_successfully": "تم استرجاع المحللين المفضلين بنجاح",
+  "user_not_found_in_favourites": "المستخدم غير موجود",
+  "delete_successfully": "تم الحذف بنجاح",
+  "internal_server_error": "خطأ داخلي في الخادم"
+}

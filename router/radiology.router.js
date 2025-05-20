@@ -240,18 +240,18 @@ router.post(
       await newRequest.save();
       res
         .status(200)
-        .json({ message: 'تم إرسال الطلب بنجاح', request: newRequest });
+        .json({ success:true ,message: 'order sent succesfully', data: newRequest });
     } catch (error) {
-      console.error('خطأ أثناء إرسال الطلب:', error);
+      console.error('error when send order', error);
       res
         .status(500)
-        .json({ message: 'حدث خطأ أثناء إرسال الطلب', error: error.message });
+        .json({ message: 'error when send order', error: error.message });
     }
   }
 );
 router.get('/Radiology-requests/:radiologyId', async (req, res) => {
   const radiology = await Radiology.findById(req.params.radiologyId);
-  if (!radiology) return res.status(404).json({ message: 'الصيدلي غير موجود' });
+  if (!radiology) return res.status(404).json({ message: 'radiology is not found' });
 
   try {
     const requests = await PrescriptionRadiologyRequest.find({
@@ -268,7 +268,7 @@ router.get('/Radiology-requests/:radiologyId', async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ message: 'خطأ أثناء جلب الطلبات', error: error.message });
+      .json({ message: 'error when send order', error: error.message });
   }
 });
 router.get(
@@ -282,7 +282,7 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
     const { requestId, specId, price, accepted } = req.body;
 
     const request = await PrescriptionRadiologyRequest.findById(requestId);
-    if (!request) return res.status(404).json({ message: 'الطلب غير موجود' });
+    if (!request) return res.status(404).json({ message: 'order does not exist' });
     if (accepted && !price) {
       res.status(400).json({ message: 'price is required' });
     }
@@ -290,9 +290,9 @@ router.post('/respond-request-from-Radiology', async (req, res) => {
     request.radiologysResponded.push({ radiologyId: specId, price, accepted });
     await request.save();
 
-    res.status(200).json({ message: 'تم إرسال الرد بنجاح' });
+    res.status(200).json({ message: 'reply was sent successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'خطأ أثناء الرد على الطلب', error });
+    res.status(500).json({ message: 'error when replied order', error });
   }
 });
 

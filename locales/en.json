@@ -1,0 +1,21 @@
+{
+  "user_not_found": "User not found",
+  "user_approved_successfully": "User approved successfully",
+  "user_rejected_successfully": "User rejected successfully",
+  "region_not_found_in_selected_city": "Region not found in the selected city",
+  "no_result": "No result",
+  "server_error": "Server error",
+  "updated_successfully": "Updated Successfully",
+  "city_not_found": "City not found",
+  "invalid_or_expired_code": "Invalid or expired code",
+  "reset_code_sent_to_email": "Reset code sent to your email",
+  "code_verified_successfully": "Code verified successfully",
+  "password_reset_successfully": "Password reset successfully",
+  "analyst_not_found": "Analyst not found",
+  "analyst_added_to_favourites": "Analyst added to favourites",
+  "analyst_removed_from_favourites": "Analyst removed from favourites",
+  "favourite_analysts_retrieved_successfully": "Favourite analysts retrieved successfully",
+  "user_not_found_in_favourites": "User not found",
+  "delete_successfully": "Delete successfully",
+  "internal_server_error": "Internal server error"
+}

@@ -113,9 +113,9 @@ router.get('/adverts-for-doctor', async (req, res) => {
   try {
     const adverts = await doctorAdvert.find().sort({ createdAt: -1 });
     if (adverts.length === 0) {
-      return res.status(404).json({ message: 'No Adverts Yet' });
+      return res.status(200).json({ message: 'No Adverts Yet' ,data:[] });
     }
-    res.status(200).json({ adverts });
+    res.status(200).json({message:'add successfully', data:adverts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -149,9 +149,9 @@ router.get('/adverts-for-pharmacy', async (req, res) => {
   try {
     const adverts = await PharmacyAdvert.find().sort({ createdAt: -1 });
     if (adverts.length === 0) {
-      return res.status(404).json({ message: 'No Adverts Yet' });
+      return res.status(200).json({ message: 'No Adverts Yet' ,data:[] });
     }
-    res.status(200).json({ adverts });
+    res.status(200).json({ data:adverts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -175,7 +175,7 @@ const imageUrl = req.file.path;
     });
 
     await newAdvert.save();
-    res.status(200).json({ message: 'تمت إضافة الإعلان بنجاح', advert: newAdvert });
+    res.status(200).json({ message: 'advert added successfully', data: newAdvert });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -185,7 +185,7 @@ router.get('/adverts-for-radiology', async (req, res) => {
   try {
     const adverts = await RadiologyAdvert.find().sort({ createdAt: -1 });
     if (adverts.length === 0) {
-      return res.status(404).json({ message: 'No Adverts Yet' });
+      return res.status(200).json({ message: 'No Adverts Yet',data:[] });
     }
     res.status(200).json({ adverts });
   } catch (error) {
@@ -222,7 +222,7 @@ router.get('/adverts-for-analyst', async (req, res) => {
   try {
     const adverts = await AnalystAdvert.find().sort({ createdAt: -1 });
     if (adverts.length === 0) {
-      return res.status(404).json({ message: 'No Adverts Yet' });
+      return res.status(200).json({ message: 'No Adverts Yet' ,data:[] });
     }
     res.status(200).json({ adverts });
   } catch (error) {
@@ -258,7 +258,7 @@ router.get('/adverts-for-seek', async (req, res) => {
     const adverts = await SeekAdvert.find().sort({ createdAt: -1 });
 
     if (adverts.length === 0) {
-      return res.status(404).json({ message: 'No Adverts Yet' });
+      return res.status(200).json({ message: 'No Adverts Yet',data:[] });
     }
 
     res.status(200).json({ adverts });
