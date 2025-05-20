@@ -148,7 +148,7 @@ router.get('/getTopDoctors/:city/:region', checkprov.checkifLoggedIn, async (req
     ]);
 console.log("Top Doctors:", topDoctors);
 
-    const favouriteDoctors = await FavouriteDoctor.find({ userId });
+    const favouriteDoctors = await FavouriteDoctor.find({ userId , isFavourite:true });
     const favouriteDoctorIds = favouriteDoctors.map(fav => fav.specId.toString());
 
 
