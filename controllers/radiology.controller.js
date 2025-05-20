@@ -607,6 +607,7 @@ exports.toggleRadiologyFavourite = async (req, res) => {
     const { userId,specId } = req.body;
 
     const pharma = await Radiology.findById(specId);
+    console.log(pharma)
     if (!pharma) {
       return res.status(404).json({ message: 'Radiology not found' });
     }
