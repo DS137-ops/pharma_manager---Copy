@@ -5,7 +5,7 @@ const checkprov = require('../middleware/auth.middleware');
 const ckeckSeek = require('../middleware/seek.middleware');
 const Analyst = require('../model/analyst.model');
 const City = require('../model/cities.model');
-const FavouriteRadiologies = require('../model/FavouriteRadiology.model');
+const favouriteAnalyst = require('../model/FavouriteAnalyst.model');
 
 const PrescriptionAnalystRequest = require('../model/PrescriptionAnalystRequest.model');
 const mongoose = require('mongoose');
@@ -158,7 +158,7 @@ router.get(
         },
       ]);
 
-      const favouriteAnalyst = await FavouriteRadiologies.find({ userId , isFavourite:true });
+      const favouriteAnalyst = await favouriteAnalyst.find({ userId , isFavourite:true });
       const favouriteAnalystIds = favouriteAnalyst.map((fav) =>
         fav.specId.toString()
       );
