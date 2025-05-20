@@ -158,8 +158,8 @@ router.get(
         },
       ]);
 
-      const favouriteAnalyst = await favouriteAnalyst.find({ userId , isFavourite:true });
-      const favouriteAnalystIds = favouriteAnalyst.map((fav) =>
+      const favouriteanalyst = await favouriteAnalyst.find({ userId , isFavourite:true });
+      const favouriteAnalystIds = favouriteanalyst.map((fav) =>
         fav.specId.toString()
       );
 
