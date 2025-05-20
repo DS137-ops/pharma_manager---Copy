@@ -258,19 +258,19 @@ exports.getPharmas = async (req, res) => {
       return res.status(200).json({ status: true, message: 'No result' ,data:[] });
     }
 
-    const user = await Seek.findById(userId);
+const favouriteDocs = await Favourite.find({ userId, isFavourite: true }).select('specId');
+const userFavourites = favouriteDocs.map(fav => fav.specId.toString());
 
-    const userFavourites = user ? user.Favourite.map((f) => f.toString()) : [];
-    const pharmaciesWithRatings = findPharma.map((pharma) => {
-      const ratings = pharma.rate?.map((r) => r.rating) || [];
-      const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = (ratings.length ? Math.round((total / ratings.length).toFixed(1)) : 0);
-      return {
-        ...pharma.toObject(),
-        finalRate: averageRating,
-        isfavourite: userFavourites.includes(pharma._id.toString()),
-      };
-    });
+const pharmaciesWithRatings = findPharma.map((pharma) => {
+  const ratings = pharma.rate?.map((r) => r.rating) || [];
+  const total = ratings.reduce((sum, rating) => sum + rating, 0);
+  const averageRating = (ratings.length ? Math.round((total / ratings.length).toFixed(1)) : 0);
+  return {
+    ...pharma.toObject(),
+    finalRate: averageRating,
+    isfavourite: userFavourites.includes(pharma._id.toString()),
+  };
+});
     
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
     
