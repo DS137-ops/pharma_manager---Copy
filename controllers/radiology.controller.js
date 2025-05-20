@@ -296,21 +296,19 @@ exports.getradiology = async (req, res) => {
     if (!findRadiology || findRadiology.length === 0) {
       return res.status(200).json({ succes: true, message: 'No result',data:[] });
     }
-    const user = await Seek.findById(userId);
-
-    const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
-
-    const radiologiesWithRatings = findRadiology.map((radiology) => {
-      const ratings = radiology.rate?.map((r) => r.rating) || [];
-      const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating = ratings.length > 0 ? Math.round((total / ratings.length).toFixed(1)) : 0;
-
-      return {
-        ...radiology.toObject(),
-        finalRate: averageRating,
-        isfavourite: userFavourites.includes(radiology._id.toString()),
-      };
-    });
+   const favouriteDocs = await Favourite.find({ userId, isFavourite: true }).select('specId');
+   const userFavourites = favouriteDocs.map(fav => fav.specId.toString());
+   
+   const radiologiesWithRatings = findRadiology.map((pharma) => {
+     const ratings = pharma.rate?.map((r) => r.rating) || [];
+     const total = ratings.reduce((sum, rating) => sum + rating, 0);
+     const averageRating = (ratings.length ? Math.round((total / ratings.length).toFixed(1)) : 0);
+     return {
+       ...pharma.toObject(),
+       finalRate: averageRating,
+       isfavourite: userFavourites.includes(pharma._id.toString()),
+     };
+   });
 
     radiologiesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
 

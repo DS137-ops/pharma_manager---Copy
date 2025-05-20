@@ -782,8 +782,8 @@ exports.getDoctors = async (req, res) => {
       return res.status(200).json({ status: true, message: 'No doctors found' , data:[] });
     }
 
-    const favouriteDoctors = await FavouriteDoctor.find({ userId });
-    const favouriteDoctorIds = favouriteDoctors.map((fav) => fav.doctorId.toString());
+    const favouriteDoctors = await FavouriteDoctor.find({ userId , isFavourite:true});
+    const favouriteDoctorIds = favouriteDoctors.map((fav) => fav.specId.toString());
 
     const doctorsWithFavStatus = doctors.map((doctor) => {
       const ratings = doctor.rate?.map((r) => r.rating) || [];

@@ -85,9 +85,12 @@ exports.createNewAnalyst = async (req, res) => {
       EndJob,
     });
 
-
     await newUser.save();
-    const token = await jwt.sign({_id:newUser._id, role: 'analyst' }, process.env.JWT_SECRET ,   { expiresIn: '1d' });
+    const token = await jwt.sign(
+      { _id: newUser._id, role: 'analyst' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
     await RefreshToken.create({ token, userRef: newUser._id });
     const approvalLink = `http://147.93.106.92:8080/api/Analyst/approve/analyst/${newUser._id}`;
     const rejectLink = `http://147.93.106.92:8080/api/Analyst/reject/analyst/${newUser._id}`;
@@ -153,43 +156,47 @@ exports.addToFamousAnalysts = async (req, res) => {
 
     res
       .status(200)
-      .json({succes:true, message: 'analyst added to famous analysts menu', data:analyst });
+      .json({
+        succes: true,
+        message: 'analyst added to famous analysts menu',
+        data: analyst,
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 
 exports.getFamousAnalysts = async (req, res) => {
   try {
-
     const famousAnalysts = await Analyst.find({ isFamous: true });
-    
+
     if (famousAnalysts.length === 0) {
-      return res.status(200).json({succes:true , message: 'No famous Analysts found' ,data:[] });
+      return res
+        .status(200)
+        .json({ succes: true, message: 'No famous Analysts found', data: [] });
     }
 
-    const analystswithRating = famousAnalysts.map((fam)=>{
-      let finalRate =0
-      if(fam.rate && fam.rate.length>0){
-        const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
-        finalRate = Math.round((totalRating / fam.rate.length).toFixed(1))
+    const analystswithRating = famousAnalysts.map((fam) => {
+      let finalRate = 0;
+      if (fam.rate && fam.rate.length > 0) {
+        const totalRating = fam.rate.reduce((sum, r) => sum + r.rating, 0);
+        finalRate = Math.round((totalRating / fam.rate.length).toFixed(1));
       }
-      return{
+      return {
         ...fam._doc,
-        finalRate:finalRate
-      }
-    })
-   
-    res.status(200).json({succes:true , message:'' , data:analystswithRating  });
+        finalRate: finalRate,
+      };
+    });
+
+    res
+      .status(200)
+      .json({ succes: true, message: '', data: analystswithRating });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
-
-
 
 exports.searchanalystByName = async (req, res) => {
   try {
@@ -208,10 +215,14 @@ exports.searchanalystByName = async (req, res) => {
     if (!analysts.length) {
       return res
         .status(200)
-        .json({ status: true, message: 'No matching analysts found' , data:[] });
+        .json({
+          status: true,
+          message: 'No matching analysts found',
+          data: [],
+        });
     }
 
-    return res.status(200).json({ status: true, analysts:analysts });
+    return res.status(200).json({ status: true, analysts: analysts });
   } catch (error) {
     console.error('Search error:', error);
     res
@@ -222,19 +233,27 @@ exports.searchanalystByName = async (req, res) => {
 
 exports.deleteAnalystAccount = async (req, res) => {
   try {
-
     const user = req.user;
 
- if(!user._id)return res.status(404).json({succes:false , message:'Invalid ID' , data:[]})
+    if (!user._id)
+      return res
+        .status(404)
+        .json({ succes: false, message: 'Invalid ID', data: [] });
     await Analyst.findByIdAndDelete(user._id);
 
-    res.status(200).json({ succes:true , message: 'Account deleted successfully', data: [] });
+    res
+      .status(200)
+      .json({
+        succes: true,
+        message: 'Account deleted successfully',
+        data: [],
+      });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
 };
 exports.loginAna = async (req, res) => {
-const { email, password } = req.body;
+  const { email, password } = req.body;
 
   if (!email) {
     return res.status(403).json({ message: 'Email is required' });
@@ -266,12 +285,9 @@ const { email, password } = req.body;
     delete data.resetCode;
     delete data.resetCodeExpires;
 
-
-    const token = jwt.sign(
-      { id: user._id, role: 'analyst' },
-      '1001110',
-  { expiresIn: '1d' }
-    );
+    const token = jwt.sign({ id: user._id, role: 'analyst' }, '1001110', {
+      expiresIn: '1d',
+    });
 
     await RefreshToken.create({ token, userRef: user._id });
 
@@ -279,7 +295,7 @@ const { email, password } = req.body;
       success: true,
       message: 'Login successful',
       token,
-      data:data,
+      data: data,
     });
   } catch (err) {
     console.error('Error logging in:', err);
@@ -402,30 +418,32 @@ exports.getAnalyst = async (req, res) => {
     const findAnalyst = await Analyst.find(query).select('-password');
 
     if (!findAnalyst || findAnalyst.length === 0) {
-      return res.status(200).json({ succes:true, message: 'No result' ,data:[] });
+      return res
+        .status(200)
+        .json({ succes: true, message: 'No result', data: [] });
     }
-    const user = await Seek.findById(userId);
+    const favouriteDocs = await Favourite.find({
+      userId,
+      isFavourite: true,
+    }).select('specId');
+    const userFavourites = favouriteDocs.map((fav) => fav.specId.toString());
 
-    const userFavourites = user ? user.favourites.map((f) => f.toString()) : [];
-    
-    const analystsWithRatings = findAnalyst.map((analyst) => {
-      const ratings = analyst.rate?.map((r) => r.rating) || [];
+    const analystsWithRatings = findAnalyst.map((pharma) => {
+      const ratings = pharma.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
-      const averageRating =
-        ratings.length > 0 ? Math.round((total / ratings.length).toFixed(1)) :0;
-
+      const averageRating = ratings.length
+        ? Math.round((total / ratings.length).toFixed(1))
+        : 0;
       return {
-        ...analyst.toObject(),
+        ...pharma.toObject(),
         finalRate: averageRating,
-        isfavourite: userFavourites.includes(analyst._id.toString()),
+        isfavourite: userFavourites.includes(pharma._id.toString()),
       };
     });
 
     analystsWithRatings.sort((a, b) => b.finalRate - a.finalRate);
 
-    return res
-      .status(200)
-      .json({ status: true, data: analystsWithRatings });
+    return res.status(200).json({ status: true, data: analystsWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -447,7 +465,7 @@ exports.updateAnalystInfo = async (req, res) => {
       req.body;
     const id = req.params.id;
 
-    const updateFields = {}; 
+    const updateFields = {};
 
     if (fullName) updateFields.fullName = fullName;
     if (address) updateFields.address = address;
@@ -521,7 +539,9 @@ exports.forgetPassForAnalyst = async (req, res) => {
     html: `<h4>Your password reset code is:</h4> <h2>${resetCode}</h2>`,
   });
 
-  res.status(200).json({succes:true , message: 'Reset code sent to your email' });
+  res
+    .status(200)
+    .json({ succes: true, message: 'Reset code sent to your email' });
 };
 
 exports.verifyCodeAnalyst = async (req, res) => {
@@ -532,7 +552,7 @@ exports.verifyCodeAnalyst = async (req, res) => {
     return res.status(400).json({ message: 'Invalid or expired code' });
   }
 
-  res.status(200).json({ succes:true , message: 'Code verified successfully' });
+  res.status(200).json({ succes: true, message: 'Code verified successfully' });
 };
 
 exports.resetAnalystPass = async (req, res) => {
@@ -549,7 +569,9 @@ exports.resetAnalystPass = async (req, res) => {
   user.resetCodeExpires = null;
   await user.save();
 
-  res.status(200).json({ succes:true , message: 'Password reset successfully' });
+  res
+    .status(200)
+    .json({ succes: true, message: 'Password reset successfully' });
 };
 
 exports.toggleAnalystFavourite = async (req, res) => {
@@ -592,17 +614,15 @@ exports.toggleAnalystFavourite = async (req, res) => {
   }
 };
 
-
-
 exports.getFavourites = async (req, res) => {
   try {
     const { userId } = req.params;
 
     const favourites = await Favourite.find({ userId, isFavourite: true })
-    .populate({
-      path:'specId',
-      select:'-password -resetCode -resetCodeExpires -approved'
-    })
+      .populate({
+        path: 'specId',
+        select: '-password -resetCode -resetCodeExpires -approved',
+      })
       .exec();
 
     const favouritesWithRating = favourites.map((fav) => {
@@ -611,12 +631,12 @@ exports.getFavourites = async (req, res) => {
 
       if (analyst && analyst.rate && analyst.rate.length > 0) {
         const totalRating = analyst.rate.reduce((sum, r) => sum + r.rating, 0);
-        finalRate = Math.round((totalRating / analyst.rate.length).toFixed(1))
+        finalRate = Math.round((totalRating / analyst.rate.length).toFixed(1));
       }
 
       return {
-          ...analyst._doc,
-          finalRate: finalRate, 
+        ...analyst._doc,
+        finalRate: finalRate,
       };
     });
 
