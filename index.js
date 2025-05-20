@@ -183,7 +183,7 @@ const specialties = [
   {
     name: 'جراحة مخ و أعصاب و عمود فقري',
     image:
-      'https://res.cloudinary.com/dqk8dzdoo/image/upload/v1747587459/جراحة_مخ_و_ا_صاب_و_عمود_فقري_lkpcnu.jpg',
+      'https://res.cloudinary.com/dqk8dzdoo/image/upload/v1747587459/%D8%AC%D8%B1%D8%A7%D8%AD%D8%A9_%D9%85%D8%AE_%D9%88_%D8%A7_%D8%B9%D8%B5%D8%A7%D8%A8_%D9%88_%D8%B9%D9%85%D9%88%D8%AF_%D9%81%D9%82%D8%B1%D9%8A_lkpcnu.jpg',
   },
   {
     name: 'أورام',
