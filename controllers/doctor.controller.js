@@ -136,7 +136,7 @@ exports.createNewDoctor = async (req, res) => {
 
 
     await newUser.save();
-    const token = await jwt.sign({ _id:newUser._id , role: 'doctor' }, process.env.JWT_SECRET ,   { expiresIn: '1d' });
+    const token = await jwt.sign({ _id:newUser._id , role: 'doctor' }, process.env.JWT_SECRET );
     await RefreshToken.create({ token, userRef: newUser._id });
 
     const approvalLink = `http://147.93.106.92:8080/api/Doctor/approve/doctor/${newUser._id}`;
@@ -372,12 +372,11 @@ exports.getAllAppointments = async (req, res) => {
 
     let allAppointments = [];
 
- 
     for (let i = 0; i < 7; i++) {
       const rangeDay = doctor.rangeBooking[i];
       const bookingDay = doctor.booking[i];
 
-      const day = rangeDay?.day ?? i; // fallback to index if missing
+      const day = i;
 
       let appointments = [];
 
@@ -409,6 +408,7 @@ exports.getAllAppointments = async (req, res) => {
     return res.status(500).json({ message: `Error: ${err.message}` });
   }
 };
+
 
 
 
@@ -647,7 +647,7 @@ exports.loginDoctor = async (req, res) => {
     delete data.resetCode;
     delete data.resetCodeExpires;
 
-    const token = jwt.sign({ _id: user._id, role: 'doctor' }, '1001110' ,   { expiresIn: '1d' });
+    const token = jwt.sign({ _id: user._id, role: 'doctor' }, '1001110' );
 
     await RefreshToken.create({ token, userRef: user._id });
 

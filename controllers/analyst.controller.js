@@ -285,9 +285,7 @@ exports.loginAna = async (req, res) => {
     delete data.resetCode;
     delete data.resetCodeExpires;
 
-    const token = jwt.sign({ id: user._id, role: 'analyst' }, '1001110', {
-      expiresIn: '1d',
-    });
+    const token = jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
 
     await RefreshToken.create({ token, userRef: user._id });
 

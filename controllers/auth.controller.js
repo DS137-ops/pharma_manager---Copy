@@ -107,7 +107,7 @@ exports.createNewPharmatic = async (req, res) => {
     });
 
     await newUser.save();
-    const token = jwt.sign({ _id: newUser._id, role: 'pharmatic' }, process.env.JWT_SECRET ,  { expiresIn: '1d' });    
+    const token = jwt.sign({ _id: newUser._id, role: 'pharmatic' }, process.env.JWT_SECRET );    
 
     await RefreshToken.create({ token, userRef: newUser._id });
 
@@ -481,7 +481,7 @@ const newSeek = new Seek({
 
 
     await newSeek.save();
-    const token = jwt.sign({ _id: newSeek._id, role: 'user' }, process.env.JWT_SECRET ,   { expiresIn: '1d' });    
+    const token = jwt.sign({ _id: newSeek._id, role: 'user' }, process.env.JWT_SECRET );    
     await RefreshToken.create({ token, userRef: newSeek._id });
 
     return res.status(200).json({
@@ -588,8 +588,7 @@ exports.loginSeek = async (req, res) => {
 
     const token = await jwt.sign(
       { _id: user._id, role: 'user' },
-      process.env.JWT_SECRET,
-        { expiresIn: '1d' }
+      process.env.JWT_SECRET
     );
 
     
@@ -667,7 +666,7 @@ exports.loginPhar = async (req, res) => {
     const token = jwt.sign(
       { _id: user._id, role: 'pharmatic' },
       '1001110',
-        { expiresIn: '1d' }
+
     );
 
     await RefreshToken.create({ token, userRef: user._id });

@@ -98,7 +98,7 @@ exports.createNewRadiology = async (req, res) => {
     });
 
     await newUser.save();
-    const token = await jwt.sign({_id:newUser._id ,role: 'radiology' }, process.env.JWT_SECRET ,   { expiresIn: '1d' });
+    const token = await jwt.sign({_id:newUser._id ,role: 'radiology' }, process.env.JWT_SECRET );
     await RefreshToken.create({ token , userRef:newUser._id });
     const approvalLink = `http://147.93.106.92/api/Radiology/approve/radiology/${newUser._id}`;
     const rejectLink = `http://147.93.106.92/api/Radiology/reject/radiology/${newUser._id}`;
@@ -479,8 +479,7 @@ exports.loginRadio = async (req, res) => {
   
       const token = jwt.sign(
         { _id: user._id, role: 'doctor' },
-        '1001110',
-          { expiresIn: '1d' }
+        '1001110'
       );
   
       await RefreshToken.create({ token, userRef: user._id });
