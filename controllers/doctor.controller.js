@@ -279,7 +279,25 @@ const dayMapping = {
   الجمعة: 5,
   السبت: 6,
 };
+function generateAllSlots(start, end) {
+  const startHour = parseInt(start.split(":")[0]);
+  const startMin = parseInt(start.split(":")[1]);
+  const endHour = parseInt(end.split(":")[0]);
+  const endMin = parseInt(end.split(":")[1]);
 
+  const slots = [];
+  let current = new Date(1970, 0, 1, startHour, startMin);
+  const endTime = new Date(1970, 0, 1, endHour, endMin);
+
+  let idHour = 0;
+  while (current < endTime) {
+    slots.push({ idHour });
+    current.setMinutes(current.getMinutes() + 30);
+    idHour++;
+  }
+
+  return slots;
+}
 function convertTimeTo24Hour(timeString) {
   const match = timeString.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
 
@@ -361,13 +379,13 @@ exports.getAllAppointments = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid Doctor ID format' });
+      return res.status(400).json({ message: "Invalid Doctor ID format" });
     }
 
-    const doctor = await Doctor.findById(id).select('rangeBooking booking');
+    const doctor = await Doctor.findById(id).select("rangeBooking booking");
 
     if (!doctor) {
-      return res.status(404).json({ error: 'Doctor not found' });
+      return res.status(404).json({ error: "Doctor not found" });
     }
 
     let allAppointments = [];
@@ -376,32 +394,36 @@ exports.getAllAppointments = async (req, res) => {
       const rangeDay = doctor.rangeBooking[i];
       const bookingDay = doctor.booking[i];
 
-      const day = i;
+      const appointments = [];
 
-      let appointments = [];
+      if (rangeDay && rangeDay.start && rangeDay.end) {
+        const allSlots = generateAllSlots(rangeDay.start, rangeDay.end);
+        const booked = bookingDay?.bookingHours ?? [];
 
-      if (
-        rangeDay &&
-        bookingDay &&
-        bookingDay.bookingHours &&
-        Array.isArray(bookingDay.bookingHours)
-      ) {
-        appointments = bookingDay.bookingHours.map((hour) => ({
-          idHour: hour.idHour,
-          startTime: convertIdHourToTime(hour.idHour, rangeDay.start),
-          patientCount: hour.patientIDs.length,
-          patientIDs: hour.patientIDs,
-        }));
+        for (let slot of allSlots) {
+          const existing = booked.find((b) => b.idHour === slot.idHour);
+
+          const count = existing?.patientIDs?.length ?? 0;
+          const max = 2;
+
+          appointments.push({
+            idHour: slot.idHour,
+            startTime: convertIdHourToTime(slot.idHour, rangeDay.start),
+            patientCount: count,
+            patientIDs: existing?.patientIDs ?? [],
+            status: count >= max ? "unavailable" : "available",
+          });
+        }
       }
 
       allAppointments.push({
-        day,
+        day: i,
         appointments,
       });
     }
 
     return res.status(200).json({
-      message: 'All appointments (booked and available)',
+      message: "Appointments (available and unavailable)",
       data: allAppointments,
     });
   } catch (err) {
