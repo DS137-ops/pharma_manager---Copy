@@ -8,25 +8,25 @@ const RefreshToken = require('../model/RefreshToken.model');
 const City = require('../model/cities.model');
 const FavouriteDoctor = require('../model/FavouriteDoctor.model');
 const moment = require('moment');
-function generateTimeSlots(start, end) {
-  const slots = [];
-  let [sh, sm] = start.split(':').map(Number);
-  let [eh, em] = end.split(':').map(Number);
+// function generateTimeSlots(start, end) {
+//   const slots = [];
+//   let [sh, sm] = start.split(':').map(Number);
+//   let [eh, em] = end.split(':').map(Number);
 
-  while (sh < eh || (sh === eh && sm < em)) {
-    let hour = sh.toString().padStart(2, '0');
-    let minute = sm.toString().padStart(2, '0');
-    slots.push(`${hour}:${minute}`);
+//   while (sh < eh || (sh === eh && sm < em)) {
+//     let hour = sh.toString().padStart(2, '0');
+//     let minute = sm.toString().padStart(2, '0');
+//     slots.push(`${hour}:${minute}`);
 
-    sm += 30;
-    if (sm >= 60) {
-      sm -= 60;
-      sh++;
-    }
-  }
+//     sm += 30;
+//     if (sm >= 60) {
+//       sm -= 60;
+//       sh++;
+//     }
+//   }
 
-  return slots;
-}
+//   return slots;
+// }
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -279,25 +279,20 @@ const dayMapping = {
   الجمعة: 5,
   السبت: 6,
 };
-function generateAllSlots(start, end) {
-  const startHour = parseInt(start.split(":")[0]);
-  const startMin = parseInt(start.split(":")[1]);
-  const endHour = parseInt(end.split(":")[0]);
-  const endMin = parseInt(end.split(":")[1]);
-
+function generateAllSlots(startDecimal, endDecimal) {
   const slots = [];
-  let current = new Date(1970, 0, 1, startHour, startMin);
-  const endTime = new Date(1970, 0, 1, endHour, endMin);
-
   let idHour = 0;
-  while (current < endTime) {
+
+  let current = startDecimal;
+  while (current < endDecimal) {
     slots.push({ idHour });
-    current.setMinutes(current.getMinutes() + 30);
+    current += 0.5; // نصف ساعة
     idHour++;
   }
 
   return slots;
 }
+
 function convertTimeTo24Hour(timeString) {
   const match = timeString.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
 
@@ -317,16 +312,17 @@ function convertTimeTo24Hour(timeString) {
   return hours + minutes;
 }
 
-function convertIdHourToTime(idHour, startHour) {
-  let totalMinutes = startHour * 60 + idHour * 30;
-  let hours = Math.floor(totalMinutes / 60);
-  let minutes = totalMinutes % 60;
+function convertIdHourToTime(idHour, startDecimal) {
+  let total = startDecimal + idHour * 0.5;
+  let hours = Math.floor(total);
+  let minutes = (total - hours) * 60;
   let period = hours >= 12 ? 'PM' : 'AM';
   if (hours > 12) hours -= 12;
   if (hours === 0) hours = 12;
 
   return `${hours}:${minutes === 0 ? '00' : minutes}${period}`;
 }
+
 
 exports.getAvailableAppointments = async (req, res) => {
   try {
@@ -398,7 +394,11 @@ exports.getAllAppointments = async (req, res) => {
 
       if (rangeDay && rangeDay.start && rangeDay.end) {
         const allSlots = generateAllSlots(rangeDay.start, rangeDay.end);
-        const booked = bookingDay?.bookingHours ?? [];
+        if (!bookingDay || !bookingDay.bookingHours) {
+  allAppointments.push({ day: i, appointments: [] });
+  continue;
+}
+
 
         for (let slot of allSlots) {
           const existing = booked.find((b) => b.idHour === slot.idHour);
