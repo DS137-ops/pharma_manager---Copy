@@ -386,38 +386,41 @@ exports.getAllAppointments = async (req, res) => {
 
     let allAppointments = [];
 
-    for (let i = 0; i < 7; i++) {
-      const rangeDay = doctor.rangeBooking[i];
-      const bookingDay = doctor.booking[i];
+    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+      const rangeDay = doctor.rangeBooking[dayIndex];
+      const bookingDay = doctor.booking[dayIndex];
 
       const appointments = [];
 
-      if (rangeDay && rangeDay.start && rangeDay.end) {
-        const allSlots = generateAllSlots(rangeDay.start, rangeDay.end);
-        if (!bookingDay || !bookingDay.bookingHours) {
-  allAppointments.push({ day: i, appointments: [] });
-  continue;
-}
+      if (
+        rangeDay &&
+        typeof rangeDay.start === "number" &&
+        typeof rangeDay.end === "number"
+      ) {
+        const allSlots = generateAllSlots(
+          convertDecimalToTimeString(rangeDay.start),
+          convertDecimalToTimeString(rangeDay.end)
+        );
 
+        const booked = bookingDay?.bookingHours ?? [];
 
-        for (let slot of allSlots) {
-          const existing = booked.find((b) => b.idHour === slot.idHour);
-
-          const count = existing?.patientIDs?.length ?? 0;
-          const max = 2;
+        for (const slot of allSlots) {
+          const existingBooking = booked.find((b) => b.idHour === slot.idHour);
+          const patientCount = existingBooking?.patientIDs?.length ?? 0;
+          const maxPatients = 2;
 
           appointments.push({
             idHour: slot.idHour,
             startTime: convertIdHourToTime(slot.idHour, rangeDay.start),
-            patientCount: count,
-            patientIDs: existing?.patientIDs ?? [],
-            status: count >= max ? "unavailable" : "available",
+            patientCount: patientCount,
+            patientIDs: existingBooking?.patientIDs ?? [],
+            status: patientCount >= maxPatients ? "unavailable" : "available",
           });
         }
       }
 
       allAppointments.push({
-        day: i,
+        day: dayIndex,
         appointments,
       });
     }
@@ -426,10 +429,17 @@ exports.getAllAppointments = async (req, res) => {
       message: "Appointments (available and unavailable)",
       data: allAppointments,
     });
-  } catch (err) {
-    return res.status(500).json({ message: `Error: ${err.message}` });
+  } catch (error) {
+    return res.status(500).json({ message: `Error: ${error.message}` });
   }
 };
+
+// Helper function to convert decimal time (e.g. 9.5) to "HH:mm" string for generateAllSlots
+function convertDecimalToTimeString(decimalTime) {
+  const hours = Math.floor(decimalTime);
+  const minutes = (decimalTime - hours) * 60;
+  return `${hours.toString().padStart(2, "0")}:${minutes === 0 ? "00" : minutes}`;
+}
 
 
 
