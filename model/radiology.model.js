@@ -65,6 +65,7 @@ const medicalSchemaforRadiology = new mongoose.Schema({
       date: { type: Date, default: Date.now },
     },
   ],
+
   accountDate: {
     type: Date,
   },

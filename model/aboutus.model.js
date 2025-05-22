@@ -1,10 +1,19 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const aboutUsSchema = new mongoose.Schema({
-  content: {
-    type: String,
-    required: true,
+const aboutUsSchema = new mongoose.Schema(
+  {
+    content: {
+      en: {
+        type: String,
+        required: true,
+      },
+      ar: {
+        type: String,
+        required: true,
+      },
+    },
   },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("AboutUs", aboutUsSchema);
+module.exports = mongoose.model('AboutUs', aboutUsSchema);

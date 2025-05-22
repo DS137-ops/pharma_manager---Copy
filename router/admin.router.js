@@ -322,26 +322,55 @@ router.get("/support-tickets/:ticketNumber", async (req, res) => {
   }
 });
 
-router.post("/add-city", async(req,res)=>{
+
+
+router.post("/add-city", async (req, res) => {
   try {
-    const { name } = req.body;
-    const newCity = new City({ name, regions: [] });
+    const { name_en, name_ar } = req.body;
+
+    // Validate required fields
+    if (!name_en || !name_ar) {
+      return res.status(400).json({
+        success: false,
+        message: "Both English and Arabic names are required",
+      });
+    }
+
+    // Create and save city
+    const newCity = new City({
+      name: { en: name_en.trim(), ar: name_ar.trim() },
+      regions: [],
+    });
+
     await newCity.save();
-    res.status(201).json({ message: "City added successfully", city: newCity });
+
+    res.status(201).json({
+      success: true,
+      message: "City added successfully",
+      city: newCity,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error adding city:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 });
+
 
 router.post("/cities/:cityId/add-region", async(req,res)=>{
   try {
     const { cityId } = req.params;
-    const { name } = req.body;
+    const { name_en , name_ar } = req.body;
 
     const city = await City.findById(cityId);
     if (!city) return res.status(404).json({ error: "City not found" });
 
-    const newRegion = { _id: new mongoose.Types.ObjectId(), name };
+    const newRegion = { _id: new mongoose.Types.ObjectId(), name:{
+      en:name_en, ar:name_ar
+    }};
     city.regions.push(newRegion);
     await city.save();
 
@@ -355,7 +384,7 @@ router.get("/cities", async(req,res)=>{
     const cities = await City.find();
     
     if (!cities || cities.length === 0) {
-        return res.status(404).json({ message: "No cities found" });
+        return res.status(200).json({ message: "No cities found" ,data:[] });
     }
   
     res.status(200).json(cities);

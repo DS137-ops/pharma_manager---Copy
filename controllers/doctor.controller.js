@@ -53,10 +53,10 @@ exports.searchdoctorByName = async (req, res) => {
     if (doctor.length === 0) {
       return res
         .status(200)
-        .json({ status: false, message: 'No matching doctor found' , data:[] });
+        .json({ status: false, message: 'No matching doctor found', data: [] });
     }
 
-    return res.status(200).json({ status: true, data:doctor });
+    return res.status(200).json({ status: true, data: doctor });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -112,7 +112,7 @@ exports.createNewDoctor = async (req, res) => {
         success: false,
         message: 'Region not found in the selected city',
       });
-      const existSpec = await Specialty.find({ specId:specId });
+    const existSpec = await Specialty.find({ specId: specId });
     if (!existSpec) {
       return res.status(400).json({
         success: false,
@@ -120,7 +120,6 @@ exports.createNewDoctor = async (req, res) => {
       });
     }
     const specName = existSpec[0].name;
-
 
     const newUser = new Doctor({
       fullName,
@@ -130,13 +129,15 @@ exports.createNewDoctor = async (req, res) => {
       region: regionExists.name,
       address,
       phone,
-      specilizate:specName,
+      specilizate: specName,
       NumberState,
     });
 
-
     await newUser.save();
-    const token = await jwt.sign({ _id:newUser._id , role: 'doctor' }, process.env.JWT_SECRET );
+    const token = await jwt.sign(
+      { _id: newUser._id, role: 'doctor' },
+      process.env.JWT_SECRET
+    );
     await RefreshToken.create({ token, userRef: newUser._id });
 
     const approvalLink = `http://147.93.106.92:8080/api/Doctor/approve/doctor/${newUser._id}`;
@@ -195,7 +196,9 @@ exports.addToFamousDoctors = async (req, res) => {
     );
 
     if (!doctor) {
-      return res.status(404).json({succes:true , message: 'Doctor not found' });
+      return res
+        .status(404)
+        .json({ succes: true, message: 'Doctor not found' });
     }
 
     res
@@ -209,26 +212,27 @@ exports.addToFamousDoctors = async (req, res) => {
 
 exports.getFamousDoctors = async (req, res) => {
   try {
-
     const famousDoctors = await Doctor.find({ isFamous: true });
-    
+
     if (famousDoctors.length === 0) {
-      return res.status(200).json({ message: 'No famous doctors found' ,data:[] });
+      return res
+        .status(200)
+        .json({ message: 'No famous doctors found', data: [] });
     }
 
-    const doctorswithRating = famousDoctors.map((fam)=>{
-      let finalRate =0
-      if(fam.rate && fam.rate.length>0){
-        const totalRating = fam.rate.reduce((sum,r)=> sum+r.rating,0)
-        finalRate = Math.round((totalRating / fam.rate.length).toFixed(1))
+    const doctorswithRating = famousDoctors.map((fam) => {
+      let finalRate = 0;
+      if (fam.rate && fam.rate.length > 0) {
+        const totalRating = fam.rate.reduce((sum, r) => sum + r.rating, 0);
+        finalRate = Math.round((totalRating / fam.rate.length).toFixed(1));
       }
-      return{
+      return {
         ...fam._doc,
-        finalRate:finalRate
-      }
-    })
-   
-    res.status(200).json({succes:true , data:doctorswithRating });
+        finalRate: finalRate,
+      };
+    });
+
+    res.status(200).json({ succes: true, data: doctorswithRating });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -296,11 +300,11 @@ function generateAllSlots(startDecimal, endDecimal) {
 function convertTimeTo24Hour(timeString) {
   const match = timeString.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/);
 
-  if (!match) return null; 
+  if (!match) return null;
 
   let [_, hours, minutes, period] = match;
   hours = parseInt(hours, 10);
-  minutes = parseInt(minutes, 10) / 60; 
+  minutes = parseInt(minutes, 10) / 60;
 
   if (period === 'PM' && hours !== 12) {
     hours += 12;
@@ -312,17 +316,10 @@ function convertTimeTo24Hour(timeString) {
   return hours + minutes;
 }
 
-function convertIdHourToTime(idHour, startDecimal) {
-  let total = startDecimal + idHour * 0.5;
-  let hours = Math.floor(total);
-  let minutes = (total - hours) * 60;
-  let period = hours >= 12 ? 'PM' : 'AM';
-  if (hours > 12) hours -= 12;
-  if (hours === 0) hours = 12;
-
-  return `${hours}:${minutes === 0 ? '00' : minutes}${period}`;
+function convertIdHourToTime(idHour, dayStartDecimal) {
+  const decimalTime = dayStartDecimal + idHour * 0.5;
+  return convertDecimalToTimeString(decimalTime);
 }
-
 
 exports.getAvailableAppointments = async (req, res) => {
   try {
@@ -369,19 +366,18 @@ exports.getAvailableAppointments = async (req, res) => {
   }
 };
 
-
 exports.getAllAppointments = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Doctor ID format" });
+      return res.status(400).json({ message: 'Invalid Doctor ID format' });
     }
 
-    const doctor = await Doctor.findById(id).select("rangeBooking booking");
+    const doctor = await Doctor.findById(id).select('rangeBooking booking');
 
     if (!doctor) {
-      return res.status(404).json({ error: "Doctor not found" });
+      return res.status(404).json({ error: 'Doctor not found' });
     }
 
     let allAppointments = [];
@@ -394,13 +390,11 @@ exports.getAllAppointments = async (req, res) => {
 
       if (
         rangeDay &&
-        typeof rangeDay.start === "number" &&
-        typeof rangeDay.end === "number"
+        typeof rangeDay.start === 'number' &&
+        typeof rangeDay.end === 'number'
       ) {
-        const allSlots = generateAllSlots(
-          convertDecimalToTimeString(rangeDay.start),
-          convertDecimalToTimeString(rangeDay.end)
-        );
+        // هنا نمرر القيم العشرية مباشرة بدون تحويل إلى نص
+        const allSlots = generateAllSlots(rangeDay.start, rangeDay.end);
 
         const booked = bookingDay?.bookingHours ?? [];
 
@@ -414,7 +408,7 @@ exports.getAllAppointments = async (req, res) => {
             startTime: convertIdHourToTime(slot.idHour, rangeDay.start),
             patientCount: patientCount,
             patientIDs: existingBooking?.patientIDs ?? [],
-            status: patientCount >= maxPatients ? "unavailable" : "available",
+            status: patientCount >= maxPatients ? 'unavailable' : 'available',
           });
         }
       }
@@ -426,7 +420,7 @@ exports.getAllAppointments = async (req, res) => {
     }
 
     return res.status(200).json({
-      message: "Appointments (available and unavailable)",
+      message: 'Appointments (available and unavailable)',
       data: allAppointments,
     });
   } catch (error) {
@@ -434,15 +428,12 @@ exports.getAllAppointments = async (req, res) => {
   }
 };
 
-// Helper function to convert decimal time (e.g. 9.5) to "HH:mm" string for generateAllSlots
+
 function convertDecimalToTimeString(decimalTime) {
   const hours = Math.floor(decimalTime);
   const minutes = (decimalTime - hours) * 60;
-  return `${hours.toString().padStart(2, "0")}:${minutes === 0 ? "00" : minutes}`;
+  return `${hours.toString().padStart(2, '0')}:${minutes === 0 ? '00' : minutes}`;
 }
-
-
-
 
 exports.updateBookingRange = async (req, res) => {
   try {
@@ -528,8 +519,7 @@ exports.createBooking = async (req, res) => {
       day: dayMapping[day] ?? null,
       start: convertTimeTo24Hour(start),
       end: convertTimeTo24Hour(end),
-    }
-  ));
+    }));
 
     if (
       formattedRangeBooking.some(
@@ -567,7 +557,10 @@ exports.createBooking = async (req, res) => {
 exports.deleteDoctorAccount = async (req, res) => {
   try {
     const user = req.user;
-    if(!user._id)return res.status(404).json({succes:false , message:'Invalid ID' , data:[]})
+    if (!user._id)
+      return res
+        .status(404)
+        .json({ succes: false, message: 'Invalid ID', data: [] });
 
     await Doctor.findByIdAndDelete(user._id);
 
@@ -638,8 +631,9 @@ exports.rejectDoctor = async (req, res) => {
     await transporter.sendMail(mailOptions);
     await Doctor.deleteOne({ _id: req.params.id });
 
-    res
-      login.status(200)
+    res;
+    login
+      .status(200)
       .json({ success: true, message: 'User rejected successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -679,7 +673,7 @@ exports.loginDoctor = async (req, res) => {
     delete data.resetCode;
     delete data.resetCodeExpires;
 
-    const token = jwt.sign({ _id: user._id, role: 'doctor' }, '1001110' );
+    const token = jwt.sign({ _id: user._id, role: 'doctor' }, '1001110');
 
     await RefreshToken.create({ token, userRef: user._id });
 
@@ -729,7 +723,6 @@ exports.rateDoctor = async (req, res) => {
     );
 
     if (existingRatingIndex !== -1) {
- 
       doctor.rate[existingRatingIndex].rating = rating;
       doctor.rate[existingRatingIndex].review = review;
       doctor.rate[existingRatingIndex].date = new Date();
@@ -768,9 +761,9 @@ exports.getFinalRateforDoctor = async (req, res) => {
     }
 
     const total = ratings.reduce((sum, rating) => sum + rating, 0);
-    const averageRating = Math.round((total / ratings.length).toFixed(1))
+    const averageRating = Math.round((total / ratings.length).toFixed(1));
 
-    res.status(200).json({succes:true , doctorId, finalRate: averageRating});
+    res.status(200).json({ succes: true, doctorId, finalRate: averageRating });
   } catch (error) {
     console.error('Error calculating rating:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -784,7 +777,9 @@ exports.getDoctors = async (req, res) => {
 
     const existCity = await City.findById(city);
     if (!existCity)
-      return res.status(400).json({ success: false, message: 'City not found' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'City not found' });
 
     const existRegion = existCity.regions.find(
       (r) => r._id.toString() === region
@@ -811,21 +806,32 @@ exports.getDoctors = async (req, res) => {
     const doctors = await Doctor.find(query);
 
     if (!doctors || doctors.length === 0) {
-      return res.status(200).json({ status: true, message: 'No doctors found' , data:[] });
+      return res
+        .status(200)
+        .json({ status: true, message: 'No doctors found', data: [] });
     }
 
-    const favouriteDoctors = await FavouriteDoctor.find({ userId , isFavourite:true});
-    const favouriteDoctorIds = favouriteDoctors.map((fav) => fav.specId.toString());
+    const favouriteDoctors = await FavouriteDoctor.find({
+      userId,
+      isFavourite: true,
+    });
+    const favouriteDoctorIds = favouriteDoctors.map((fav) =>
+      fav.specId.toString()
+    );
 
     const doctorsWithFavStatus = doctors.map((doctor) => {
       const ratings = doctor.rate?.map((r) => r.rating) || [];
       const total = ratings.reduce((sum, rating) => sum + rating, 0);
       const averageRating =
-        ratings.length > 0 ? Math.round((total / ratings.length).toFixed(1)) : 0
+        ratings.length > 0
+          ? Math.round((total / ratings.length).toFixed(1))
+          : 0;
 
       const doctorObj = doctor.toObject({ getters: true, versionKey: false });
 
-      doctorObj.isFavourite = favouriteDoctorIds.includes(doctor._id.toString());
+      doctorObj.isFavourite = favouriteDoctorIds.includes(
+        doctor._id.toString()
+      );
       doctorObj.finalRate = averageRating;
 
       return doctorObj;
@@ -837,7 +843,6 @@ exports.getDoctors = async (req, res) => {
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
-
 
 exports.createNewBook = async (req, res) => {
   try {
@@ -974,28 +979,20 @@ exports.updateDoctorInfo = async (req, res) => {
     const id = req.params.id;
     const updateFields = {};
 
-    const {
-      fullName,
-      city,
-      region,
-      address,
-      specId,
-      NumberState,
-
-    } = req.body;
+    const { fullName, city, region, address, specId, NumberState } = req.body;
 
     if (fullName) updateFields.fullName = fullName;
     if (address) updateFields.address = address;
     if (specId) {
-      const existSpec = await Specialty.find({specId:specId})
-      if(!existSpec){
+      const existSpec = await Specialty.find({ specId: specId });
+      if (!existSpec) {
         return res.status(400).json({
           success: false,
           message: 'Specialty not found in the selected city',
         });
       }
-      const specName = existSpec[0].name
-      updateFields.specilizate = specName
+      const specName = existSpec[0].name;
+      updateFields.specilizate = specName;
     }
     if (NumberState) updateFields.NumberState = NumberState;
 
@@ -1015,8 +1012,8 @@ exports.updateDoctorInfo = async (req, res) => {
           message: 'Region not found in the selected city',
         });
 
-      updateFields.city = existCity.name; 
-      updateFields.region = existRegion.name; 
+      updateFields.city = existCity.name;
+      updateFields.region = existRegion.name;
     }
 
     const updatedDoctor = await Doctor.findByIdAndUpdate(
@@ -1041,7 +1038,6 @@ exports.updateDoctorInfo = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
 
 exports.forgetPassForDoctor = async (req, res) => {
   const { email } = req.body;
@@ -1094,7 +1090,7 @@ exports.resetDoctorPass = async (req, res) => {
 
 exports.toggleDoctorFavourite = async (req, res) => {
   try {
-    const {userId , specId } = req.body;
+    const { userId, specId } = req.body;
 
     const pharma = await Doctor.findById(specId);
     if (!pharma) {
@@ -1140,10 +1136,10 @@ exports.getFavourites = async (req, res) => {
     const { userId } = req.params;
 
     const favourites = await FavouriteDoctor.find({ userId, isFavourite: true })
-    .populate({
-      path:'specId',
-      select:'-password -resetCode -resetCodeExpires -approved'
-    })
+      .populate({
+        path: 'specId',
+        select: '-password -resetCode -resetCodeExpires -approved',
+      })
       .exec();
 
     const favouritesWithRating = favourites.map((fav) => {
@@ -1152,13 +1148,12 @@ exports.getFavourites = async (req, res) => {
 
       if (doctor && doctor.rate && doctor.rate.length > 0) {
         const totalRating = doctor.rate.reduce((sum, r) => sum + r.rating, 0);
-        finalRate = Math.round((totalRating / doctor.rate.length).toFixed(1))
+        finalRate = Math.round((totalRating / doctor.rate.length).toFixed(1));
       }
 
       return {
-
-          ...doctor._doc,
-          finalRate: finalRate, 
+        ...doctor._doc,
+        finalRate: finalRate,
       };
     });
 

@@ -253,7 +253,7 @@ exports.deleteAnalystAccount = async (req, res) => {
   }
 };
 exports.loginAna = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password  } = req.body;
 
   if (!email) {
     return res.status(403).json({ message: 'Email is required' });
@@ -262,7 +262,9 @@ exports.loginAna = async (req, res) => {
   if (!password) {
     return res.status(400).json({ message: 'Password is required' });
   }
-
+if (!firebase_token) {
+    return res.status(400).json({ message: 'firebase_token is required' });
+  }
   try {
     const user = await Analyst.findOne({ email });
     if (!user) {
@@ -286,7 +288,6 @@ exports.loginAna = async (req, res) => {
     delete data.resetCodeExpires;
 
     const token = jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
-
     await RefreshToken.create({ token, userRef: user._id });
 
     return res.status(200).json({

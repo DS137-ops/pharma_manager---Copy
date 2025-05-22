@@ -29,7 +29,6 @@ const localUri = 'mongodb://localhost:27017/medicalapp',
   GlobalUri =
     'mongodb+srv://feadkaffoura:YcQJ6vJSgdBFwX9b@cluster0.v3b0sud.mongodb.net/medicalapp?retryWrites=true&w=majority&appName=Cluster0';
 
-
 // const specialties = [
 //   'أسنان',
 //   'مراكز تجميل',
@@ -215,8 +214,7 @@ mongoose
   .catch((err) => {
     console.error('MongoDB connection error:', err);
     process.exit(1);
-  })
-
+  });
 
 app.use('/api/Pharmatic', PharmaticRouter);
 app.use('/api/Analyst', AnalystRouter);
@@ -224,6 +222,6 @@ app.use('/api/Radiology', RadiologyRouter);
 app.use('/api/Doctor', DoctorRouter);
 app.use('/admin', adminRouter);
 
-server.listen(PORT, () => {
+app.listen(2000, '0.0.0.0', () => {
   console.log(`Server is Running ${PORT}`);
 });

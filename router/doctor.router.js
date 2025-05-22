@@ -181,7 +181,7 @@ router.get(
 
 router.get(
   '/getAllAppointments/:id',
-  checkprov.checkifLoggedIn,
+
   doctorController.getAllAppointments
 );
 

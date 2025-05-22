@@ -565,7 +565,7 @@ exports.updateSickInfo = async (req, res) => {
 };
 
 exports.loginSeek = async (req, res) => {
-  const { phone, password } = req.body;
+  const { phone, password  } = req.body;
 
   if (!phone) {
     return res.status(403).json({ message: 'phone is required' });
