@@ -8,6 +8,7 @@ const requestRadiologySchema = new mongoose.Schema({
   },
   region: {
     type: String
+    
   },
   date: {
     type: Date,

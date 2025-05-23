@@ -197,7 +197,7 @@ const docs = specialties.map((spec, index) => ({
 }));
 
 mongoose
-  .connect(localUri)
+  .connect(GlobalUri)
   .then(async () => {
     console.log('MongoDB connected!');
 
