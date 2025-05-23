@@ -69,6 +69,9 @@ const medicalSchemaforRadiology = new mongoose.Schema({
   accountDate: {
     type: Date,
   },
+   firebasetoken:{
+    type:String
+  },
   notifications: [
     {
       sickId: String,

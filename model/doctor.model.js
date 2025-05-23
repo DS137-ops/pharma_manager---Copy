@@ -96,6 +96,9 @@ const doctorSchema = new mongoose.Schema({
   accountDate: {
     type: Date,
   },
+   firebasetoken:{
+    type:String
+  },
   rangeBooking: [{ day: Number, start: Number, end: Number }],
   booking: [
     {

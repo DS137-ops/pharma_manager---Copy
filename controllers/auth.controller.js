@@ -417,93 +417,85 @@ exports.rejectPharmatic = async (req, res) => {
   }
 };
 
+
+
 exports.createNewSeek = async (req, res) => {
-  const { fullName, phone, password, age, city, region } = req.body;
+  const {
+    fullName,
+    phone,
+    password,
+    age,
+    city, // city ID
+    region, // region ID
+  } = req.body;
 
   if (!password)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Password should not be empty' });
+    return res.status(409).json({ success: false, message: 'Password should not be empty' });
+
   if (!fullName)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Full name should not be empty' });
+    return res.status(409).json({ success: false, message: 'Full name should not be empty' });
 
   if (!phone)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Phone should not be empty' });
+    return res.status(409).json({ success: false, message: 'Phone should not be empty' });
+
   if (!age)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Age should not be empty' });
+    return res.status(409).json({ success: false, message: 'Age should not be empty' });
+
   if (!city)
-    return res
-      .status(409)
-      .json({ success: false, message: 'City should not be empty' });
+    return res.status(409).json({ success: false, message: 'City ID is required' });
+
   if (!region)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Region should not be empty' });
+    return res.status(409).json({ success: false, message: 'Region ID is required' });
 
   try {
-
     const existSeek = await Seek.findOne({ phone });
     if (existSeek)
-      return res
-        .status(400)
-        .json({ success: false, message: 'Phone number is already taken' });
+      return res.status(400).json({ success: false, message: 'Phone number is already taken' });
 
     const cityExists = await City.findById(city);
     if (!cityExists)
-      return res
-        .status(400)
-        .json({ success: false, message: 'City not found' });
+      return res.status(400).json({ success: false, message: 'City not found' });
 
-    const regionExists = cityExists.regions.find(
-      (r) => r._id.toString() === region
-    );
+    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
     if (!regionExists)
-      return res.status(400).json({
-        success: false,
-        message: 'Region not found in the selected city',
-      });
+      return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
 
-
-const newSeek = new Seek({
-      fullName,
+    const newSeek = new Seek({
+      fullName:fullName,
       phone,
       password,
       age,
-      city: cityExists.name,
-      region: regionExists.name,
-    })
-
+      city:cityExists.name,
+      region:regionExists.name,
+      accountDate: new Date(),
+    });
 
     await newSeek.save();
-    const token = jwt.sign({ _id: newSeek._id, role: 'user' }, process.env.JWT_SECRET );    
+
+    const token = jwt.sign({ _id: newSeek._id, role: 'user' }, process.env.JWT_SECRET);
     await RefreshToken.create({ token, userRef: newSeek._id });
 
     return res.status(200).json({
       success: true,
       message: 'User registered successfully',
       token,
-      data:{
-        _id:newSeek._id,
-        fullName:newSeek.fullName
-      }
+      data: {
+        _id: newSeek._id,
+        fullName: newSeek.fullName,
+        city: newSeek.city,
+        region: newSeek.region,
+      },
     });
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      return res.status(400).json({ success: false, message: errors.join(', ') });
     }
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
 
 exports.updateSickInfo = async (req, res) => {
   try {
@@ -550,7 +542,13 @@ exports.updateSickInfo = async (req, res) => {
       { $set: updateData }
     );
 
-    res.status(200).json({ success: true, message: 'Updated successfully' , data:updateData });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: 'Updated successfully',
+        data: updateData,
+      });
   } catch (err) {
     console.error('Error updating user:', err);
     if (err.name === 'ValidationError') {
@@ -565,13 +563,15 @@ exports.updateSickInfo = async (req, res) => {
 };
 
 exports.loginSeek = async (req, res) => {
-  const { phone, password  } = req.body;
+  const { phone, password , firebase_token  } = req.body;
 
   if (!phone) {
     return res.status(403).json({ message: 'phone is required' });
   }
   if (!password)
     return res.status(400).json({ message: 'password is required' });
+   if (!firebase_token)
+    return res.status(400).json({ message: 'firebase_token is required' });
   try {
     const user = await Seek.findOne({ phone });
     if (!user) {
@@ -585,7 +585,9 @@ exports.loginSeek = async (req, res) => {
         .status(401)
         .json({ success: false, message: 'password is Not the same' });
     }
-
+ await Seek.findByIdAndUpdate(user._id, {
+      firebasetoken: firebase_token,
+    });
     const token = await jwt.sign(
       { _id: user._id, role: 'user' },
       process.env.JWT_SECRET
@@ -629,8 +631,10 @@ exports.deleteSeekAccount = async (req, res) => {
   }
 };
 
+
+
 exports.loginPhar = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password , firebase_token } = req.body;
 
   if (!email) {
     return res.status(403).json({ message: 'Email is required' });
@@ -654,7 +658,9 @@ exports.loginPhar = async (req, res) => {
         .status(401)
         .json({ success: false, message: 'Password is not correct' });
     }
-
+ await Pharmatic.findByIdAndUpdate(user._id, {
+        firebasetoken: firebase_token,
+      });
     await RefreshToken.deleteMany({ userRef: user._id });
 
     const data = user.toObject({ getters: true, versionKey: false });

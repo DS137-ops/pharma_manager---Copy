@@ -3,17 +3,21 @@ const mongoose = require('mongoose');
 const requestAnalystSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Seek' },
   imageUrl: String,
-  city: String,
-  region: String,
+  city: {
+    type:String
+  },
+  region: {
+    type:String
+  },
   date: {
     type: Date,
     default: Date.now(),
   },
   status: {
-      type: String,
-      enum: ["unread", "read"],
-      default: "unread",
-    },
+    type: String,
+    enum: ['unread', 'read'],
+    default: 'unread',
+  },
   analystsResponded: [
     {
       analystId: { type: mongoose.Schema.Types.ObjectId, ref: 'analyst' },
@@ -23,4 +27,7 @@ const requestAnalystSchema = new mongoose.Schema({
   ],
 });
 
-module.exports = mongoose.model('PrescriptionAnalystRequest', requestAnalystSchema);
+module.exports = mongoose.model(
+  'PrescriptionAnalystRequest',
+  requestAnalystSchema
+);

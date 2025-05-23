@@ -69,6 +69,9 @@ router.delete(
   checkprov.checkifLoggedIn,
   authController.deleteSeekAccount
 );
+
+
+
 router.get(
   '/get-sick-profile/:id',
   checkprov.checkifLoggedIn,
@@ -86,6 +89,7 @@ router.get(
     res.status(200).json({ success: true,message:'', data: user });
   }
 );
+
 router.get(
   '/search',
   checkprov.checkifLoggedIn,
@@ -184,7 +188,9 @@ router.post(
 
       const existCity = await City.findById(city);
       if (!existCity) {
-        return res.status(400).json({ success: false, message: 'City not found' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'City not found' });
       }
 
       const existRegion = existCity.regions.find(
@@ -202,21 +208,15 @@ router.post(
       }
 
       const imageUrl = req.file.path;
-      const cityname = existCity.name;
-      const regionname = existRegion.name;
 
       const newRequest = new PrescriptionRequest({
         patientId,
         imageUrl,
-        city: cityname,
-        region: regionname,
+        city:city,
+        region:region,
         status: 'unread',
       });
-      console.log('patientId:', patientId);
-      console.log('city:', cityname);
-      console.log('region:', regionname);
-      console.log('req.file:', req.file);
-      
+
       await newRequest.save();
 
       res.status(200).json({
@@ -224,7 +224,6 @@ router.post(
         message: 'تم إرسال الطلب بنجاح',
         data: newRequest,
       });
-
     } catch (error) {
       console.error('خطأ أثناء إرسال الطلب:', error);
       res.status(500).json({
@@ -383,6 +382,7 @@ router.delete(
   checkprov.checkifLoggedIn,
   authController.deleteFromFavo
 );
+
 router.get(
   '/patient-orders/:patientId',
   checkprov.checkifLoggedIn,
@@ -400,6 +400,7 @@ router.get(
     }
   }
 );
+
 
 router.get(
   '/getTopPharmas/:city/:region',
@@ -488,58 +489,95 @@ const dayMapping2 = {
   5: 'الجمعة',
   6: 'السبت',
 };
-router.get('/AllOrders/:patientId' , checkprov.checkifLoggedIn , async(req,res)=>{
-  try{
+
+router.get('/AllOrders/:patientId', checkprov.checkifLoggedIn, async (req, res) => {
+  try {
     const { patientId } = req.params;
-    const fromPharma = await PrescriptionRequest.find(
-      { patientId },
-      '-pharmacistsResponded'
-    );
-    const fromAnalyst = await PrescriptionAnalystRequest.find(
-      { patientId },
-        '-pharmacistsResponded'
-    );
-    const fromRadiology = await PrescriptionRadiologyRequest.find(
-            { patientId },
-            '-pharmacistsResponded'
-          );
-          const fromDoctor = await Doctor.find({
-                'booking.bookingHours.patientIDs.id': patientId,
-              }).select('fullName specilizate booking');
-          
-              if (!fromDoctor || fromDoctor.length === 0) {
-                return res
-                  .status(200)
-                  .json({ status: true, message: 'No bookings found for this patient' , data:[] });
-              }
-          
-              let patientBookings = [];
-          
-              fromDoctor.forEach((doctor) => {
-                doctor.booking.forEach((day, idDay) => {
-                  day.bookingHours.forEach((hour, idHour) => {
-                    hour.patientIDs.forEach((patient) => {
-                      if (patient.id.toString() === patientId) {
-                        let dayname = dayMapping2[idDay];
-                        patientBookings.push({
-                          doctorId: doctor._id,
-                          doctorName: doctor.fullName,
-                          specialization: doctor.specilizate,
-                          dayname,
-                          idHour,
-                          appointmentDate: patient.date,
-                        });
-                      }
-                    });
-                  });
-                });
+    const lang = req.headers['accept-language'] === 'ar' ? 'ar' : 'en'; // default to en
+
+    const fromPharmaRaw = await PrescriptionRequest.find({ patientId });
+    const fromAnalystRaw = await PrescriptionAnalystRequest.find({ patientId });
+    const fromRadiologyRaw = await PrescriptionRadiologyRequest.find({ patientId });
+
+    const fromPharma = fromPharmaRaw.map((item) => ({
+      _id: item._id,
+      patientId: item.patientId,
+      imageUrl: item.imageUrl,
+      city: item.city?.[lang] || '',
+      region: item.region?.[lang] || '',
+      date: item.date,
+      status: item.status,
+    }));
+
+    const fromAnalyst = fromAnalystRaw.map((item) => ({
+      _id: item._id,
+      patientId: item.patientId,
+      imageUrl: item.imageUrl,
+      city: item.city?.[lang] || '',
+      region: item.region?.[lang] || '',
+      date: item.date,
+      status: item.status,
+    }));
+
+    const fromRadiology = fromRadiologyRaw.map((item) => ({
+      _id: item._id,
+      patientId: item.patientId,
+      imageUrl: item.imageUrl,
+      city: item.city?.[lang] || '',
+      region: item.region?.[lang] || '',
+      date: item.date,
+      status: item.status,
+    }));
+
+    const fromDoctor = await Doctor.find({
+      'booking.bookingHours.patientIDs.id': patientId,
+    }).select('fullName specilizate booking city region');
+
+    let patientBookings = [];
+
+    fromDoctor.forEach((doctor) => {
+      doctor.booking.forEach((day, idDay) => {
+        day.bookingHours.forEach((hour, idHour) => {
+          hour.patientIDs.forEach((patient) => {
+            if (patient.id.toString() === patientId) {
+              let dayname = dayMapping2[idDay];
+              patientBookings.push({
+                doctorId: doctor._id,
+                doctorName: doctor.fullName,
+                specialization: doctor.specilizate,
+                city: doctor.city?.[lang] || '',
+                region: doctor.region?.[lang] || '',
+                dayname,
+                idHour,
+                appointmentDate: patient.date,
               });
-    if (!fromPharma && !fromAnalyst && !fromRadiology && (!fromDoctor || fromDoctor.length === 0)) return res.status(200).json({ message: 'No orders ' , data:[] });
-return res.status(200).json({succes:true ,message:'' , fromPharma:fromPharma , fromAnalyst:fromAnalyst , fromRadiology:fromRadiology , fromDoctor:patientBookings})
-  }catch(error){
-    res.status(500).json({succes:true , message:`internal server error ${error.message}`})
+            }
+          });
+        });
+      });
+    });
+
+    if (
+      !fromPharma.length &&
+      !fromAnalyst.length &&
+      !fromRadiology.length &&
+      !patientBookings.length
+    ) {
+      return res.status(200).json({ message: 'No orders', data: [] });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: '',
+      fromPharma,
+      fromAnalyst,
+      fromRadiology,
+      fromDoctor: patientBookings,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: `Internal server error: ${error.message}` });
   }
-})
+});
 
 
 router.get('/AllResponses/:patientId' , checkprov.checkifLoggedIn , async(req,res)=>{
