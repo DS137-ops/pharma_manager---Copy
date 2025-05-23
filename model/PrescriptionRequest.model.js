@@ -3,8 +3,22 @@ const mongoose = require('mongoose');
 const requestSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Seek' },
   imageUrl: String,
-  city: String,
-  region: String,
+    city: {
+    en: {
+      type: String,
+    },
+    ar: {
+      type: String,
+    },
+  },
+  region: {
+    en: {
+      type: String,
+    },
+    ar: {
+      type: String,
+    },
+  },
   date: {
     type: Date,
     default: Date.now,

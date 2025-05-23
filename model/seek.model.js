@@ -3,9 +3,16 @@ const bcrypt = require('bcryptjs');
 var mongoose = require('mongoose');
 const SeekSchema = new mongoose.Schema({
   fullName: {
-    type: String,
+   en:{
+     type: String,
     required: true,
     trim: true,
+   },
+   ar:{
+     type: String,
+    required: true,
+    trim: true,
+   }
   },
   phone: {
     type: String,
@@ -31,12 +38,24 @@ const SeekSchema = new mongoose.Schema({
     default: null,
   },
   city: {
-    type: String,
+   en:{
+     type: String,
     default: null,
+   },
+   ar:{
+     type: String,
+    default: null,
+   }
   },
   region: {
-    type: String,
+   en:{
+     type: String,
     default: null,
+   },
+   ar:{
+     type: String,
+    default: null,
+   }
   },
   accountDate: {
     type: Date,

@@ -417,100 +417,108 @@ exports.rejectPharmatic = async (req, res) => {
   }
 };
 
+
+
 exports.createNewSeek = async (req, res) => {
-  const { fullName, phone, password, age, city, region } = req.body;
+  const {
+    fullName_en,
+    fullName_ar,
+    phone,
+    password,
+    age,
+    city, // city ID
+    region, // region ID
+  } = req.body;
 
   if (!password)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Password should not be empty' });
-  if (!fullName)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Full name should not be empty' });
+    return res.status(409).json({ success: false, message: 'Password should not be empty' });
+
+  if (!fullName_en || !fullName_ar)
+    return res.status(409).json({ success: false, message: 'Full name should not be empty' });
 
   if (!phone)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Phone should not be empty' });
+    return res.status(409).json({ success: false, message: 'Phone should not be empty' });
+
   if (!age)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Age should not be empty' });
+    return res.status(409).json({ success: false, message: 'Age should not be empty' });
+
   if (!city)
-    return res
-      .status(409)
-      .json({ success: false, message: 'City should not be empty' });
+    return res.status(409).json({ success: false, message: 'City ID is required' });
+
   if (!region)
-    return res
-      .status(409)
-      .json({ success: false, message: 'Region should not be empty' });
+    return res.status(409).json({ success: false, message: 'Region ID is required' });
 
   try {
-
     const existSeek = await Seek.findOne({ phone });
     if (existSeek)
-      return res
-        .status(400)
-        .json({ success: false, message: 'Phone number is already taken' });
+      return res.status(400).json({ success: false, message: 'Phone number is already taken' });
 
     const cityExists = await City.findById(city);
     if (!cityExists)
-      return res
-        .status(400)
-        .json({ success: false, message: 'City not found' });
+      return res.status(400).json({ success: false, message: 'City not found' });
 
-    const regionExists = cityExists.regions.find(
-      (r) => r._id.toString() === region
-    );
+    const regionExists = cityExists.regions.find(r => r._id.toString() === region);
     if (!regionExists)
-      return res.status(400).json({
-        success: false,
-        message: 'Region not found in the selected city',
-      });
+      return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
 
-
-const newSeek = new Seek({
-      fullName,
+    const newSeek = new Seek({
+      fullName: {
+        en: fullName_en,
+        ar: fullName_ar,
+      },
       phone,
       password,
       age,
-      city: cityExists.name,
-      region: regionExists.name,
-    })
-
+      city: {
+        en: cityExists.name.en,
+        ar: cityExists.name.ar,
+      },
+      region: {
+        en: regionExists.name.en,
+        ar: regionExists.name.ar,
+      },
+      accountDate: new Date(),
+    });
 
     await newSeek.save();
-    const token = jwt.sign({ _id: newSeek._id, role: 'user' }, process.env.JWT_SECRET );    
+
+    const token = jwt.sign({ _id: newSeek._id, role: 'user' }, process.env.JWT_SECRET);
     await RefreshToken.create({ token, userRef: newSeek._id });
 
     return res.status(200).json({
       success: true,
       message: 'User registered successfully',
       token,
-      data:{
-        _id:newSeek._id,
-        fullName:newSeek.fullName
-      }
+      data: {
+        _id: newSeek._id,
+        fullName: newSeek.fullName,
+        city: newSeek.city,
+        region: newSeek.region,
+      },
     });
   } catch (err) {
     console.error('Error registering user:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map((e) => e.message);
-      return res
-        .status(400)
-        .json({ success: false, message: errors.join(', ') });
+      return res.status(400).json({ success: false, message: errors.join(', ') });
     }
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
+
+
 exports.updateSickInfo = async (req, res) => {
   try {
-    const { fullName, phone, age, city, region } = req.body;
+    const { fullName_en, fullName_ar, phone, age, city, region } = req.body;
     const id = req.params.id;
 
-    let cityname, regionname;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID' });
+    }
+
+    let cityname = null;
+    let regionname = null;
 
     if (city) {
       const existCity = await City.findById(city);
@@ -536,21 +544,35 @@ exports.updateSickInfo = async (req, res) => {
       }
     }
 
+    // بناء كائن التحديث
     const updateData = {
-      fullName,
       phone,
       age,
     };
 
-    if (cityname) updateData.cityname = cityname;
-    if (regionname) updateData.regionname = regionname;
+    if (fullName_en && fullName_ar) {
+      updateData.fullName = { en: fullName_en, ar: fullName_ar };
+    }
 
-    await Seek.updateMany(
-      { _id: new mongoose.Types.ObjectId(id) },
-      { $set: updateData }
-    );
+    if (cityname) {
+      updateData.city = cityname;
+    }
 
-    res.status(200).json({ success: true, message: 'Updated successfully' , data:updateData });
+    if (regionname) {
+      updateData.region = regionname;
+    }
+
+    const updated = await Seek.findByIdAndUpdate(id, { $set: updateData }, { new: true });
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Updated successfully',
+      data: updated,
+    });
   } catch (err) {
     console.error('Error updating user:', err);
     if (err.name === 'ValidationError') {
@@ -563,6 +585,7 @@ exports.updateSickInfo = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
+
 
 exports.loginSeek = async (req, res) => {
   const { phone, password , firebase_token  } = req.body;

@@ -80,26 +80,41 @@ exports.getPrivacyPolicy = async (req, res) => {
   }
 };
 
-exports.addAboutUs = async(req,res)=>{
-  try{
-  const { content } = req.body;
 
-    if (!content) {
-      return res.status(400).json({ message: "Content is required." });
+exports.addAboutUs = async (req, res) => {
+  try {
+    const { content_en, content_ar } = req.body;
+
+    if (!content_en || !content_ar) {
+      return res.status(400).json({ message: "Both English and Arabic content are required." });
     }
-    let about = await AboutUs.findOne()
-    if(about){
-      about.content = content
-      await about.save()
-    }else{
-      about = new AboutUs({ content })
-      await about.save()
+
+    let about = await AboutUs.findOne();
+
+    if (about) {
+      about.content.en = content_en;
+      about.content.ar = content_ar;
+      await about.save();
+    } else {
+      about = new AboutUs({
+        content: {
+          en: content_en,
+          ar: content_ar,
+        }
+      });
+      await about.save();
     }
-    res.status(200).json({ message: "About us saved.", about });
-  }catch(err){
-  res.status(500).json({ message: "Server error.", error: err.message });
+
+    res.status(200).json({
+      success: true,
+      message: "About us content saved successfully.",
+      data: about
+    });
+  } catch (err) {
+    console.error("Error saving About Us content:", err);
+    res.status(500).json({ success: false, message: "Server error.", error: err.message });
   }
-}
+};
 
 exports.getAboutUs = async(req,res)=>{
   try {

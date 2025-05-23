@@ -74,18 +74,41 @@ router.get(
   checkprov.checkifLoggedIn,
   async (req, res) => {
     const { id } = req.params;
+    const lang = req.headers['accept-language'] || 'en';
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
+
     const user = await Seek.findById(id).select(
       '-password -resetCode -resetCodeExpires -notifications'
     );
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.status(200).json({ success: true,message:'', data: user });
+let fullName = '';
+if (user.fullName) {
+  fullName = user.fullName[lang] || user.fullName.en || '';
+}
+
+   const userData = {
+  _id: user._id,
+  fullName,
+  phone: user.phone,
+  age: user.age,
+  city: user.city?.[lang] || user.city?.en,
+  region: user.region?.[lang] || user.region?.en,
+  accountDate: user.accountDate,
+  role: user.role,
+};
+
+console.log('user.fullName:', user.fullName);
+
+
+    res.status(200).json({ success: true, message: '', data: userData });
   }
 );
+
 router.get(
   '/search',
   checkprov.checkifLoggedIn,
@@ -184,7 +207,9 @@ router.post(
 
       const existCity = await City.findById(city);
       if (!existCity) {
-        return res.status(400).json({ success: false, message: 'City not found' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'City not found' });
       }
 
       const existRegion = existCity.regions.find(
@@ -202,21 +227,21 @@ router.post(
       }
 
       const imageUrl = req.file.path;
-      const cityname = existCity.name;
-      const regionname = existRegion.name;
 
       const newRequest = new PrescriptionRequest({
         patientId,
         imageUrl,
-        city: cityname,
-        region: regionname,
+        city: {
+          en: existCity.name.en,
+          ar: existCity.name.ar,
+        },
+        region: {
+          en: existRegion.name.en,
+          ar: existRegion.name.ar,
+        },
         status: 'unread',
       });
-      console.log('patientId:', patientId);
-      console.log('city:', cityname);
-      console.log('region:', regionname);
-      console.log('req.file:', req.file);
-      
+
       await newRequest.save();
 
       res.status(200).json({
@@ -224,7 +249,6 @@ router.post(
         message: 'تم إرسال الطلب بنجاح',
         data: newRequest,
       });
-
     } catch (error) {
       console.error('خطأ أثناء إرسال الطلب:', error);
       res.status(500).json({
@@ -389,17 +413,48 @@ router.get(
   async (req, res) => {
     try {
       const { patientId } = req.params;
+      const lang = req.headers['accept-language'] === 'ar' ? 'ar' : 'en';
+
       const requests = await PrescriptionRequest.find(
         { patientId },
         '-pharmacistsResponded'
       );
-      if (!requests) return res.status(200).json({ succes:true , message: 'No orders ' , data:[] });
-      return res.status(200).json({ succes:true , message:'', data: requests });
+
+      if (!requests || requests.length === 0) {
+        return res
+          .status(200)
+          .json({ success: true, message: 'No orders', data: [] });
+      }
+
+      // ترجمة البيانات حسب اللغة المطلوبة
+      const translatedRequests = requests.map((req) => {
+        const translated = req.toObject();
+
+        // أمثلة للحقول القابلة للترجمة (حسب سكيمتك):
+        if (translated.city && translated.city[lang]) {
+          translated.city = translated.city[lang];
+        }
+
+        if (translated.region && translated.region[lang]) {
+          translated.region = translated.region[lang];
+        }
+
+        if (translated.fullName && translated.fullName[lang]) {
+          translated.fullName = translated.fullName[lang];
+        }
+
+        return translated;
+      });
+
+      return res
+        .status(200)
+        .json({ success: true, message: '', data: translatedRequests });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
 );
+
 
 router.get(
   '/getTopPharmas/:city/:region',
