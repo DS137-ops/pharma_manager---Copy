@@ -41,6 +41,9 @@ const SeekSchema = new mongoose.Schema({
   accountDate: {
     type: Date,
   },
+   firebasetoken:{
+    type:String
+  },
   notifications: {
     type: Array,
     default: null,

@@ -253,48 +253,43 @@ exports.deleteAnalystAccount = async (req, res) => {
   }
 };
 exports.loginAna = async (req, res) => {
-  const { email, password  } = req.body;
+  const { email, password, firebase_token } = req.body;
 
-  if (!email) {
-    return res.status(403).json({ message: 'Email is required' });
-  }
+  if (!email) return res.status(403).json({ message: 'Email is required' });
+  if (!password) return res.status(400).json({ message: 'Password is required' });
+  if (!firebase_token) return res.status(400).json({ message: 'firebase_token is required' });
 
-  if (!password) {
-    return res.status(400).json({ message: 'Password is required' });
-  }
-if (!firebase_token) {
-    return res.status(400).json({ message: 'firebase_token is required' });
-  }
   try {
     const user = await Analyst.findOne({ email });
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Email is not correct' });
+      return res.status(404).json({ success: false, message: 'Email is not correct' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ success: false, message: 'Password is not correct' });
+      return res.status(401).json({ success: false, message: 'Password is not correct' });
     }
 
+    user.firebasetoken = firebase_token;
+    await user.save();
+
+
     await RefreshToken.deleteMany({ userRef: user._id });
+
+
+    const token = jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
+    await RefreshToken.create({ token, userRef: user._id });
 
     const data = user.toObject({ getters: true, versionKey: false });
     delete data.password;
     delete data.resetCode;
     delete data.resetCodeExpires;
 
-    const token = jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
-    await RefreshToken.create({ token, userRef: user._id });
-
     return res.status(200).json({
       success: true,
       message: 'Login successful',
       token,
-      data: data,
+      data,
     });
   } catch (err) {
     console.error('Error logging in:', err);

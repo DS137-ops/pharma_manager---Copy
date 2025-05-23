@@ -70,6 +70,9 @@ const medicalSchema = new mongoose.Schema({
   accountDate: {
     type: Date,
   },
+   firebasetoken:{
+    type:String
+  },
  
 });
 medicalSchema.methods.verifyPassword = async function (password) {

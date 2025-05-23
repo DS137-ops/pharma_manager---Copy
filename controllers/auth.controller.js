@@ -565,13 +565,15 @@ exports.updateSickInfo = async (req, res) => {
 };
 
 exports.loginSeek = async (req, res) => {
-  const { phone, password  } = req.body;
+  const { phone, password , firebase_token  } = req.body;
 
   if (!phone) {
     return res.status(403).json({ message: 'phone is required' });
   }
   if (!password)
     return res.status(400).json({ message: 'password is required' });
+   if (!firebase_token)
+    return res.status(400).json({ message: 'firebase_token is required' });
   try {
     const user = await Seek.findOne({ phone });
     if (!user) {
@@ -585,7 +587,9 @@ exports.loginSeek = async (req, res) => {
         .status(401)
         .json({ success: false, message: 'password is Not the same' });
     }
-
+ await Seek.findByIdAndUpdate(user._id, {
+      firebasetoken: firebase_token,
+    });
     const token = await jwt.sign(
       { _id: user._id, role: 'user' },
       process.env.JWT_SECRET
@@ -629,8 +633,10 @@ exports.deleteSeekAccount = async (req, res) => {
   }
 };
 
+
+
 exports.loginPhar = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password , firebase_token } = req.body;
 
   if (!email) {
     return res.status(403).json({ message: 'Email is required' });
@@ -654,7 +660,9 @@ exports.loginPhar = async (req, res) => {
         .status(401)
         .json({ success: false, message: 'Password is not correct' });
     }
-
+ await Pharmatic.findByIdAndUpdate(user._id, {
+        firebasetoken: firebase_token,
+      });
     await RefreshToken.deleteMany({ userRef: user._id });
 
     const data = user.toObject({ getters: true, versionKey: false });

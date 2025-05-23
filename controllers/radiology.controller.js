@@ -443,8 +443,9 @@ exports.getFinalRateForRadiology = async (req, res) => {
   }
 };
 
+
 exports.loginRadio = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password , firebase_token } = req.body;
   
     if (!email) {
       return res.status(403).json({ message: 'Email is required' });
@@ -468,7 +469,9 @@ exports.loginRadio = async (req, res) => {
           .status(401)
           .json({ success: false, message: 'Password is not correct' });
       }
-  
+  await Radiology.findByIdAndUpdate(user._id, {
+        firebasetoken: firebase_token,
+      });
       await RefreshToken.deleteMany({ userRef: user._id });
   
       const data = user.toObject({ getters: true, versionKey: false });
