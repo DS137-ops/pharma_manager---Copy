@@ -779,6 +779,34 @@ exports.resetPharmaPass = async (req, res) => {
 };
 
 
+const admin = require('../firebase');
+
+exports.sendSickNotification = async (req, res) => {
+  try {
+    const { userId, title, body } = req.body;
+
+    const user = await Analyst.findById(userId);
+    if (!user || !user.firebaseToken) {
+      return res.status(404).json({ message: 'User or Firebase token not found' });
+    }
+
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      token: user.firebaseToken,
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log('Notification sent:', response);
+
+    return res.status(200).json({ success: true, message: 'Notification sent' });
+  } catch (error) {
+    console.error('Notification error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 
 exports.addToFamousPhars = async (req, res) => {
