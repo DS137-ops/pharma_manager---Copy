@@ -222,6 +222,6 @@ app.use('/api/Radiology', RadiologyRouter);
 app.use('/api/Doctor', DoctorRouter);
 app.use('/admin', adminRouter);
 
-app.listen(8080, '0.0.0.0', () => {
+app.listen(8080, () => {
   console.log(`Server is Running ${PORT}`);
 });
