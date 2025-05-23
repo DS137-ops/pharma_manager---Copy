@@ -280,6 +280,7 @@ exports.loginAna = async (req, res) => {
     const token = jwt.sign({ id: user._id, role: 'analyst' }, '1001110');
     await RefreshToken.create({ token, userRef: user._id });
 
+    // تجهيز البيانات المسترجعة
     const data = user.toObject({ getters: true, versionKey: false });
     delete data.password;
     delete data.resetCode;

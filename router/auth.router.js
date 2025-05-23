@@ -69,43 +69,24 @@ router.delete(
   checkprov.checkifLoggedIn,
   authController.deleteSeekAccount
 );
+
+
+
 router.get(
   '/get-sick-profile/:id',
   checkprov.checkifLoggedIn,
   async (req, res) => {
     const { id } = req.params;
-    const lang = req.headers['accept-language'] || 'en';
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
-
     const user = await Seek.findById(id).select(
       '-password -resetCode -resetCodeExpires -notifications'
     );
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-let fullName = '';
-if (user.fullName) {
-  fullName = user.fullName[lang] || user.fullName.en || '';
-}
-
-   const userData = {
-  _id: user._id,
-  fullName,
-  phone: user.phone,
-  age: user.age,
-  city: user.city?.[lang] || user.city?.en,
-  region: user.region?.[lang] || user.region?.en,
-  accountDate: user.accountDate,
-  role: user.role,
-};
-
-console.log('user.fullName:', user.fullName);
-
-
-    res.status(200).json({ success: true, message: '', data: userData });
+    res.status(200).json({ success: true,message:'', data: user });
   }
 );
 
@@ -231,14 +212,8 @@ router.post(
       const newRequest = new PrescriptionRequest({
         patientId,
         imageUrl,
-        city: {
-          en: existCity.name.en,
-          ar: existCity.name.ar,
-        },
-        region: {
-          en: existRegion.name.en,
-          ar: existRegion.name.ar,
-        },
+        city:city,
+        region:region,
         status: 'unread',
       });
 
@@ -407,48 +382,19 @@ router.delete(
   checkprov.checkifLoggedIn,
   authController.deleteFromFavo
 );
+
 router.get(
   '/patient-orders/:patientId',
   checkprov.checkifLoggedIn,
   async (req, res) => {
     try {
       const { patientId } = req.params;
-      const lang = req.headers['accept-language'] === 'ar' ? 'ar' : 'en';
-
       const requests = await PrescriptionRequest.find(
         { patientId },
         '-pharmacistsResponded'
       );
-
-      if (!requests || requests.length === 0) {
-        return res
-          .status(200)
-          .json({ success: true, message: 'No orders', data: [] });
-      }
-
-      // ترجمة البيانات حسب اللغة المطلوبة
-      const translatedRequests = requests.map((req) => {
-        const translated = req.toObject();
-
-        // أمثلة للحقول القابلة للترجمة (حسب سكيمتك):
-        if (translated.city && translated.city[lang]) {
-          translated.city = translated.city[lang];
-        }
-
-        if (translated.region && translated.region[lang]) {
-          translated.region = translated.region[lang];
-        }
-
-        if (translated.fullName && translated.fullName[lang]) {
-          translated.fullName = translated.fullName[lang];
-        }
-
-        return translated;
-      });
-
-      return res
-        .status(200)
-        .json({ success: true, message: '', data: translatedRequests });
+      if (!requests) return res.status(200).json({ succes:true , message: 'No orders ' , data:[] });
+      return res.status(200).json({ succes:true , message:'', data: requests });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -543,58 +489,95 @@ const dayMapping2 = {
   5: 'الجمعة',
   6: 'السبت',
 };
-router.get('/AllOrders/:patientId' , checkprov.checkifLoggedIn , async(req,res)=>{
-  try{
+
+router.get('/AllOrders/:patientId', checkprov.checkifLoggedIn, async (req, res) => {
+  try {
     const { patientId } = req.params;
-    const fromPharma = await PrescriptionRequest.find(
-      { patientId },
-      '-pharmacistsResponded'
-    );
-    const fromAnalyst = await PrescriptionAnalystRequest.find(
-      { patientId },
-        '-pharmacistsResponded'
-    );
-    const fromRadiology = await PrescriptionRadiologyRequest.find(
-            { patientId },
-            '-pharmacistsResponded'
-          );
-          const fromDoctor = await Doctor.find({
-                'booking.bookingHours.patientIDs.id': patientId,
-              }).select('fullName specilizate booking');
-          
-              if (!fromDoctor || fromDoctor.length === 0) {
-                return res
-                  .status(200)
-                  .json({ status: true, message: 'No bookings found for this patient' , data:[] });
-              }
-          
-              let patientBookings = [];
-          
-              fromDoctor.forEach((doctor) => {
-                doctor.booking.forEach((day, idDay) => {
-                  day.bookingHours.forEach((hour, idHour) => {
-                    hour.patientIDs.forEach((patient) => {
-                      if (patient.id.toString() === patientId) {
-                        let dayname = dayMapping2[idDay];
-                        patientBookings.push({
-                          doctorId: doctor._id,
-                          doctorName: doctor.fullName,
-                          specialization: doctor.specilizate,
-                          dayname,
-                          idHour,
-                          appointmentDate: patient.date,
-                        });
-                      }
-                    });
-                  });
-                });
+    const lang = req.headers['accept-language'] === 'ar' ? 'ar' : 'en'; // default to en
+
+    const fromPharmaRaw = await PrescriptionRequest.find({ patientId });
+    const fromAnalystRaw = await PrescriptionAnalystRequest.find({ patientId });
+    const fromRadiologyRaw = await PrescriptionRadiologyRequest.find({ patientId });
+
+    const fromPharma = fromPharmaRaw.map((item) => ({
+      _id: item._id,
+      patientId: item.patientId,
+      imageUrl: item.imageUrl,
+      city: item.city?.[lang] || '',
+      region: item.region?.[lang] || '',
+      date: item.date,
+      status: item.status,
+    }));
+
+    const fromAnalyst = fromAnalystRaw.map((item) => ({
+      _id: item._id,
+      patientId: item.patientId,
+      imageUrl: item.imageUrl,
+      city: item.city?.[lang] || '',
+      region: item.region?.[lang] || '',
+      date: item.date,
+      status: item.status,
+    }));
+
+    const fromRadiology = fromRadiologyRaw.map((item) => ({
+      _id: item._id,
+      patientId: item.patientId,
+      imageUrl: item.imageUrl,
+      city: item.city?.[lang] || '',
+      region: item.region?.[lang] || '',
+      date: item.date,
+      status: item.status,
+    }));
+
+    const fromDoctor = await Doctor.find({
+      'booking.bookingHours.patientIDs.id': patientId,
+    }).select('fullName specilizate booking city region');
+
+    let patientBookings = [];
+
+    fromDoctor.forEach((doctor) => {
+      doctor.booking.forEach((day, idDay) => {
+        day.bookingHours.forEach((hour, idHour) => {
+          hour.patientIDs.forEach((patient) => {
+            if (patient.id.toString() === patientId) {
+              let dayname = dayMapping2[idDay];
+              patientBookings.push({
+                doctorId: doctor._id,
+                doctorName: doctor.fullName,
+                specialization: doctor.specilizate,
+                city: doctor.city?.[lang] || '',
+                region: doctor.region?.[lang] || '',
+                dayname,
+                idHour,
+                appointmentDate: patient.date,
               });
-    if (!fromPharma && !fromAnalyst && !fromRadiology && (!fromDoctor || fromDoctor.length === 0)) return res.status(200).json({ message: 'No orders ' , data:[] });
-return res.status(200).json({succes:true ,message:'' , fromPharma:fromPharma , fromAnalyst:fromAnalyst , fromRadiology:fromRadiology , fromDoctor:patientBookings})
-  }catch(error){
-    res.status(500).json({succes:true , message:`internal server error ${error.message}`})
+            }
+          });
+        });
+      });
+    });
+
+    if (
+      !fromPharma.length &&
+      !fromAnalyst.length &&
+      !fromRadiology.length &&
+      !patientBookings.length
+    ) {
+      return res.status(200).json({ message: 'No orders', data: [] });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: '',
+      fromPharma,
+      fromAnalyst,
+      fromRadiology,
+      fromDoctor: patientBookings,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: `Internal server error: ${error.message}` });
   }
-})
+});
 
 
 router.get('/AllResponses/:patientId' , checkprov.checkifLoggedIn , async(req,res)=>{

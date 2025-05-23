@@ -4,20 +4,10 @@ const requestSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Seek' },
   imageUrl: String,
     city: {
-    en: {
-      type: String,
-    },
-    ar: {
-      type: String,
-    },
+    type: String,
   },
   region: {
-    en: {
-      type: String,
-    },
-    ar: {
-      type: String,
-    },
+   type: String,
   },
   date: {
     type: Date,

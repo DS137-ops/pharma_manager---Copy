@@ -421,8 +421,7 @@ exports.rejectPharmatic = async (req, res) => {
 
 exports.createNewSeek = async (req, res) => {
   const {
-    fullName_en,
-    fullName_ar,
+    fullName,
     phone,
     password,
     age,
@@ -433,7 +432,7 @@ exports.createNewSeek = async (req, res) => {
   if (!password)
     return res.status(409).json({ success: false, message: 'Password should not be empty' });
 
-  if (!fullName_en || !fullName_ar)
+  if (!fullName)
     return res.status(409).json({ success: false, message: 'Full name should not be empty' });
 
   if (!phone)
@@ -462,21 +461,12 @@ exports.createNewSeek = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
 
     const newSeek = new Seek({
-      fullName: {
-        en: fullName_en,
-        ar: fullName_ar,
-      },
+      fullName:fullName,
       phone,
       password,
       age,
-      city: {
-        en: cityExists.name.en,
-        ar: cityExists.name.ar,
-      },
-      region: {
-        en: regionExists.name.en,
-        ar: regionExists.name.ar,
-      },
+      city:cityExists.name,
+      region:regionExists.name,
       accountDate: new Date(),
     });
 
@@ -507,18 +497,12 @@ exports.createNewSeek = async (req, res) => {
 };
 
 
-
 exports.updateSickInfo = async (req, res) => {
   try {
-    const { fullName_en, fullName_ar, phone, age, city, region } = req.body;
+    const { fullName, phone, age, city, region } = req.body;
     const id = req.params.id;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid user ID' });
-    }
-
-    let cityname = null;
-    let regionname = null;
+    let cityname, regionname;
 
     if (city) {
       const existCity = await City.findById(city);
@@ -544,35 +528,27 @@ exports.updateSickInfo = async (req, res) => {
       }
     }
 
-    // بناء كائن التحديث
     const updateData = {
+      fullName,
       phone,
       age,
     };
 
-    if (fullName_en && fullName_ar) {
-      updateData.fullName = { en: fullName_en, ar: fullName_ar };
-    }
+    if (cityname) updateData.cityname = cityname;
+    if (regionname) updateData.regionname = regionname;
 
-    if (cityname) {
-      updateData.city = cityname;
-    }
+    await Seek.updateMany(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { $set: updateData }
+    );
 
-    if (regionname) {
-      updateData.region = regionname;
-    }
-
-    const updated = await Seek.findByIdAndUpdate(id, { $set: updateData }, { new: true });
-
-    if (!updated) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Updated successfully',
-      data: updated,
-    });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: 'Updated successfully',
+        data: updateData,
+      });
   } catch (err) {
     console.error('Error updating user:', err);
     if (err.name === 'ValidationError') {
@@ -585,7 +561,6 @@ exports.updateSickInfo = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
 
 exports.loginSeek = async (req, res) => {
   const { phone, password , firebase_token  } = req.body;

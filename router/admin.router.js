@@ -326,10 +326,10 @@ router.get("/support-tickets/:ticketNumber", async (req, res) => {
 
 router.post("/add-city", async (req, res) => {
   try {
-    const { name_en, name_ar } = req.body;
+    const { name } = req.body;
 
     // Validate required fields
-    if (!name_en || !name_ar) {
+    if (!name) {
       return res.status(400).json({
         success: false,
         message: "Both English and Arabic names are required",
@@ -338,7 +338,7 @@ router.post("/add-city", async (req, res) => {
 
     // Create and save city
     const newCity = new City({
-      name: { en: name_en.trim(), ar: name_ar.trim() },
+      name: name,
       regions: [],
     });
 
@@ -363,14 +363,14 @@ router.post("/add-city", async (req, res) => {
 router.post("/cities/:cityId/add-region", async(req,res)=>{
   try {
     const { cityId } = req.params;
-    const { name_en , name_ar } = req.body;
+    const { name } = req.body;
 
     const city = await City.findById(cityId);
     if (!city) return res.status(404).json({ error: "City not found" });
 
-    const newRegion = { _id: new mongoose.Types.ObjectId(), name:{
-      en:name_en, ar:name_ar
-    }};
+    const newRegion = { _id: new mongoose.Types.ObjectId(), name:
+      name
+    };
     city.regions.push(newRegion);
     await city.save();
 

@@ -4,16 +4,14 @@ const mongoose = require("mongoose");
 const RegionSchema = new mongoose.Schema({
   _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
   name: {
-    en: { type: String, required: true, trim: true },
-    ar: { type: String, required: true, trim: true },
+    type: String, required: true, trim: true
   },
-}, { _id: false }); // لأننا نضبط _id يدويًا
+}, { _id: false });
 
-// Main Schema for City
+
 const CitySchema = new mongoose.Schema({
   name: {
-    en: { type: String, required: true, trim: true },
-    ar: { type: String, required: true, trim: true },
+   type: String, required: true, trim: true
   },
   regions: [RegionSchema],
 }, { timestamps: true });
