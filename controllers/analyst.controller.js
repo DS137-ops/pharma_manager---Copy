@@ -23,6 +23,7 @@ exports.createNewAnalyst = async (req, res) => {
     region, // region ID
     address,
     phone,
+    firebasetoken,
     StartJob,
     EndJob,
   } = req.body;
@@ -36,6 +37,7 @@ exports.createNewAnalyst = async (req, res) => {
     !region ||
     !address ||
     !phone ||
+    !firebasetoken||
     !StartJob ||
     !EndJob
   ) {
@@ -81,6 +83,7 @@ exports.createNewAnalyst = async (req, res) => {
       region: regionExists.name,
       address,
       phone,
+      firebasetoken,
       StartJob,
       EndJob,
     });
@@ -137,6 +140,34 @@ exports.createNewAnalyst = async (req, res) => {
 
     // General error response
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
+exports.sendAnalystNotification = async (req, res) => {
+  try {
+    const { userId, title, body } = req.body;
+
+    const user = await Analyst.findById(userId);
+    if (!user || !user.firebasetoken) {
+      return res.status(404).json({ message: 'User or Firebase token not found' });
+    }
+
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      token: user.firebasetoken,
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log('Notification sent:', response);
+
+    return res.status(200).json({ success: true, message: 'Notification sent' });
+  } catch (error) {
+    console.error('Notification error:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

@@ -71,6 +71,7 @@ router.delete(
 );
 
 router.post('/send-sick-notify' , authController.sendSickNotification)
+router.post('/send-pharma-notify' , authController.sendPharmaNotification)
 
 router.get(
   '/get-sick-profile/:id',
