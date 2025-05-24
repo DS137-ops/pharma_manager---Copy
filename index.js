@@ -200,7 +200,6 @@ mongoose
   .connect(GlobalUri)
   .then(async () => {
     console.log('MongoDB connected!');
-
   
   })
   .catch((err) => {
@@ -217,3 +216,5 @@ app.use('/admin', adminRouter);
 app.listen(8080, () => {
   console.log(`Server is Running ${PORT}`);
 });
+
+
