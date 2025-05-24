@@ -10,10 +10,10 @@ const SeekSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
-    match: [
-      /^201[0-9]{9}$/,
-      'Please enter a valid Egyptian phone number',
-    ],
+    // match: [
+    //   /^201[0-9]{9}$/,
+    //   'Please enter a valid Egyptian phone number',
+    // ],
   },
   password: {
     type: String,
