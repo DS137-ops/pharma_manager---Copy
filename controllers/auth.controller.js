@@ -227,7 +227,7 @@ exports.ratePharmatic = async (req, res) => {
 exports.getPharmas = async (req, res) => {
   const { city, region } = req.params;
   const userId = req.user._id;
-
+console.log(userId)
   const existCity = await City.findById(city);
   const existRegion = existCity.regions.find(
     (r) => r._id.toString() === region
@@ -259,17 +259,30 @@ exports.getPharmas = async (req, res) => {
       return res.status(200).json({ status: true, message: 'No result' ,data:[] });
     }
 
-const favouriteDocs = await Favourite.find({ userId, isFavourite: true }).select('specId');
-const userFavourites = favouriteDocs.map(fav => fav.specId.toString());
+const favouriteDocs = await Favourite.find({
+  userId,
+  isFavourite: true,
+}).select('specId');
+
+
+
+const userFavourites = favouriteDocs.map((fav) => fav.specId.toString());
+
 
 const pharmaciesWithRatings = findPharma.map((pharma) => {
   const ratings = pharma.rate?.map((r) => r.rating) || [];
   const total = ratings.reduce((sum, rating) => sum + rating, 0);
-  const averageRating = (ratings.length ? Math.round((total / ratings.length).toFixed(1)) : 0);
+  const averageRating = ratings.length
+    ? Math.round((total / ratings.length).toFixed(1))
+    : 0;
+
+  const isFav = userFavourites.includes(pharma._id.toString());
+  console.log(`Pharma ID: ${pharma._id}, Is Favourite: ${isFav}`);
+
   return {
     ...pharma.toObject(),
     finalRate: averageRating,
-    isfavourite: userFavourites.includes(pharma._id.toString()),
+    isfavourite: isFav,
   };
 });
     
