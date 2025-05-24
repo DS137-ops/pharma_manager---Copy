@@ -23,6 +23,7 @@ app.use(express.json());
 app.use(mongoSanitize());
 app.use(xss());
 app.use(helmet());
+const { client, getLatestQr, qrcode } = require('./utils/whatsapp');
 //require('./utils/sendWhatsAppMessage');
 const server = http.createServer(app);
 const localUri = 'mongodb://localhost:27017/medicalapp',
@@ -213,7 +214,35 @@ app.use('/api/Radiology', RadiologyRouter);
 app.use('/api/Doctor', DoctorRouter);
 app.use('/admin', adminRouter);
 
+<<<<<<< HEAD
 app.listen(8080, () => {
+=======
+app.get('/api/qr', (req, res) => {
+    const qr = getLatestQr();
+    if (qr) {
+        res.json({ success: true, qr });
+    } else {
+        res.status(404).json({ success: false, message: 'QR not generated yet' });
+    }
+});
+
+app.get('/api/qr/image', async (req, res) => {
+    const qr = getLatestQr();
+    if (!qr) {
+        return res.status(404).json({ success: false, message: 'QR not generated yet' });
+    }
+
+    try {
+        const qrImage = await qrcode.toDataURL(qr);
+        res.send(`<img src="${qrImage}" alt="QR Code">`);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Failed to generate QR image' });
+    }
+});
+
+app.listen(8080, '0.0.0.0', () => {
+>>>>>>> whats_app
   console.log(`Server is Running ${PORT}`);
 });
 

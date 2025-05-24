@@ -10,6 +10,7 @@ var nodemailer = require('nodemailer');
 const City = require('../model/cities.model');
 const Blacklist = require('../model/Blacklist.model');
 const RefreshToken = require('../model/RefreshToken.model');
+const { client } = require('../utils/whatsapp');
 require('dotenv').config();
 function generateTimeSlots(start, end) {
   const slots = [];
@@ -239,7 +240,7 @@ exports.ratePharmatic = async (req, res) => {
 exports.getPharmas = async (req, res) => {
   const { city, region } = req.params;
   const userId = req.user._id;
-
+console.log(userId)
   const existCity = await City.findById(city);
   const existRegion = existCity.regions.find(
     (r) => r._id.toString() === region
@@ -291,6 +292,10 @@ exports.getPharmas = async (req, res) => {
         isfavourite: userFavourites.includes(pharma._id.toString()),
       };
     });
+
+
+
+
 
     pharmaciesWithRatings.sort((a, b) => b.finalRate - a.finalRate);
 
@@ -506,6 +511,7 @@ exports.createNewSeek = async (req, res) => {
       (r) => r._id.toString() === region
     );
     if (!regionExists)
+<<<<<<< HEAD
       return res
         .status(400)
         .json({
@@ -513,6 +519,10 @@ exports.createNewSeek = async (req, res) => {
           message: 'Region not found in the selected city',
         });
 
+=======
+      return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
+    
+>>>>>>> whats_app
     const newSeek = new Seek({
       fullName: fullName,
       phone,
@@ -1184,3 +1194,99 @@ exports.getUserBookings = async (req, res) => {
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
+<<<<<<< HEAD
+=======
+
+
+exports.forgotPassword = async (req, res) => {
+  const { phone } = req.body;
+
+  if (!phone) return res.status(400).json({ success: false, message: 'Phone number is required' });
+
+  try {
+    const user = await Seek.findOne({ phone });
+    if (!user) return res.status(400).json({ success: false, message: 'User not found' });
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000); 
+    
+    user.resetCode = resetCode;
+    user.resetCodeExpires = Date.now() + 10 * 60 * 1000; 
+    await user.save();
+
+    const formattedPhone = `${phone}@c.us`; 
+    const message = `🔒 كود استعادة كلمة المرور الخاص بك هو: ${resetCode}\nصالح لمدة 10 دقائق.`;
+
+    await client.sendMessage(formattedPhone, message);
+
+    res.json({ success: true, message: 'Reset code sent via WhatsApp' });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+
+exports.verifyOtp = async (req, res) => {
+  const { phone, otp } = req.body;
+
+  if (!phone || !otp)
+    return res.status(400).json({ success: false, message: 'Phone and OTP code are required' });
+
+  try {
+    const user = await Seek.findOne({ phone });
+
+    if (!user)
+      return res.status(400).json({ success: false, message: 'User not found' });
+
+    if (!user.resetCode || !user.resetCodeExpires)
+      return res.status(400).json({ success: false, message: 'No reset code found. Please request a new one.' });
+
+    if (user.resetCode !== otp)
+      return res.status(400).json({ success: false, message: 'Invalid OTP code' });
+
+    if (Date.now() > user.resetCodeExpires)
+      return res.status(400).json({ success: false, message: 'OTP code has expired. Please request a new one.' });
+
+    const tokenPayload = { userId: user._id, phone: user.phone };
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '10m' });
+
+    res.status(200).json({ success: true, message: 'OTP verified successfully', token });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { token, newPassword, confirmPassword } = req.body;
+
+  if (!token || !newPassword || !confirmPassword)
+    return res.status(400).json({ success: false, message: 'Token, new password, and confirm password are required' });
+
+  if (newPassword !== confirmPassword)
+    return res.status(400).json({ success: false, message: 'New password and confirm password do not match' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await Seek.findById(decoded.userId);
+    if (!user)
+      return res.status(400).json({ success: false, message: 'User not found' });
+
+    user.password = newPassword;
+    user.resetCode = null;
+    user.resetCodeExpires = null;
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Password has been reset successfully' });
+
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ success: false, message: 'Invalid or expired token' });
+  }
+};
+
+
+>>>>>>> whats_app

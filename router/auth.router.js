@@ -53,6 +53,10 @@ router.post(
   ],
   authController.createNewSeek
 );
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/verify-otp', authController.verifyOtp);
+router.post('/reset-password', authController.resetPassword);
+
 router.post('/loginSeek',  authController.loginSeek);
 router.post(
   '/logoutSeek',
