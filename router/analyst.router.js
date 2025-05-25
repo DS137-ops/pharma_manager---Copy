@@ -67,6 +67,7 @@ router.get(
   analystController.getFavourites
 );
 
+router.post('/sendAnaNotification' , analystController.sendAnalystNotification)
 router.post(
   '/signinAnalyst',
   checkprov.isProvvedAna,

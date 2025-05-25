@@ -72,6 +72,7 @@ exports.createNewDoctor = async (req, res) => {
     region, // region ID
     address,
     phone,
+    firebasetoken,
     specId,
     NumberState,
   } = req.body;
@@ -84,6 +85,7 @@ exports.createNewDoctor = async (req, res) => {
     !region ||
     !address ||
     !phone ||
+    !firebasetoken||
     !specId ||
     !NumberState
   ) {
@@ -129,6 +131,7 @@ exports.createNewDoctor = async (req, res) => {
       region: regionExists.name,
       address,
       phone,
+      firebasetoken,
       specilizate: specName,
       NumberState,
     });
@@ -694,62 +697,35 @@ await Doctor.findByIdAndUpdate(user._id, {
       message: `Internal server error: ${err.message}`,
     });
   }
-};exports.loginDoctor = async (req, res) => {
-  const { email, password , firebase_token} = req.body;
-
-  if (!email) {
-    return res.status(403).json({ message: 'Email is required' });
-  }
-
-  if (!password) {
-    return res.status(400).json({ message: 'Password is required' });
-  }
-if (!firebase_token) {
-    return res.status(400).json({ message: 'firebase_token is required' });
-  }
-  try {
-    const user = await Doctor.findOne({ email });
-    if (!user) {
-      return res
-        .status(401)
-        .json({ success: false, message: 'Email is not correct' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res
-        .status(401)
-        .json({ success: false, message: 'Password is not correct' });
-    }
-await Doctor.findByIdAndUpdate(user._id, {
-      firebasetoken: firebase_token,
-    });
-    await RefreshToken.deleteMany({ userRef: user._id });
-
-    const data = user.toObject({ getters: true, versionKey: false });
-    delete data.password;
-    delete data.resetCode;
-    delete data.resetCodeExpires;
-
-    const token = jwt.sign({ _id: user._id, role: 'doctor' }, '1001110');
-
-    await RefreshToken.create({ token, userRef: user._id });
-
-    return res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      token,
-      data,
-    });
-  } catch (err) {
-    console.error('Error logging in:', err);
-    return res.status(500).json({
-      success: false,
-      message: `Internal server error: ${err.message}`,
-    });
-  }
 };
 
+
+exports.sendDoctorNotification = async (req, res) => {
+  try {
+    const { userId, title, body } = req.body;
+
+    const user = await Doctor.findById(userId);
+    if (!user || !user.firebasetoken) {
+      return res.status(404).json({ message: 'User or Firebase token not found' });
+    }
+
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      token: user.firebasetoken,
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log('Notification sent:', response);
+
+    return res.status(200).json({ success: true, message: 'Notification sent' });
+  } catch (error) {
+    console.error('Notification error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 exports.rateDoctor = async (req, res) => {
   try {
     const { DoctorId } = req.params;
@@ -1212,6 +1188,7 @@ exports.getFavourites = async (req, res) => {
       return {
         ...doctor._doc,
         finalRate: finalRate,
+        isFavourite: true
       };
     });
 
