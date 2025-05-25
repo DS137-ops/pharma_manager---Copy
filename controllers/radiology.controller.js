@@ -21,7 +21,7 @@ const transporter = nodemailer.createTransport({
 exports.searchradiologyByName = async (req, res) => {
   try {
     const { fullName } = req.query;
-
+   const userId = req.user?._id;
     if (!fullName) {
       return res.status(400).json({ status: false, message: 'Please provide a name' });
     }
@@ -33,8 +33,39 @@ exports.searchradiologyByName = async (req, res) => {
     if (radiology.length === 0) {
       return res.status(200).json({ status: true,data:[] });
     }
+const radiologiesWithRatings = await Promise.all(
+  radiology.map(async (radiology) => {
+    const ratings = radiology.rate?.map((r) => r.rating) || [];
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    const averageRating =
+      ratings.length > 0
+        ? Math.round((total / ratings.length).toFixed(1))
+        : 0;
+console.log(userId)
+    let isFavourite = false;
+    if (userId) {
+      const fav = await Favourite.findOne({
+        userId,
+        specId: radiology._id,
+        isFavourite: true,
+      });
+      isFavourite = !!fav;
+    }
+console.log(isFavourite)
+    const radiologyObj = radiology.toObject();
+    delete radiologyObj.password;
+    delete radiologyObj.resetCode;
+    delete radiologyObj.resetCodeExpires;
+    delete radiologyObj.rate;
 
-    return res.status(200).json({ status: true, data:radiology });
+    return {
+      ...radiologyObj,
+      finalRate: averageRating,
+      isFavourite,
+    };
+  })
+);
+    return res.status(200).json({ status: true, data:radiologiesWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
@@ -372,6 +403,7 @@ exports.getFavourites = async (req, res) => {
       return {
           ...radiology._doc,
           finalRate: finalRate, 
+          isFavourite:true
       };
     });
 

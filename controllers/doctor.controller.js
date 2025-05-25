@@ -55,8 +55,39 @@ exports.searchdoctorByName = async (req, res) => {
         .status(200)
         .json({ status: false, message: 'No matching doctor found', data: [] });
     }
+  const doctorWithRatings = await Promise.all(
+  doctor.map(async (doc) => {
+    const ratings = doc.rate?.map((r) => r.rating) || [];
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    const averageRating =
+      ratings.length > 0
+        ? Math.round((total / ratings.length).toFixed(1))
+        : 0;
+console.log(userId)
+    let isFavourite = false;
+    if (userId) {
+      const fav = await Favourite.findOne({
+        userId,
+        specId: doc._id,
+        isFavourite: true,
+      });
+      isFavourite = !!fav;
+    }
+console.log(isFavourite)
+    const pharmaObj = doc.toObject();
+    delete pharmaObj.password;
+    delete pharmaObj.resetCode;
+    delete pharmaObj.resetCodeExpires;
+    delete pharmaObj.rate;
 
-    return res.status(200).json({ status: true, data: doctor });
+    return {
+      ...pharmaObj,
+      finalRate: averageRating,
+      isFavourite,
+    };
+  })
+);
+    return res.status(200).json({ status: true, data: doctorWithRatings });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: 'Server error' });
