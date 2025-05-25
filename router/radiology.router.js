@@ -276,6 +276,7 @@ router.get(
   checkprov.checkifLoggedIn,
   RadiologyController.searchradiologyByName
 );
+router.post('/sendRadNotification' , RadiologyController.sendRadiologyNotification)
 
 router.post('/respond-request-from-Radiology', async (req, res) => {
   try {

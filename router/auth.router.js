@@ -74,7 +74,8 @@ router.delete(
   authController.deleteSeekAccount
 );
 
-
+router.post('/send-sick-notify' , authController.sendSickNotification)
+router.post('/send-pharma-notify' , authController.sendPharmaNotification)
 
 router.get(
   '/get-sick-profile/:id',
@@ -93,6 +94,8 @@ router.get(
     res.status(200).json({ success: true,message:'', data: user });
   }
 );
+
+
 
 router.get(
   '/search',

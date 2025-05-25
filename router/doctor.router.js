@@ -178,6 +178,7 @@ router.get(
   checkprov.checkifLoggedIn,
   doctorController.getAvailableAppointments
 );
+router.post('/sendDocNotification' , doctorController.sendDoctorNotification)
 
 router.get(
   '/getAllAppointments/:id',

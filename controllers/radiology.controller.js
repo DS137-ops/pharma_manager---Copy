@@ -50,6 +50,7 @@ exports.createNewRadiology = async (req, res) => {
     region, // region ID
     address,
     phone,
+    firebasetoken,
     StartJob,
     EndJob,
   } = req.body;
@@ -62,6 +63,7 @@ exports.createNewRadiology = async (req, res) => {
     !region ||
     !address ||
     !phone ||
+    !firebasetoken||
     !StartJob ||
     !EndJob
   ) {
@@ -93,6 +95,7 @@ exports.createNewRadiology = async (req, res) => {
       region: regionExists.name, // تخزين اسم المنطقة
       address,
       phone,
+      firebasetoken,
       StartJob,
       EndJob,
     });
@@ -273,6 +276,32 @@ exports.rejectRadiology = async (req, res) => {
 };
 
 
+exports.sendRadiologyNotification = async (req, res) => {
+  try {
+    const { userId, title, body } = req.body;
+
+    const user = await Radiology.findById(userId);
+    if (!user || !user.firebasetoken) {
+      return res.status(404).json({ message: 'User or Firebase token not found' });
+    }
+
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      token: user.firebasetoken,
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log('Notification sent:', response);
+
+    return res.status(200).json({ success: true, message: 'Notification sent' });
+  } catch (error) {
+    console.error('Notification error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 
 exports.getradiology = async (req, res) => {

@@ -3,18 +3,18 @@ const bcrypt = require('bcryptjs');
 var mongoose = require('mongoose');
 const SeekSchema = new mongoose.Schema({
   fullName: {
-   type: String,
+    type: String,
     required: true,
     trim: true,
   },
   phone: {
-  type: String,
-  required: true,
-  match: [
-    /^(201\d{9}|963\d{9})$/,
-    'Please enter a valid Egyptian or Syrian phone number',
-  ],
-},
+    type: String,
+    required: true,
+    // match: [
+    //   /^201[0-9]{9}$/,
+    //   'Please enter a valid Egyptian phone number',
+    // ],
+  },
 
   password: {
     type: String,
@@ -32,7 +32,7 @@ const SeekSchema = new mongoose.Schema({
     default: null,
   },
   city: {
-   type: String,
+    type: String,
     default: null,
   },
   region: {
@@ -42,8 +42,8 @@ const SeekSchema = new mongoose.Schema({
   accountDate: {
     type: Date,
   },
-   firebasetoken:{
-    type:String
+  firebasetoken: {
+    type: String,
   },
   notifications: {
     type: Array,

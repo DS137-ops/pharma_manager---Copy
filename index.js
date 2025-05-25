@@ -201,16 +201,7 @@ mongoose
   .connect(GlobalUri)
   .then(async () => {
     console.log('MongoDB connected!');
-
-    // try {
-    //   await Specialty.deleteMany();
-    //   await Specialty.insertMany(docs);
-    //   console.log('added images succesfully');
-    //   process.exit(0);
-    // } catch (err) {
-    //   console.error('error', err);
-    //   process.exit(1);
-    // }
+  
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
@@ -222,6 +213,8 @@ app.use('/api/Analyst', AnalystRouter);
 app.use('/api/Radiology', RadiologyRouter);
 app.use('/api/Doctor', DoctorRouter);
 app.use('/admin', adminRouter);
+
+
 
 app.get('/api/qr', (req, res) => {
     const qr = getLatestQr();
@@ -250,3 +243,5 @@ app.get('/api/qr/image', async (req, res) => {
 app.listen(8080, '0.0.0.0', () => {
   console.log(`Server is Running ${PORT}`);
 });
+
+
