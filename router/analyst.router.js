@@ -364,7 +364,7 @@ router.get(
   }
 );
 
-router.get('/search', analystController.searchanalystByName);
+router.get('/search',  checkprov.checkifLoggedIn,  analystController.searchanalystByName);
 
 router.delete(
   '/from-favourite/:cardId',
