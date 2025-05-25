@@ -511,7 +511,7 @@ exports.createNewSeek = async (req, res) => {
       (r) => r._id.toString() === region
     );
     if (!regionExists)
-<<<<<<< HEAD
+
       return res
         .status(400)
         .json({
@@ -519,10 +519,7 @@ exports.createNewSeek = async (req, res) => {
           message: 'Region not found in the selected city',
         });
 
-=======
-      return res.status(400).json({ success: false, message: 'Region not found in the selected city' });
-    
->>>>>>> whats_app
+
     const newSeek = new Seek({
       fullName: fullName,
       phone,
@@ -1194,8 +1191,6 @@ exports.getUserBookings = async (req, res) => {
     res.status(500).json({ status: false, message: 'Server error' });
   }
 };
-<<<<<<< HEAD
-=======
 
 
 exports.forgotPassword = async (req, res) => {
@@ -1287,6 +1282,3 @@ exports.resetPassword = async (req, res) => {
     res.status(400).json({ success: false, message: 'Invalid or expired token' });
   }
 };
-
-
->>>>>>> whats_app

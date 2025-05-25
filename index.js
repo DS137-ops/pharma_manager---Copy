@@ -214,9 +214,8 @@ app.use('/api/Radiology', RadiologyRouter);
 app.use('/api/Doctor', DoctorRouter);
 app.use('/admin', adminRouter);
 
-<<<<<<< HEAD
-app.listen(8080, () => {
-=======
+
+
 app.get('/api/qr', (req, res) => {
     const qr = getLatestQr();
     if (qr) {
@@ -242,7 +241,6 @@ app.get('/api/qr/image', async (req, res) => {
 });
 
 app.listen(8080, '0.0.0.0', () => {
->>>>>>> whats_app
   console.log(`Server is Running ${PORT}`);
 });
 
