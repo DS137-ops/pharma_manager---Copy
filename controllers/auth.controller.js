@@ -1118,6 +1118,7 @@ exports.getFavourites = async (req, res) => {
       return {
         ...pharma._doc,
         finalRate: finalRate,
+        isFavourite:true
       };
     });
 

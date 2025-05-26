@@ -773,6 +773,69 @@ const doctorsData = [
   ]
 
   },
+
+
+
+
+
+
+
+
+  {
+    fullName: "haidar jomaa",
+    email: "Asaadaw@gmail.com",
+    password: "Asaad123456",
+    city: "Aliskandreh",
+    region: "Domeat",
+    address: "Altawra",
+    phone: "+201275233909",
+    specilizate: "نساء و توليد",
+    NumberState: 3,
+        imageUrl:"https://res.cloudinary.com/dqk8dzdoo/image/upload/v1747665924/pharmacies/s576ijitsljid2h2twwf.jpg",
+          Gallery:[
+    {imageUrl:"https://res.cloudinary.com/dqk8dzdoo/image/upload/v1747905675/gall1_kaocwx.jpg" },
+    {imageUrl:"https://res.cloudinary.com/dqk8dzdoo/image/upload/v1747905687/gal2_gfrjep.jpg" },
+
+  ],
+   rangeBooking: [
+       {
+      day: 0,
+      start: 9 ,
+      end: 12
+    },
+    {
+      day: 1,
+      start: 9,
+      end: 15
+    },
+    {
+      day:2,
+      start: 10,
+      end: 2
+    },
+    {
+      day: 3,
+      start: 10,
+      end: 2
+    },
+    {
+      day: 4,
+      start: 10,
+      end: 2
+    },
+    {
+      day: 5,
+      start: 10,
+      end: 2
+    },
+     {
+      day: 6,
+      start: 10,
+      end: 2
+    }
+  ]
+
+  },
 ];
 
 async function seedDoctors() {
